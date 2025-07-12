@@ -10,13 +10,10 @@ export default function Footer() {
           {/* Brand */}
           <div className="md:col-span-1">
             <div className="flex items-center space-x-2 mb-4">
-              <div className="w-8 h-8 bg-black flex items-center justify-center transform rotate-45">
-                <div className="transform -rotate-45 text-white text-xs font-bold">
-                  <span className="text-xs">le</span>
-                  <svg className="w-2 h-2 inline-block ml-0.5" fill="currentColor" viewBox="0 0 8 8">
-                    <path d="M4 0L0 4h2v4h4V4h2L4 0z"/>
-                  </svg>
-                </div>
+              <div className="w-8 h-8 bg-gradient-to-br from-pink-500 to-purple-600 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
               </div>
               <div>
                 <span className="text-lg font-bold text-black">Levitas Finance</span>
