@@ -1,5 +1,6 @@
 import { useState, useEffect, createContext, useContext } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { switchToBaseSepolia } from "@/lib/web3";
 
 interface WalletContextType {
   isConnected: boolean;
@@ -61,14 +62,22 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
           description: `Connected to ${accounts[0].slice(0, 6)}...${accounts[0].slice(-4)}`,
         });
 
-        // Check if on correct network (Base Sepolia)
+        // Check if on correct network (Base Sepolia) and switch if needed
         const chainId = await window.ethereum.request({ method: 'eth_chainId' });
         if (chainId !== '0x14a34') { // Base Sepolia chain ID
-          toast({
-            title: "Wrong Network",
-            description: "Please switch to Base Sepolia testnet.",
-            variant: "destructive"
-          });
+          try {
+            await switchToBaseSepolia();
+            toast({
+              title: "Network Switched",
+              description: "Successfully switched to Base Sepolia testnet.",
+            });
+          } catch (switchError) {
+            toast({
+              title: "Network Switch Failed",
+              description: "Please manually switch to Base Sepolia testnet in MetaMask.",
+              variant: "destructive"
+            });
+          }
         }
       }
     } catch (error) {
