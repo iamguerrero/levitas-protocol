@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project is a decentralized finance (DeFi) application called Levitas Finance that provides tokenized volatility products. It's a full-stack web application with a React frontend and Express.js backend, featuring volatility index tokens (BVIX, EVIX, VIXC) that allow users to hedge their cryptocurrency holdings.
+This project is a decentralized finance (DeFi) application called Levitas Finance that provides tokenized volatility products. It's a React frontend DApp with Ethers.js Web3 integration, featuring volatility index tokens (BVIX, EVIX, VIXC) that allow users to hedge their cryptocurrency holdings on Base Sepolia testnet.
 
 ## User Preferences
 
@@ -18,29 +18,30 @@ Preferred communication style: Simple, everyday language.
 - **State Management**: TanStack Query for server state and React hooks for local state
 - **Web3 Integration**: Custom wallet provider using MetaMask/window.ethereum
 
-### Backend Architecture
-- **Runtime**: Node.js with Express.js framework
-- **Language**: TypeScript with ESM modules
-- **API Pattern**: RESTful API with `/api` prefix for all endpoints
-- **Development Server**: Custom Vite integration for hot reloading
+### Web3 Architecture
+- **Blockchain**: Base Sepolia testnet for development
+- **Web3 Library**: Ethers.js v6 for blockchain interactions
+- **Wallet Integration**: MetaMask browser extension with automatic network switching
+- **Smart Contracts**: Custom Solidity contracts (BVIXToken, MockOracle, MintRedeem)
+- **Contract ABIs**: Generated JSON ABIs stored in `client/src/contracts/`
 
-### Data Storage Solutions
-- **Database**: PostgreSQL (configured for Neon database)
-- **ORM**: Drizzle ORM with schema defined in TypeScript
-- **Migrations**: Drizzle Kit for database migrations
-- **Session Storage**: PostgreSQL sessions using connect-pg-simple
-- **Development Storage**: In-memory storage implementation for development
+### Backend Architecture (Minimal)
+- **Runtime**: Node.js with Express.js framework (minimal, mostly serves frontend)
+- **Language**: TypeScript with ESM modules
+- **Development Server**: Custom Vite integration for hot reloading
 
 ## Key Components
 
 ### Wallet Integration
 - MetaMask wallet connection with automatic network switching to Base Sepolia
 - Wallet context provider for managing connection state across the app
-- Smart contract integration placeholders for BVIX, EVIX tokens and USDC
+- Real smart contract integration for BVIX token, Oracle, and MintRedeem contracts
 
 ### Trading Interface
-- Mint/redeem functionality for volatility tokens
-- Real-time balance display and transaction history
+- Real mint/redeem functionality using smart contracts via Ethers.js
+- Live BVIX balance reading from blockchain
+- Oracle price feeds from MockOracle contract
+- Automatic USDC approval and transaction handling
 - Form validation and error handling with toast notifications
 
 ### Landing Page
@@ -58,17 +59,18 @@ Preferred communication style: Simple, everyday language.
 ## Data Flow
 
 1. **User Authentication**: Wallet-based authentication through MetaMask
-2. **Token Operations**: Mint/redeem operations interface with smart contracts
-3. **Price Data**: Mock data currently, intended for oracle integration
-4. **State Management**: React Query handles API state, wallet context manages Web3 state
-5. **Database Operations**: Drizzle ORM provides type-safe database interactions
+2. **Token Operations**: Real mint/redeem operations via smart contracts using Ethers.js
+3. **Price Data**: Live oracle price feeds from deployed MockOracle contract
+4. **State Management**: React hooks manage Web3 state, wallet context manages connection
+5. **Blockchain Interactions**: Direct contract calls for balances, minting, and redeeming
 
 ## External Dependencies
 
 ### Blockchain Integration
 - **Network**: Base Sepolia testnet for development
 - **Wallet**: MetaMask browser extension required
-- **Smart Contracts**: Placeholder addresses for BVIX/EVIX tokens, Mock Oracle, and Mock USDC
+- **Smart Contracts**: Ready for deployment - BVIXToken.sol, MockOracle.sol, MintRedeem.sol
+- **Contract Integration**: Ethers.js v6 with generated ABIs and helper functions
 
 ### Third-Party Services
 - **Database**: Neon PostgreSQL (serverless Postgres)

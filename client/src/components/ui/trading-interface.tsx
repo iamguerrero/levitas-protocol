@@ -1,11 +1,22 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Bitcoin, Zap, TrendingUp, Loader2 } from "lucide-react";
+import { Bitcoin, Zap, TrendingUp, Loader2, AlertCircle } from "lucide-react";
 import { useWallet } from "@/hooks/use-wallet";
 import { useToast } from "@/hooks/use-toast";
+import { 
+  getBVIXBalance, 
+  getUSDCBalance, 
+  getOraclePrice, 
+  mintBVIX, 
+  redeemBVIX,
+  switchToBaseSepolia,
+  BVIX_ADDRESS,
+  ORACLE_ADDRESS,
+  MINT_REDEEM_ADDRESS
+} from "@/lib/web3";
 
 export default function TradingInterface() {
   const { address } = useWallet();
@@ -13,17 +24,71 @@ export default function TradingInterface() {
   const [mintAmount, setMintAmount] = useState("");
   const [redeemAmount, setRedeemAmount] = useState("");
   const [isTransacting, setIsTransacting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Real contract data
+  const [contractData, setContractData] = useState({
+    bvixPrice: "42.15",
+    evixPrice: "37.98", // EVIX not implemented yet
+    usdcBalance: "0.00",
+    bvixBalance: "0.00",
+    totalValue: "0.00"
+  });
 
-  // Mock balances and prices
-  const mockData = {
-    bvixPrice: 42.15,
-    evixPrice: 37.98,
-    usdcBalance: 1250.00,
-    bvixBalance: 29.65,
-    totalValue: 2498.94
+  // Check if contracts are deployed
+  const contractsDeployed = BVIX_ADDRESS !== "0xBVIXAddressHere";
+
+  // Load contract data
+  useEffect(() => {
+    if (address && contractsDeployed) {
+      loadContractData();
+    } else {
+      setIsLoading(false);
+    }
+  }, [address, contractsDeployed]);
+
+  const loadContractData = async () => {
+    if (!address) return;
+    
+    setIsLoading(true);
+    try {
+      const [bvixBalance, usdcBalance, oraclePrice] = await Promise.all([
+        getBVIXBalance(address),
+        getUSDCBalance(address),
+        getOraclePrice()
+      ]);
+
+      const totalValue = (parseFloat(bvixBalance) * parseFloat(oraclePrice) + parseFloat(usdcBalance)).toFixed(2);
+
+      setContractData({
+        bvixPrice: oraclePrice,
+        evixPrice: "37.98", // EVIX not implemented yet
+        usdcBalance,
+        bvixBalance,
+        totalValue
+      });
+    } catch (error) {
+      console.error('Error loading contract data:', error);
+      toast({
+        title: "Contract Error",
+        description: "Failed to load contract data. Please check your network connection.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleMint = async () => {
+    if (!contractsDeployed) {
+      toast({
+        title: "Contracts Not Deployed",
+        description: "Smart contracts are not yet deployed. Please wait for deployment.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (!mintAmount || parseFloat(mintAmount) <= 0) {
       toast({
         title: "Invalid Amount",
@@ -35,18 +100,49 @@ export default function TradingInterface() {
 
     setIsTransacting(true);
     
-    // Simulate transaction
-    setTimeout(() => {
+    try {
+      // Ensure user is on Base Sepolia
+      await switchToBaseSepolia();
+      
+      const tx = await mintBVIX(mintAmount);
+      
+      toast({
+        title: "Transaction Submitted",
+        description: "Your mint transaction has been submitted. Please wait for confirmation.",
+      });
+      
+      await tx.wait();
+      
       toast({
         title: "Mint Successful!",
-        description: `Successfully minted ${(parseFloat(mintAmount) / mockData.bvixPrice).toFixed(4)} BVIX tokens.`,
+        description: `Successfully minted BVIX tokens!`,
       });
+      
       setMintAmount("");
+      await loadContractData(); // Refresh balances
+      
+    } catch (error: any) {
+      console.error('Mint error:', error);
+      toast({
+        title: "Mint Failed",
+        description: error.message || "Failed to mint BVIX tokens. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
       setIsTransacting(false);
-    }, 2000);
+    }
   };
 
   const handleRedeem = async () => {
+    if (!contractsDeployed) {
+      toast({
+        title: "Contracts Not Deployed",
+        description: "Smart contracts are not yet deployed. Please wait for deployment.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (!redeemAmount || parseFloat(redeemAmount) <= 0) {
       toast({
         title: "Invalid Amount", 
@@ -58,16 +154,61 @@ export default function TradingInterface() {
 
     setIsTransacting(true);
     
-    // Simulate transaction
-    setTimeout(() => {
+    try {
+      // Ensure user is on Base Sepolia
+      await switchToBaseSepolia();
+      
+      const tx = await redeemBVIX(redeemAmount);
+      
+      toast({
+        title: "Transaction Submitted",
+        description: "Your redeem transaction has been submitted. Please wait for confirmation.",
+      });
+      
+      await tx.wait();
+      
       toast({
         title: "Redeem Successful!",
-        description: `Successfully redeemed ${(parseFloat(redeemAmount) * mockData.bvixPrice).toFixed(2)} USDC.`,
+        description: `Successfully redeemed BVIX tokens for USDC!`,
       });
+      
       setRedeemAmount("");
+      await loadContractData(); // Refresh balances
+      
+    } catch (error: any) {
+      console.error('Redeem error:', error);
+      toast({
+        title: "Redeem Failed",
+        description: error.message || "Failed to redeem BVIX tokens. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
       setIsTransacting(false);
-    }, 2000);
+    }
   };
+
+  if (!contractsDeployed) {
+    return (
+      <div className="space-y-8">
+        <Card className="border-yellow-200 bg-yellow-50">
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-3">
+              <AlertCircle className="w-6 h-6 text-yellow-600" />
+              <div>
+                <h3 className="font-bold text-yellow-800">Contracts Not Deployed</h3>
+                <p className="text-yellow-700">Smart contracts are not yet deployed to Base Sepolia. Please update contract addresses in web3.ts after deployment.</p>
+                <div className="mt-4 space-y-2 text-sm">
+                  <p><strong>BVIX Token:</strong> {BVIX_ADDRESS}</p>
+                  <p><strong>Oracle:</strong> {ORACLE_ADDRESS}</p>
+                  <p><strong>MintRedeem:</strong> {MINT_REDEEM_ADDRESS}</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -86,8 +227,10 @@ export default function TradingInterface() {
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-2xl font-bold text-black">${mockData.bvixPrice}</div>
-                <div className="text-sm text-green-600">+2.4%</div>
+                <div className="text-2xl font-bold text-black">
+                  ${isLoading ? "..." : contractData.bvixPrice}
+                </div>
+                <div className="text-sm text-green-600">Live Price</div>
               </div>
             </div>
             <div className="text-xs text-gray-600">
@@ -109,12 +252,14 @@ export default function TradingInterface() {
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-2xl font-bold text-black">${mockData.evixPrice}</div>
-                <div className="text-sm text-green-600">+1.8%</div>
+                <div className="text-2xl font-bold text-black">
+                  ${contractData.evixPrice}
+                </div>
+                <div className="text-sm text-gray-500">Coming Soon</div>
               </div>
             </div>
             <div className="text-xs text-gray-600">
-              Last updated: {new Date().toLocaleTimeString()}
+              EVIX implementation pending
             </div>
           </CardContent>
         </Card>
@@ -144,7 +289,7 @@ export default function TradingInterface() {
                 <div className="absolute right-3 top-3 text-gray-500">USDC</div>
               </div>
               <div className="mt-2 text-sm text-gray-600">
-                Balance: {mockData.usdcBalance.toFixed(2)} USDC
+                Balance: {isLoading ? "..." : parseFloat(contractData.usdcBalance).toFixed(2)} USDC
               </div>
             </div>
 
@@ -152,12 +297,12 @@ export default function TradingInterface() {
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">You'll receive:</span>
                 <span className="font-medium text-black">
-                  {mintAmount ? (parseFloat(mintAmount) / mockData.bvixPrice).toFixed(4) : "0.00"} BVIX
+                  {mintAmount && contractData.bvixPrice ? (parseFloat(mintAmount) / parseFloat(contractData.bvixPrice)).toFixed(4) : "0.00"} BVIX
                 </span>
               </div>
               <div className="flex justify-between text-sm mt-2">
                 <span className="text-gray-600">Exchange rate:</span>
-                <span className="text-gray-600">1 USDC = {(1 / mockData.bvixPrice).toFixed(6)} BVIX</span>
+                <span className="text-gray-600">1 USDC = {contractData.bvixPrice ? (1 / parseFloat(contractData.bvixPrice)).toFixed(6) : "..."} BVIX</span>
               </div>
             </div>
 
@@ -200,7 +345,7 @@ export default function TradingInterface() {
                 <div className="absolute right-3 top-3 text-gray-500">BVIX</div>
               </div>
               <div className="mt-2 text-sm text-gray-600">
-                Balance: {mockData.bvixBalance.toFixed(2)} BVIX
+                Balance: {isLoading ? "..." : parseFloat(contractData.bvixBalance).toFixed(2)} BVIX
               </div>
             </div>
 
@@ -208,12 +353,12 @@ export default function TradingInterface() {
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">You'll receive:</span>
                 <span className="font-medium text-black">
-                  {redeemAmount ? (parseFloat(redeemAmount) * mockData.bvixPrice).toFixed(2) : "0.00"} USDC
+                  {redeemAmount && contractData.bvixPrice ? (parseFloat(redeemAmount) * parseFloat(contractData.bvixPrice)).toFixed(2) : "0.00"} USDC
                 </span>
               </div>
               <div className="flex justify-between text-sm mt-2">
                 <span className="text-gray-600">Exchange rate:</span>
-                <span className="text-gray-600">1 BVIX = {mockData.bvixPrice} USDC</span>
+                <span className="text-gray-600">1 BVIX = {contractData.bvixPrice || "..."} USDC</span>
               </div>
             </div>
 
@@ -244,15 +389,21 @@ export default function TradingInterface() {
         <CardContent>
           <div className="grid md:grid-cols-3 gap-6">
             <div className="text-center p-4 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-black">{mockData.usdcBalance.toFixed(2)}</div>
+              <div className="text-2xl font-bold text-black">
+                {isLoading ? "..." : parseFloat(contractData.usdcBalance).toFixed(2)}
+              </div>
               <div className="text-sm text-gray-600">USDC Balance</div>
             </div>
             <div className="text-center p-4 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-black">{mockData.bvixBalance.toFixed(2)}</div>
+              <div className="text-2xl font-bold text-black">
+                {isLoading ? "..." : parseFloat(contractData.bvixBalance).toFixed(2)}
+              </div>
               <div className="text-sm text-gray-600">BVIX Balance</div>
             </div>
             <div className="text-center p-4 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">${mockData.totalValue.toFixed(2)}</div>
+              <div className="text-2xl font-bold text-green-600">
+                ${isLoading ? "..." : contractData.totalValue}
+              </div>
               <div className="text-sm text-gray-600">Total Value</div>
             </div>
           </div>
