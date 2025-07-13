@@ -1,27 +1,30 @@
-import { ethers } from 'ethers';
-import BVIX_ABI from '../contracts/BVIXToken.abi.json';
-import Oracle_ABI from '../contracts/MockOracle.abi.json';
-import MintRedeem_ABI from '../contracts/MintRedeem.abi.json';
-import USDC_ABI from '../contracts/MockUSDC.abi.json';
+import { ethers } from "ethers";
+import BVIX_ABI from "../contracts/BVIXToken.abi.json";
+import Oracle_ABI from "../contracts/MockOracle.abi.json";
+import MintRedeem_ABI from "../contracts/MintRedeem.abi.json";
+import USDC_ABI from "../contracts/MockUSDC.abi.json";
 
 declare global {
   interface Window {
     ethereum?: {
       request: (args: { method: string; params?: any[] }) => Promise<any>;
       on: (event: string, callback: (accounts: string[]) => void) => void;
-      removeListener: (event: string, callback: (accounts: string[]) => void) => void;
+      removeListener: (
+        event: string,
+        callback: (accounts: string[]) => void,
+      ) => void;
     };
   }
 }
 
-export const BASE_SEPOLIA_CHAIN_ID = '0x14a34';
-export const BASE_SEPOLIA_RPC_URL = 'https://sepolia.base.org';
+export const BASE_SEPOLIA_CHAIN_ID = "0x14a34";
+export const BASE_SEPOLIA_RPC_URL = "https://sepolia.base.org";
 
 // Contract addresses - to be updated after deployment
-export const MINT_REDEEM_ADDRESS = "0xMintRedeemAddressHere";
-export const BVIX_ADDRESS = "0xBVIXAddressHere";
-export const ORACLE_ADDRESS = "0xOracleAddressHere";
-export const MOCK_USDC_ADDRESS = "0xMockUSDCAddressHere";
+export const MINT_REDEEM_ADDRESS = "0xd8fE46AC323e5e302bfCA27BD7B25a0a071e7e2F";
+export const BVIX_ADDRESS = "0x6840B4d2Bd39E1BfD9E610A487eB86DfBD679920";
+export const ORACLE_ADDRESS = "0x85485dD6cFaF5220150c413309C61a8EA24d24FE";
+export const MOCK_USDC_ADDRESS = "0x3c88f575AdF2d76E09E5a9704D92b2c380CEC7a1";
 
 // Contract factory functions
 export const getBVIXContract = (providerOrSigner: any) =>
@@ -38,8 +41,8 @@ export const getUSDCContract = (providerOrSigner: any) =>
 
 // Provider functions
 export function getProvider() {
-  if (typeof window.ethereum === 'undefined') {
-    throw new Error('MetaMask not installed');
+  if (typeof window.ethereum === "undefined") {
+    throw new Error("MetaMask not installed");
   }
   return new ethers.BrowserProvider(window.ethereum);
 }
@@ -50,31 +53,33 @@ export async function getSigner() {
 }
 
 export async function switchToBaseSepolia() {
-  if (typeof window.ethereum === 'undefined') {
-    throw new Error('MetaMask not installed');
+  if (typeof window.ethereum === "undefined") {
+    throw new Error("MetaMask not installed");
   }
 
   try {
     await window.ethereum.request({
-      method: 'wallet_switchEthereumChain',
+      method: "wallet_switchEthereumChain",
       params: [{ chainId: BASE_SEPOLIA_CHAIN_ID }],
     });
   } catch (switchError: any) {
     // If the chain hasn't been added to MetaMask, add it
     if (switchError.code === 4902) {
       await window.ethereum.request({
-        method: 'wallet_addEthereumChain',
-        params: [{
-          chainId: BASE_SEPOLIA_CHAIN_ID,
-          chainName: 'Base Sepolia',
-          rpcUrls: [BASE_SEPOLIA_RPC_URL],
-          nativeCurrency: {
-            name: 'ETH',
-            symbol: 'ETH',
-            decimals: 18,
+        method: "wallet_addEthereumChain",
+        params: [
+          {
+            chainId: BASE_SEPOLIA_CHAIN_ID,
+            chainName: "Base Sepolia",
+            rpcUrls: [BASE_SEPOLIA_RPC_URL],
+            nativeCurrency: {
+              name: "ETH",
+              symbol: "ETH",
+              decimals: 18,
+            },
+            blockExplorerUrls: ["https://sepolia.basescan.org/"],
           },
-          blockExplorerUrls: ['https://sepolia.basescan.org/'],
-        }],
+        ],
       });
     } else {
       throw switchError;
@@ -90,7 +95,7 @@ export async function getBVIXBalance(address: string): Promise<string> {
     const balance = await bvixContract.balanceOf(address);
     return ethers.formatEther(balance);
   } catch (error) {
-    console.error('Error getting BVIX balance:', error);
+    console.error("Error getting BVIX balance:", error);
     return "0.0";
   }
 }
@@ -102,7 +107,7 @@ export async function getUSDCBalance(address: string): Promise<string> {
     const balance = await usdcContract.balanceOf(address);
     return ethers.formatUnits(balance, 6); // USDC has 6 decimals
   } catch (error) {
-    console.error('Error getting USDC balance:', error);
+    console.error("Error getting USDC balance:", error);
     return "0.0";
   }
 }
@@ -114,31 +119,61 @@ export async function getOraclePrice(): Promise<string> {
     const price = await oracleContract.getPrice();
     return ethers.formatEther(price);
   } catch (error) {
-    console.error('Error getting oracle price:', error);
+    console.error("Error getting oracle price:", error);
     return "42.15"; // Fallback price
   }
 }
 
-export async function mintBVIX(usdcAmount: string): Promise<ethers.ContractTransactionResponse> {
+export async function mintBVIX(
+  usdcAmount: string,
+): Promise<ethers.ContractTransactionResponse> {
   const signer = await getSigner();
+  const address = await signer.getAddress();
   const mintRedeemContract = getMintRedeemContract(signer);
   const usdcContract = getUSDCContract(signer);
-  
-  // First approve USDC spending
+
   const usdcAmountWei = ethers.parseUnits(usdcAmount, 6); // USDC has 6 decimals
-  const approveTx = await usdcContract.approve(MINT_REDEEM_ADDRESS, usdcAmountWei);
-  await approveTx.wait();
   
+  // Check USDC balance first
+  const usdcBalance = await usdcContract.balanceOf(address);
+  if (usdcBalance < usdcAmountWei) {
+    throw new Error(`Insufficient USDC balance. You have ${ethers.formatUnits(usdcBalance, 6)} USDC but need ${usdcAmount} USDC`);
+  }
+
+  // Check current allowance
+  const currentAllowance = await usdcContract.allowance(address, MINT_REDEEM_ADDRESS);
+  
+  // Only approve if needed
+  if (currentAllowance < usdcAmountWei) {
+    console.log('Approving USDC spending...');
+    const approveTx = await usdcContract.approve(MINT_REDEEM_ADDRESS, usdcAmountWei);
+    await approveTx.wait();
+    console.log('USDC approval confirmed');
+  }
+
   // Then mint BVIX
+  console.log('Minting BVIX tokens...');
   const mintTx = await mintRedeemContract.mint(usdcAmountWei);
   return mintTx;
 }
 
-export async function redeemBVIX(bvixAmount: string): Promise<ethers.ContractTransactionResponse> {
+export async function redeemBVIX(
+  bvixAmount: string,
+): Promise<ethers.ContractTransactionResponse> {
   const signer = await getSigner();
+  const address = await signer.getAddress();
   const mintRedeemContract = getMintRedeemContract(signer);
+  const bvixContract = getBVIXContract(signer);
+  
   const bvixAmountWei = ethers.parseEther(bvixAmount);
   
+  // Check BVIX balance first
+  const bvixBalance = await bvixContract.balanceOf(address);
+  if (bvixBalance < bvixAmountWei) {
+    throw new Error(`Insufficient BVIX balance. You have ${ethers.formatEther(bvixBalance)} BVIX but need ${bvixAmount} BVIX`);
+  }
+
+  console.log('Redeeming BVIX tokens...');
   const redeemTx = await mintRedeemContract.redeem(bvixAmountWei);
   return redeemTx;
 }
@@ -153,5 +188,67 @@ export function formatBalance(balance: string, decimals: number = 18): string {
     return num.toFixed(4);
   } catch {
     return "0.0000";
+  }
+}
+
+// Helper function to get test USDC - check if there's a faucet function
+export async function getTestUSDC(amount: string): Promise<ethers.ContractTransactionResponse | null> {
+  try {
+    const signer = await getSigner();
+    const usdcContract = getUSDCContract(signer);
+    
+    // Check if the contract has a mint function (for test tokens)
+    const amountWei = ethers.parseUnits(amount, 6);
+    const address = await signer.getAddress();
+    
+    // Try to call mint function if it exists (common in test tokens)
+    const mintTx = await usdcContract.mint(address, amountWei);
+    return mintTx;
+  } catch (error) {
+    console.error('No mint function available on USDC contract:', error);
+    return null;
+  }
+}
+
+// Debug function to get contract info
+export async function getContractDebugInfo(): Promise<any> {
+  try {
+    const provider = getProvider();
+    const signer = await getSigner();
+    const address = await signer.getAddress();
+    
+    const usdcContract = getUSDCContract(provider);
+    const bvixContract = getBVIXContract(provider);
+    const oracleContract = getOracleContract(provider);
+    const mintRedeemContract = getMintRedeemContract(provider);
+    
+    const [
+      usdcBalance,
+      bvixBalance,
+      oraclePrice,
+      usdcAllowance
+    ] = await Promise.all([
+      usdcContract.balanceOf(address),
+      bvixContract.balanceOf(address),
+      oracleContract.getPrice(),
+      usdcContract.allowance(address, MINT_REDEEM_ADDRESS)
+    ]);
+    
+    return {
+      userAddress: address,
+      usdcBalance: ethers.formatUnits(usdcBalance, 6),
+      bvixBalance: ethers.formatEther(bvixBalance),
+      oraclePrice: ethers.formatEther(oraclePrice),
+      usdcAllowance: ethers.formatUnits(usdcAllowance, 6),
+      contractAddresses: {
+        usdc: MOCK_USDC_ADDRESS,
+        bvix: BVIX_ADDRESS,
+        oracle: ORACLE_ADDRESS,
+        mintRedeem: MINT_REDEEM_ADDRESS
+      }
+    };
+  } catch (error) {
+    console.error('Error getting debug info:', error);
+    return { error: error.message };
   }
 }
