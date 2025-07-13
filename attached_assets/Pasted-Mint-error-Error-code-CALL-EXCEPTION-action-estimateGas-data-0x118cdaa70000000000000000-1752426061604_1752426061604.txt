@@ -1,0 +1,16 @@
+Mint error: 
+Error {code: "CALL_EXCEPTION", action: "estimateGas", data: "0x118cdaa7000000000000000000000000d8fe46ac323e5e302bfca27bd7b25a0a071e7e2f", reason: null, transaction: {…}, …}
+action: "estimateGas"
+code: "CALL_EXCEPTION"
+data: "0x118cdaa7000000000000000000000000d8fe46ac323e5e302bfca27bd7b25a0a071e7e2f"
+info: Object
+invocation: null
+reason: null
+revert: null
+shortMessage: "execution reverted (unknown custom error)"
+transaction: Object
+message: "execution reverted (unknown custom error) (action="estimateGas", data="0x118cdaa7000000000000000000000000d8fe46ac323e5e302bfca27bd7b25a0a071e7e2f", reason=null, transaction={ "data": "0xa0712d6800000000000000000000000000000000000000000000000000000000029020c0", "from": "0xe18d3B075A241379D77fffE01eD1317ddA0e8bac", "to": "0xd8fE46AC323e5e302bfCA27BD7B25a0a071e7e2F" }, invocation=null, revert=null, code=CALL_EXCEPTION, version=6.15.0)"
+stack: "Error: execution reverted (unknown custom error) (action="estimateGas", data="0x118cdaa7000000000000000000000000d8fe46ac323e5e302bfca27bd7b25a0a071e7e2f", reason=null, transaction={ "data": "0xa0712d6800000000000000000000000000000000000000000000000000000000029020c0", "from": "0xe18d3B075A241379D77fffE01eD1317ddA0e8bac", "to": "0xd8fE46AC323e5e302bfCA27BD7B25a0a071e7e2F" }, invocation=null, revert=null, code=CALL_EXCEPTION, version=6.15.0)↵ at makeError (https://e106c780-a437-4454-bbc3-14455a9e31ed-00-3atykg4g5l0nu.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/ethers.js?v=0596b7ce:337:15)↵ at getBuiltinCallException (https://e106c780-a437-4454-bbc3-14455a9e31ed-00-3atykg4g5l0nu.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/ethers.js?v=0596b7ce:12020:10)↵ at _AbiCoder.getBuiltinCallException (https://e106c780-a437-4454-bbc3-14455a9e31ed-00-3atykg4g5l0nu.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/ethers.js?v=0596b7ce:12091:12)↵ at _BrowserProvider.getRpcError (https://e106c780-a437-4454-bbc3-14455a9e31ed-00-3atykg4g5l0nu.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/ethers.js?v=0596b7ce:19294:26)↵ at _BrowserProvider.getRpcError (https://e106c780-a437-4454-bbc3-14455a9e31ed-00-3atykg4g5l0nu.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/ethers.js?v=0596b7ce:21728:18)↵ at https://e106c780-a437-4454-bbc3-14455a9e31ed-00-3atykg4g5l0nu.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/ethers.js?v=0596b7ce:19482:27"
+get stack: ƒ ()
+set stack: ƒ ()
+[[Prototype]]: Object

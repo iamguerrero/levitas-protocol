@@ -13,9 +13,12 @@ import {
   mintBVIX, 
   redeemBVIX,
   switchToBaseSepolia,
+  getContractDebugInfo,
+  getTestUSDC,
   BVIX_ADDRESS,
   ORACLE_ADDRESS,
-  MINT_REDEEM_ADDRESS
+  MINT_REDEEM_ADDRESS,
+  MOCK_USDC_ADDRESS
 } from "@/lib/web3";
 
 export default function TradingInterface() {
@@ -25,6 +28,7 @@ export default function TradingInterface() {
   const [redeemAmount, setRedeemAmount] = useState("");
   const [isTransacting, setIsTransacting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [debugInfo, setDebugInfo] = useState<any>(null);
   
   // Real contract data
   const [contractData, setContractData] = useState({
@@ -180,6 +184,58 @@ export default function TradingInterface() {
       toast({
         title: "Redeem Failed",
         description: error.message || "Failed to redeem BVIX tokens. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsTransacting(false);
+    }
+  };
+
+  const handleDebug = async () => {
+    try {
+      const info = await getContractDebugInfo();
+      setDebugInfo(info);
+      console.log('Debug Info:', info);
+      
+      toast({
+        title: "Debug Info Retrieved",
+        description: "Check the browser console for detailed contract information.",
+      });
+    } catch (error) {
+      toast({
+        title: "Debug Failed",
+        description: "Failed to retrieve debug information.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleGetTestUSDC = async () => {
+    setIsTransacting(true);
+    try {
+      const tx = await getTestUSDC("1000"); // Get 1000 test USDC
+      if (tx) {
+        toast({
+          title: "Getting Test USDC",
+          description: "Transaction submitted. Please wait for confirmation.",
+        });
+        await tx.wait();
+        toast({
+          title: "Test USDC Received!",
+          description: "Successfully received 1000 test USDC tokens.",
+        });
+        await loadContractData(); // Refresh balances
+      } else {
+        toast({
+          title: "No Faucet Available",
+          description: "This USDC contract doesn't have a mint function. You'll need to get USDC another way.",
+          variant: "destructive"
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Failed to Get Test USDC",
+        description: error.message || "The USDC contract doesn't support minting test tokens.",
         variant: "destructive"
       });
     } finally {
@@ -406,6 +462,49 @@ export default function TradingInterface() {
               </div>
               <div className="text-sm text-gray-600">Total Value</div>
             </div>
+          </div>
+          
+          {/* Debug Section */}
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <div className="flex flex-wrap gap-3">
+              <Button
+                onClick={handleDebug}
+                variant="outline"
+                size="sm"
+                disabled={!address}
+              >
+                Debug Contract Info
+              </Button>
+              <Button
+                onClick={handleGetTestUSDC}
+                variant="outline"
+                size="sm"
+                disabled={!address || isTransacting}
+              >
+                {isTransacting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Getting USDC...
+                  </>
+                ) : (
+                  "Get Test USDC"
+                )}
+              </Button>
+              <div className="text-xs text-gray-500 flex items-center">
+                Contract: {MOCK_USDC_ADDRESS.slice(0, 10)}...
+              </div>
+            </div>
+            
+            {debugInfo && (
+              <div className="mt-4 p-4 bg-gray-50 rounded-lg text-xs space-y-2">
+                <div><strong>Address:</strong> {debugInfo.userAddress}</div>
+                <div><strong>USDC Balance:</strong> {debugInfo.usdcBalance}</div>
+                <div><strong>BVIX Balance:</strong> {debugInfo.bvixBalance}</div>
+                <div><strong>Oracle Price:</strong> ${debugInfo.oraclePrice}</div>
+                <div><strong>USDC Allowance:</strong> {debugInfo.usdcAllowance}</div>
+                {debugInfo.error && <div className="text-red-600"><strong>Error:</strong> {debugInfo.error}</div>}
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
