@@ -1,6 +1,8 @@
-import { Github, Twitter, MessageCircle } from "lucide-react";
+import { Github, MessageCircle } from "lucide-react";
+import { SiX, SiDiscord } from "react-icons/si";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import levitasLogoPath from "@assets/levitas small_1752663859911.jpg";
 
 export default function Footer() {
   return (
@@ -10,11 +12,11 @@ export default function Footer() {
           {/* Brand */}
           <div className="md:col-span-1">
             <div className="flex items-center space-x-2 mb-4">
-              <div className="w-8 h-8 bg-gradient-to-br from-pink-500 to-purple-600 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                </svg>
-              </div>
+              <img 
+                src={levitasLogoPath} 
+                alt="Levitas Finance Logo"
+                className="w-8 h-8 object-cover rounded-lg"
+              />
               <div>
                 <span className="text-lg font-bold text-black">Levitas Finance</span>
                 <div className="text-xs text-gray-500">Composable Volatility</div>
@@ -28,7 +30,7 @@ export default function Footer() {
             <h4 className="font-semibold text-black mb-4">Product</h4>
             <ul className="space-y-2 text-sm text-gray-600">
               <li><a href="#tokens" className="hover:text-black transition-colors">Tokens</a></li>
-              <li><a href="#whitepaper" className="hover:text-black transition-colors">Whitepaper</a></li>
+              <li><a href="/Levitas Finance Whitepaper V1.pdf" target="_blank" rel="noopener noreferrer" className="hover:text-black transition-colors">Whitepaper</a></li>
               <li><a href="#" className="hover:text-black transition-colors">FAQs</a></li>
               <li><a href="#" className="hover:text-black transition-colors">Audit</a></li>
             </ul>
@@ -50,12 +52,12 @@ export default function Footer() {
             <h4 className="font-semibold text-black mb-4">Community</h4>
             <div className="flex space-x-4 mb-4">
               <a href="https://x.com/LevitasFinance" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-black transition-colors">
-                <Twitter className="w-5 h-5" />
+                <SiX className="w-5 h-5" />
               </a>
               <a href="https://discord.gg/dE5wV8Deya" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-black transition-colors" title="Join our Discord">
-                <MessageCircle className="w-5 h-5" />
+                <SiDiscord className="w-5 h-5" />
               </a>
-              <a href="#" className="text-gray-600 hover:text-black transition-colors">
+              <a href="https://github.com/iamguerrero/levitas-protocol" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-black transition-colors">
                 <Github className="w-5 h-5" />
               </a>
             </div>
