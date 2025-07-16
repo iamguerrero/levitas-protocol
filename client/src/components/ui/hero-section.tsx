@@ -19,7 +19,7 @@ export default function HeroSection() {
           </p>
         </div>
 
-        <div className="mb-12">
+        <div className="mb-20">
           <Link href="/app">
             <Button size="lg" className="bg-blue-600 text-white px-8 py-4 text-lg font-semibold hover:bg-blue-700 transition-all transform hover:scale-105 shadow-lg">
               Launch App
