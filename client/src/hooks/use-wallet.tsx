@@ -23,48 +23,53 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const checkConnection = async () => {
-    if (typeof window.ethereum !== 'undefined') {
+    if (typeof window.ethereum !== "undefined") {
       try {
-        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+        const accounts = await window.ethereum.request({
+          method: "eth_accounts",
+        });
         if (accounts.length > 0) {
           setAddress(accounts[0]);
           setIsConnected(true);
         }
       } catch (error) {
-        console.error('Error checking wallet connection:', error);
+        console.error("Error checking wallet connection:", error);
       }
     }
   };
 
   const connectWallet = async () => {
-    if (typeof window.ethereum === 'undefined') {
+    if (typeof window.ethereum === "undefined") {
       toast({
         title: "MetaMask Not Found",
         description: "Please install MetaMask to connect your wallet.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
 
     setIsConnecting(true);
-    
+
     try {
-      const accounts = await window.ethereum.request({ 
-        method: 'eth_requestAccounts' 
+      const accounts = await window.ethereum.request({
+        method: "eth_requestAccounts",
       });
-      
+
       if (accounts.length > 0) {
         setAddress(accounts[0]);
         setIsConnected(true);
-        
+
         toast({
           title: "Wallet Connected",
           description: `Connected to ${accounts[0].slice(0, 6)}...${accounts[0].slice(-4)}`,
         });
 
         // Check if on correct network (Base Sepolia) and switch if needed
-        const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-        if (chainId !== '0x14a34') { // Base Sepolia chain ID
+        const chainId = await window.ethereum.request({
+          method: "eth_chainId",
+        });
+        if (chainId !== "0x14a34") {
+          // Base Sepolia chain ID
           try {
             await switchToBaseSepolia();
             toast({
@@ -74,18 +79,19 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
           } catch (switchError) {
             toast({
               title: "Network Switch Failed",
-              description: "Please manually switch to Base Sepolia testnet in MetaMask.",
-              variant: "destructive"
+              description:
+                "Please manually switch to Base Sepolia testnet in MetaMask.",
+              variant: "destructive",
             });
           }
         }
       }
     } catch (error) {
-      console.error('Error connecting wallet:', error);
+      console.error("Error connecting wallet:", error);
       toast({
         title: "Connection Failed",
         description: "Failed to connect wallet. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsConnecting(false);
@@ -102,22 +108,39 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <WalletContext.Provider value={{
-      isConnected,
-      address,
-      isConnecting,
-      connectWallet,
-      disconnect
-    }}>
+    <WalletContext.Provider
+      value={{
+        isConnected,
+        address,
+        isConnecting,
+        connectWallet,
+        disconnect,
+      }}
+    >
       {children}
     </WalletContext.Provider>
   );
 }
 
-export function useWallet() {
+export function useWallet(): WalletContextType {
   const context = useContext(WalletContext);
-  if (!context) {
-    throw new Error('useWallet must be used within a WalletProvider');
+
+  if (context === undefined) {
+    console.warn(
+      "useWallet called outside of WalletProvider. Returning defaults.",
+    );
+    return {
+      isConnected: false,
+      address: null,
+      isConnecting: false,
+      connectWallet: async () => {
+        console.warn("connectWallet called without WalletProvider");
+      },
+      disconnect: () => {
+        console.warn("disconnect called without WalletProvider");
+      },
+    };
   }
+
   return context;
 }

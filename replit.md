@@ -4,6 +4,15 @@
 
 This project is a decentralized finance (DeFi) application called Levitas Finance that provides tokenized volatility products. It's a React frontend DApp with Ethers.js Web3 integration, featuring volatility index tokens (BVIX, EVIX, VIXC) that allow users to hedge their cryptocurrency holdings on Base Sepolia testnet.
 
+## Recent Changes (January 2025)
+
+✓ **Collateral Ratio Integration** - Added real-time collateral ratio display in wallet overview with helper function
+✓ **Enhanced Logo & Branding** - Updated navigation with new Levitas logo (cyan circle design) and proper scaling  
+✓ **Whitepaper Integration** - Connected whitepaper header to PDF file for easy access
+✓ **Advanced Debugging Tools** - Comprehensive contract debugging with balance checks, allowance verification, and test USDC faucet
+✓ **Improved Error Handling** - Enhanced minting process with pre-flight checks for USDC balance and approval
+✓ **Real Contract Integration** - Full Web3 functionality with actual smart contract calls replacing all mock data
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
