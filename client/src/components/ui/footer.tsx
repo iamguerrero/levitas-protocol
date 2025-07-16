@@ -49,10 +49,10 @@ export default function Footer() {
           <div>
             <h4 className="font-semibold text-black mb-4">Community</h4>
             <div className="flex space-x-4 mb-4">
-              <a href="#" className="text-gray-600 hover:text-black transition-colors">
+              <a href="https://x.com/LevitasFinance" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-black transition-colors">
                 <Twitter className="w-5 h-5" />
               </a>
-              <a href="#" className="text-gray-600 hover:text-black transition-colors">
+              <a href="https://discord.gg/dE5wV8Deya" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-black transition-colors" title="Join our Discord">
                 <MessageCircle className="w-5 h-5" />
               </a>
               <a href="#" className="text-gray-600 hover:text-black transition-colors">

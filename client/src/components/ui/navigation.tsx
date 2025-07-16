@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import { Link, useLocation } from "wouter";
-import levitasLogoPath from "@assets/levitas logo_1752662543218.png";
+import levitasLogoPath from "@assets/levitas small_1752663859911.jpg";
 
 export default function Navigation() {
   const [location] = useLocation();
@@ -18,7 +18,7 @@ export default function Navigation() {
               <img 
                 src={levitasLogoPath} 
                 alt="Levitas Finance Logo"
-                className="w-10 h-10 object-contain"
+                className="w-8 h-8 object-cover rounded-lg"
               />
               <div>
                 <span className="text-xl font-bold text-black">
@@ -51,6 +51,14 @@ export default function Navigation() {
               className="text-gray-600 hover:text-black transition-colors"
             >
               Whitepaper
+            </a>
+            <a
+              href="https://app.uniswap.org/add/0x036cbd53842c5426634e7929541ec2318f3dcf7e/0xa0b86a33e6ba6d57e9e8fa4c9f23de33a3b76b6f?chain=base_sepolia"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-600 hover:text-black transition-colors"
+            >
+              Liquidity
             </a>
             <Link href="/app">
               <Button className="bg-blue-600 text-white hover:bg-blue-700">
@@ -85,10 +93,20 @@ export default function Navigation() {
               Tokens
             </a>
             <a
-              href="#whitepaper"
+              href="/Levitas Finance Whitepaper V1.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
               className="block py-2 text-gray-600 hover:text-black"
             >
               Whitepaper
+            </a>
+            <a
+              href="https://app.uniswap.org/add/0x036cbd53842c5426634e7929541ec2318f3dcf7e/0xa0b86a33e6ba6d57e9e8fa4c9f23de33a3b76b6f?chain=base_sepolia"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block py-2 text-gray-600 hover:text-black"
+            >
+              Liquidity
             </a>
             <a
               href="#governance"
