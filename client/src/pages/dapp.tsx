@@ -16,7 +16,7 @@ export default function DAppPage() {
       
       {/* DApp Header */}
       <div className="bg-white border-b border-gray-200 sticky top-16 z-40">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <Link href="/">
@@ -33,7 +33,7 @@ export default function DAppPage() {
       </div>
 
       {/* DApp Content */}
-      <div className="pt-6 pb-20 px-4 sm:px-6 lg:px-8">
+      <div className="pt-12 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           {isConnected ? (
             <TradingInterface />
