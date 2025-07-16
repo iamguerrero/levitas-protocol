@@ -32,12 +32,11 @@ export default function Navigation() {
           </Link>
 
           <div className="hidden md:flex items-center space-x-8">
-            <a
-              href="#home"
-              className="text-gray-600 hover:text-black transition-colors"
-            >
-              Home
-            </a>
+            <Link href="/">
+              <span className="text-gray-600 hover:text-black transition-colors cursor-pointer">
+                Home
+              </span>
+            </Link>
             <a
               href="#tokens"
               className="text-gray-600 hover:text-black transition-colors"
@@ -80,12 +79,11 @@ export default function Navigation() {
       {isMenuOpen && (
         <div className="md:hidden bg-white border-t border-gray-200">
           <div className="px-4 py-2 space-y-2">
-            <a
-              href="#home"
-              className="block py-2 text-gray-600 hover:text-black"
-            >
-              Home
-            </a>
+            <Link href="/">
+              <span className="block py-2 text-gray-600 hover:text-black cursor-pointer">
+                Home
+              </span>
+            </Link>
             <a
               href="#tokens"
               className="block py-2 text-gray-600 hover:text-black"

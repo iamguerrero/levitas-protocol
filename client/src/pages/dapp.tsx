@@ -33,7 +33,7 @@ export default function DAppPage() {
       </div>
 
       {/* DApp Content */}
-      <div className="pt-16 pb-20 px-4 sm:px-6 lg:px-8">
+      <div className="pt-20 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           {isConnected ? (
             <TradingInterface />

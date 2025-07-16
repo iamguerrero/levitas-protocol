@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Bitcoin, Zap, TrendingUp } from "lucide-react";
+import { Bitcoin, Zap, TrendingUp, Vote } from "lucide-react";
 
 export default function TokenShowcase() {
   const tokens = [
@@ -32,6 +32,16 @@ export default function TokenShowcase() {
       iconColor: "text-gray-400",
       bgColor: "bg-gray-100",
       available: false
+    },
+    {
+      symbol: "LEVI",
+      name: "Governance, voting, fee share",
+      price: "$8.25",
+      change: "Coming Soon",
+      icon: Vote,
+      iconColor: "text-gray-400",
+      bgColor: "bg-gray-100",
+      available: false
     }
   ];
 
@@ -43,7 +53,7 @@ export default function TokenShowcase() {
           <p className="text-lg text-gray-600">Hedge your crypto holdings with tokenized volatility</p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {tokens.map((token) => {
             const Icon = token.icon;
             return (
