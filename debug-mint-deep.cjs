@@ -1,83 +1,107 @@
 const { ethers } = require("hardhat");
 
 async function main() {
-  const NEW_MINT_REDEEM = "0x685FEc86F539a1C0e9aEEf02894D5D90bfC48098";
+  console.log("=== DEEP DEBUG OF MINT ISSUE ===");
+  
+  const V3_ADDRESS = "0xdB78c7D165724428eC8F11713B17F067F9b51Dc3";
+  const BVIX_ADDRESS = "0x76c8c8ef73bA010579E47bD1372A55FBA7D55383";
   const MOCK_USDC_ADDRESS = "0x79640e0f510a7c6d59737442649d9600C84b035f";
-  const BVIX_ADDRESS = "0xEA3d08a5A5bC48Fc984F0F773826693B7480bF48";
-  const ORACLE_ADDRESS = "0x85485dD6cFaF5220150c413309C61a8EA24d24FE";
+  const USER_ADDRESS = "0xe18d3B075A241379D77fffE01eD1317ddA0e8bac";
   
-  const [user] = await ethers.getSigners();
-  console.log("=== DEEP DEBUG: Contract Call Analysis ===");
-  console.log("User address:", user.address);
-
+  const mintRedeemV3 = await ethers.getContractAt("MintRedeemV3", V3_ADDRESS);
+  const bvixToken = await ethers.getContractAt("BVIXToken", BVIX_ADDRESS);
   const usdcContract = await ethers.getContractAt("MockUSDC", MOCK_USDC_ADDRESS);
-  const mintRedeem = await ethers.getContractAt("MintRedeemV2", NEW_MINT_REDEEM);
-  const bvixContract = await ethers.getContractAt("BVIXToken", BVIX_ADDRESS);
-  const oracleContract = await ethers.getContractAt("MockOracle", ORACLE_ADDRESS);
   
-  // Check all balances and states
-  const userBalance = await usdcContract.balanceOf(user.address);
-  const vaultBalance = await usdcContract.balanceOf(NEW_MINT_REDEEM);
-  const bvixSupply = await bvixContract.totalSupply();
-  const oraclePrice = await oracleContract.getPrice();
-  const allowance = await usdcContract.allowance(user.address, NEW_MINT_REDEEM);
+  // Check ownership
+  const bvixOwner = await bvixToken.owner();
+  console.log("BVIX owner:", bvixOwner);
+  console.log("Should be:", V3_ADDRESS);
   
-  console.log("\n=== CURRENT STATE ===");
-  console.log("User USDC balance:", ethers.formatUnits(userBalance, 6));
-  console.log("Vault USDC balance:", ethers.formatUnits(vaultBalance, 6));
-  console.log("BVIX supply:", ethers.formatEther(bvixSupply));
-  console.log("Oracle price:", ethers.formatEther(oraclePrice));
-  console.log("Current allowance:", ethers.formatUnits(allowance, 6));
-  
-  // Test amount
-  const mintAmount = ethers.parseUnits("100", 6);
-  console.log("\n=== TESTING MINT: 100 USDC ===");
-  
-  // Check if we have enough balance
-  if (userBalance < mintAmount) {
-    console.log("❌ Insufficient balance - but user says they have millions!");
+  if (bvixOwner !== V3_ADDRESS) {
+    console.log("❌ OWNERSHIP ISSUE - BVIX is not owned by MintRedeemV3");
     return;
   }
   
-  // Try to simulate the mint first
-  console.log("\n=== SIMULATING MINT ===");
+  // Check supplies and balances
+  const vaultBalance = await usdcContract.balanceOf(V3_ADDRESS);
+  const bvixSupply = await bvixToken.totalSupply();
+  const userBalance = await usdcContract.balanceOf(USER_ADDRESS);
+  
+  console.log("Vault USDC balance:", ethers.formatUnits(vaultBalance, 6));
+  console.log("BVIX total supply:", ethers.formatEther(bvixSupply));
+  console.log("User USDC balance:", ethers.formatUnits(userBalance, 6));
+  
+  // Check if supply is exactly zero
+  if (bvixSupply === 0n) {
+    console.log("✅ Supply is zero - bootstrap condition should trigger");
+  } else {
+    console.log("❌ Supply is not zero:", bvixSupply.toString());
+  }
+  
+  // Test the calculation manually
+  console.log("\n=== MANUAL CALCULATION ===");
+  
+  const testAmount = ethers.parseUnits("100", 6);
+  const price = await mintRedeemV3.oracle().then(addr => 
+    ethers.getContractAt("MockOracle", addr)
+  ).then(oracle => oracle.getPrice());
+  
+  console.log("Test amount:", ethers.formatUnits(testAmount, 6), "USDC");
+  console.log("Oracle price:", ethers.formatEther(price), "USD");
+  
+  // Calculate mint amount
+  const mintFee = 30; // 0.30%
+  const netAmount = testAmount - ((testAmount * BigInt(mintFee)) / BigInt(10000));
+  const bvixToMint = (netAmount * BigInt(1e30)) / price;
+  
+  console.log("Net amount after fee:", ethers.formatUnits(netAmount, 6), "USDC");
+  console.log("BVIX to mint:", ethers.formatEther(bvixToMint));
+  
+  // Check if this is positive
+  if (bvixToMint > 0n) {
+    console.log("✅ BVIX to mint is positive");
+  } else {
+    console.log("❌ BVIX to mint is zero or negative");
+  }
+  
+  // Try the actual mint with detailed error analysis
+  console.log("\n=== TESTING ACTUAL MINT ===");
+  
   try {
-    const result = await mintRedeem.mint.staticCall(mintAmount);
-    console.log("✅ Static call successful, would mint:", ethers.formatEther(result));
+    const result = await mintRedeemV3.mint.staticCall(testAmount);
+    console.log("✅ SUCCESS! Would mint:", ethers.formatEther(result), "BVIX");
   } catch (error) {
-    console.log("❌ Static call failed:", error.message);
+    console.log("❌ Mint failed:", error.message);
     
-    // Check if it's a revert with reason
-    if (error.message.includes("execution reverted")) {
-      console.log("This is a contract revert - checking specific reasons...");
+    // Check if it's a fee calculation issue
+    if (error.message.includes("Mint amount too small")) {
+      console.log("Issue: Calculated mint amount is too small");
+      console.log("This could be due to fee calculation or precision issues");
+    }
+    
+    // Check if it's an allowance issue
+    if (error.message.includes("transfer amount exceeds allowance")) {
+      console.log("Issue: User hasn't approved USDC spending");
       
-      // Check collateral ratio calculation
-      const liability = Number(ethers.formatEther(bvixSupply)) * Number(ethers.formatEther(oraclePrice));
-      const currentCR = Number(ethers.formatUnits(vaultBalance, 6)) / liability;
-      const afterVault = Number(ethers.formatUnits(vaultBalance, 6)) + 100;
-      const afterSupply = Number(ethers.formatEther(bvixSupply)) + (99.7 / Number(ethers.formatEther(oraclePrice)));
-      const afterCR = afterVault / (afterSupply * Number(ethers.formatEther(oraclePrice)));
-      
-      console.log("Current CR:", (currentCR * 100).toFixed(1) + "%");
-      console.log("After mint CR:", (afterCR * 100).toFixed(1) + "%");
-      console.log("Min CR required: 120%");
-      
-      if (afterCR < 1.2) {
-        console.log("❌ Would violate collateral ratio!");
-      } else {
-        console.log("✅ Collateral ratio looks fine");
-      }
+      const allowance = await usdcContract.allowance(USER_ADDRESS, V3_ADDRESS);
+      console.log("Current allowance:", ethers.formatUnits(allowance, 6));
+    }
+    
+    // Check if it's a balance issue
+    if (error.message.includes("transfer amount exceeds balance")) {
+      console.log("Issue: User doesn't have enough USDC");
     }
   }
   
-  // Try to get the actual revert reason
-  console.log("\n=== CHECKING REVERT REASON ===");
+  console.log("\n=== DIRECT APPROACH ===");
+  console.log("Let me try a different approach with a larger amount to ensure it's not a precision issue");
+  
+  const largerAmount = ethers.parseUnits("1000", 6);
   try {
-    const tx = await mintRedeem.mint.populateTransaction(mintAmount);
-    const result = await user.call(tx);
-    console.log("Call result:", result);
+    const result = await mintRedeemV3.mint.staticCall(largerAmount);
+    console.log("✅ Larger amount works! Would mint:", ethers.formatEther(result), "BVIX");
   } catch (error) {
-    console.log("Error details:", error);
+    console.log("❌ Larger amount also fails:", error.message);
   }
 }
 
