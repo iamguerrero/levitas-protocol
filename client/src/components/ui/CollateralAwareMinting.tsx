@@ -33,7 +33,7 @@ export function CollateralAwareMinting({
   const [calculation, setCalculation] = useState<CollateralCalculation | null>(null);
   const { toast } = useToast();
 
-  // Calculate tokens to receive based on USDC input and CR
+  // Calculate tokens to receive based on USDC input and CR (matching contract logic)
   useEffect(() => {
     if (!vaultStats || !tokenPrice || !usdcInput) {
       setTokensToReceive(0);
@@ -50,18 +50,25 @@ export function CollateralAwareMinting({
     const currentTokenSupply = parseFloat(vaultStats.bvix);
     const selectedCR = targetCR[0];
 
-    // Simple calculation: User spends USDC, gets tokens based on price
-    // The USDC they spend becomes collateral in the vault
-    // We need to ensure the resulting CR is at least the selected CR
+    // Match contract mint logic exactly
+    // 1. Calculate how many tokens we'd mint from this USDC
+    const netAmount = usdcAmount * 0.997; // After 0.3% fee
+    const tokensToMint = netAmount / tokenPrice;
     
-    // Maximum token value we can mint with this USDC at the selected CR
-    const maxTokenValueFromUSDC = usdcAmount / (selectedCR / 100);
+    // 2. Calculate future vault state
+    const futureVaultUSDC = currentVaultUSDC + usdcAmount;
+    const futureTotalTokens = currentTokenSupply + tokensToMint;
     
-    // Convert to tokens (accounting for 0.3% mint fee)
-    const tokensBeforeFee = maxTokenValueFromUSDC / tokenPrice;
-    const tokensAfterFee = tokensBeforeFee * 0.997;
+    // 3. Calculate future collateral ratio
+    const futureTotalTokenValueUSD = futureTotalTokens * tokenPrice;
+    const futureCollateralRatio = futureTotalTokenValueUSD > 0 ? (futureVaultUSDC / futureTotalTokenValueUSD) * 100 : 0;
     
-    setTokensToReceive(Math.max(0, tokensAfterFee));
+    // 4. Only allow mint if future CR >= selected CR
+    if (futureCollateralRatio >= selectedCR) {
+      setTokensToReceive(tokensToMint);
+    } else {
+      setTokensToReceive(0);
+    }
   }, [usdcInput, targetCR, vaultStats, tokenPrice]);
 
   const handleSliderChange = (value: number[]) => {
@@ -200,11 +207,14 @@ export function CollateralAwareMinting({
 
         {/* Vault Status Info */}
         {vaultStats?.usdc === '0.0' && vaultStats.bvix !== '0' && (
-          <Alert className="border-yellow-200 bg-yellow-50">
-            <Info className="h-4 w-4 text-yellow-600" />
-            <AlertDescription className="text-yellow-800">
-              <strong>Vault Needs Collateral:</strong> The vault has {parseFloat(vaultStats.bvix).toFixed(2)} BVIX tokens but no USDC collateral.
-              The amount shown above is the minimum USDC needed to restore the selected collateral ratio.
+          <Alert className="border-red-200 bg-red-50">
+            <Info className="h-4 w-4 text-red-600" />
+            <AlertDescription className="text-red-800">
+              <strong>Vault Undercollateralized:</strong> The vault has {parseFloat(vaultStats.bvix).toFixed(2)} BVIX tokens (${(parseFloat(vaultStats.bvix) * tokenPrice).toFixed(2)} value) but no USDC collateral.
+              <br />
+              <strong>Minimum USDC needed:</strong> ${((parseFloat(vaultStats.bvix) * tokenPrice * targetCR[0]) / 100).toFixed(2)} for {targetCR[0]}% CR.
+              <br />
+              New minting is blocked until sufficient collateral is added via the addCollateral function.
             </AlertDescription>
           </Alert>
         )}
@@ -213,8 +223,7 @@ export function CollateralAwareMinting({
           <Alert className="border-blue-200 bg-blue-50">
             <Info className="h-4 w-4 text-blue-600" />
             <AlertDescription className="text-blue-800">
-              <strong>Fresh Vault:</strong> This is the first mint to the vault. The amount shown represents 
-              minting $100 worth of {tokenSymbol} tokens at your selected collateral ratio.
+              <strong>Fresh Vault:</strong> This is the first mint to the vault. You can mint tokens at your selected collateral ratio.
             </AlertDescription>
           </Alert>
         )}
