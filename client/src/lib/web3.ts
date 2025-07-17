@@ -24,9 +24,9 @@ declare global {
 export const BASE_SEPOLIA_CHAIN_ID = "0x14a34";
 export const BASE_SEPOLIA_RPC_URL = "https://sepolia.base.org";
 
-// Contract addresses - Updated with V2 collateral-enforced contract (fixed CR calculation)
-export const MINT_REDEEM_ADDRESS = "0x685FEc86F539a1C0e9aEEf02894D5D90bfC48098";
-export const BVIX_ADDRESS = "0xEA3d08a5A5bC48Fc984F0F773826693B7480bF48";
+// Contract addresses - Updated with V4 properly configured ownership
+export const MINT_REDEEM_ADDRESS = "0xCC9A824EF39a8925581616ad41ee61C8Bb43D6DF";
+export const BVIX_ADDRESS = "0x5cAd54Ad8CcEacB7bF0c34E58c72D6EB6eC884B8";
 export const EVIX_ADDRESS = "0x37e3b45fEF91D54Ef4992B71382EC36307908463";
 export const ORACLE_ADDRESS = "0x85485dD6cFaF5220150c413309C61a8EA24d24FE";
 export const MOCK_USDC_ADDRESS = "0x79640e0f510a7c6d59737442649d9600C84b035f";
@@ -412,9 +412,9 @@ export async function getContractDebugInfo(): Promise<any> {
 export const getCollateralRatio = async (): Promise<number> => {
   try {
     const provider = getProvider();
-    // 1️⃣ contracts
-    const usdc = new ethers.Contract(MOCK_USDC_ADDRESS, ERC20_ABI, provider);
-    const bvix = new ethers.Contract(BVIX_ADDRESS, ERC20_ABI, provider);
+    // 1️⃣ contracts - using contract factory functions instead of direct ABI
+    const usdc = getUSDCContract(provider);
+    const bvix = getBVIXContract(provider);
 
     // 2️⃣ read chain state in parallel
     const [rawVaultUSDC, rawSupply, price] = await Promise.all([

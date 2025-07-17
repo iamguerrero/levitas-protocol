@@ -1,33 +1,39 @@
 const { ethers } = require("hardhat");
 
 async function main() {
-  const MOCK_USDC_ADDRESS = "0x79640e0f510a7c6d59737442649d9600C84b035f";
-  const MINT_REDEEM_ADDRESS = "0x685FEc86F539a1C0e9aEEf02894D5D90bfC48098";
-  const [user] = await ethers.getSigners();
+  console.log("=== DEBUGGING CONTRACT OWNERSHIP ===");
   
-  console.log("=== ADDRESS CLARIFICATION ===");
-  console.log("Your wallet address:", user.address);
-  console.log("MintRedeem contract (vault):", MINT_REDEEM_ADDRESS);
-  console.log("USDC contract:", MOCK_USDC_ADDRESS);
+  const BVIX_ADDRESS = "0xEA3d08a5A5bC48Fc984F0F773826693B7480bF48";
+  const NEW_MINT_REDEEM = "0x685FEc86F539a1C0e9aEEf02894D5D90bfC48098";
   
-  const usdcContract = await ethers.getContractAt("MockUSDC", MOCK_USDC_ADDRESS);
+  console.log("BVIX Token:", BVIX_ADDRESS);
+  console.log("MintRedeemV2:", NEW_MINT_REDEEM);
   
-  // Check both balances
-  const yourBalance = await usdcContract.balanceOf(user.address);
-  const vaultBalance = await usdcContract.balanceOf(MINT_REDEEM_ADDRESS);
+  // Get the owner of BVIX token
+  const bvixToken = await ethers.getContractAt("BVIXToken", BVIX_ADDRESS);
+  const bvixOwner = await bvixToken.owner();
+  console.log("BVIX Token Owner:", bvixOwner);
   
-  console.log("\n=== USDC BALANCES ===");
-  console.log("Your personal wallet:", ethers.formatUnits(yourBalance, 6), "USDC");
-  console.log("Vault contract:", ethers.formatUnits(vaultBalance, 6), "USDC");
+  // Get the owner of MintRedeemV2
+  const mintRedeem = await ethers.getContractAt("MintRedeemV2", NEW_MINT_REDEEM);
+  const mintRedeemOwner = await mintRedeem.owner();
+  console.log("MintRedeemV2 Owner:", mintRedeemOwner);
   
-  console.log("\n=== WHAT THIS MEANS ===");
-  if (yourBalance == 0) {
-    console.log("• You sent all your USDC to the vault to fix collateral ratio");
-    console.log("• The vault now has 2000 USDC (good for CR!)");
-    console.log("• But your wallet has 0 USDC left for new mints");
-    console.log("• You need more USDC in your personal wallet to mint tokens");
+  // Check if MintRedeemV2 is the owner of BVIX
+  if (bvixOwner === NEW_MINT_REDEEM) {
+    console.log("✅ MintRedeemV2 is the owner of BVIX Token");
   } else {
-    console.log("• You have USDC in your wallet for minting");
+    console.log("❌ MintRedeemV2 is NOT the owner of BVIX Token");
+    console.log("This is the problem! The BVIX token needs to be owned by MintRedeemV2");
+  }
+  
+  // Show the hardhat default account
+  const [deployer] = await ethers.getSigners();
+  console.log("Hardhat deployer:", deployer.address);
+  
+  if (bvixOwner === deployer.address) {
+    console.log("✅ BVIX is owned by Hardhat deployer");
+    console.log("SOLUTION: Transfer BVIX ownership to MintRedeemV2");
   }
 }
 

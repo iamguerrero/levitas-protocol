@@ -1,69 +1,76 @@
 const { ethers } = require("hardhat");
 
 async function main() {
+  console.log("=== GETTING TEST USDC ===");
+  
   const MOCK_USDC_ADDRESS = "0x79640e0f510a7c6d59737442649d9600C84b035f";
-  const [user] = await ethers.getSigners();
   
-  console.log("=== GETTING TEST USDC FOR PERSONAL WALLET ===");
-  console.log("Your wallet:", user.address);
+  // Get deployer
+  const [deployer] = await ethers.getSigners();
+  console.log("Deployer address:", deployer.address);
   
+  // Get USDC contract
   const usdcContract = await ethers.getContractAt("MockUSDC", MOCK_USDC_ADDRESS);
   
   // Check current balance
-  const currentBalance = await usdcContract.balanceOf(user.address);
-  console.log("Current balance:", ethers.formatUnits(currentBalance, 6), "USDC");
+  const currentBalance = await usdcContract.balanceOf(deployer.address);
+  console.log("Current USDC balance:", ethers.formatUnits(currentBalance, 6));
   
-  // Try various methods to get test USDC
-  console.log("\n=== TRYING TO GET TEST USDC ===");
+  // Mint 10,000 USDC to deployer
+  const mintAmount = ethers.parseUnits("10000", 6);
   
-  // Method 1: Direct mint
+  console.log("Minting 10,000 USDC to deployer...");
+  
+  const mintTx = await usdcContract.mint(deployer.address, mintAmount);
+  await mintTx.wait();
+  
+  console.log("✅ USDC minted!");
+  
+  // Check new balance
+  const newBalance = await usdcContract.balanceOf(deployer.address);
+  console.log("New USDC balance:", ethers.formatUnits(newBalance, 6));
+  
+  // Now add collateral to the new contract
+  const NEW_MINT_REDEEM_ADDRESS = "0xAec6c459354D31031Ef7f77bE974eeE39BD60382";
+  const mintRedeem = await ethers.getContractAt("MintRedeemV2", NEW_MINT_REDEEM_ADDRESS);
+  
+  const collateralAmount = ethers.parseUnits("2000", 6); // 2000 USDC
+  
+  console.log("Adding 2000 USDC collateral...");
+  
+  // First approve the contract to spend USDC
+  const approveTx = await usdcContract.approve(NEW_MINT_REDEEM_ADDRESS, collateralAmount);
+  await approveTx.wait();
+  console.log("✅ USDC approved");
+  
+  // Add collateral
+  const addCollateralTx = await mintRedeem.addCollateral(collateralAmount);
+  await addCollateralTx.wait();
+  console.log("✅ Collateral added!");
+  
+  // Check vault balance now
+  const vaultBalance = await usdcContract.balanceOf(NEW_MINT_REDEEM_ADDRESS);
+  console.log("Vault USDC balance:", ethers.formatUnits(vaultBalance, 6));
+  
+  // Test mint function
+  console.log("\n=== TESTING MINT FUNCTION ===");
+  
+  const testAmount = ethers.parseUnits("100", 6);
+  
   try {
-    console.log("Trying direct mint...");
-    const mintTx = await usdcContract.mint(user.address, ethers.parseUnits("1000", 6));
-    await mintTx.wait();
-    console.log("✅ Direct mint successful!");
+    const result = await mintRedeem.mint.staticCall(testAmount);
+    console.log("✅ MINT TEST SUCCESSFUL!");
+    console.log("Would mint:", ethers.formatEther(result), "BVIX");
     
-    const newBalance = await usdcContract.balanceOf(user.address);
-    console.log("New balance:", ethers.formatUnits(newBalance, 6), "USDC");
-    return;
+    // Test actual collateral ratio
+    const collateralRatio = await mintRedeem.getCollateralRatio();
+    console.log("Current collateral ratio:", collateralRatio.toString() + "%");
+    
   } catch (error) {
-    console.log("❌ Direct mint failed:", error.message);
+    console.log("❌ Mint test failed:", error.message);
   }
   
-  // Method 2: Check if there's a faucet function
-  try {
-    console.log("Trying faucet function...");
-    const faucetTx = await usdcContract.faucet();
-    await faucetTx.wait();
-    console.log("✅ Faucet successful!");
-    
-    const newBalance = await usdcContract.balanceOf(user.address);
-    console.log("New balance:", ethers.formatUnits(newBalance, 6), "USDC");
-    return;
-  } catch (error) {
-    console.log("❌ Faucet failed:", error.message);
-  }
-  
-  // Method 3: Check if owner can mint
-  try {
-    console.log("Trying owner mint...");
-    const ownerTx = await usdcContract.ownerMint(user.address, ethers.parseUnits("1000", 6));
-    await ownerTx.wait();
-    console.log("✅ Owner mint successful!");
-    
-    const newBalance = await usdcContract.balanceOf(user.address);
-    console.log("New balance:", ethers.formatUnits(newBalance, 6), "USDC");
-    return;
-  } catch (error) {
-    console.log("❌ Owner mint failed:", error.message);
-  }
-  
-  console.log("\n=== ALL METHODS FAILED ===");
-  console.log("You need to get test USDC from external sources:");
-  console.log("• https://faucet.quicknode.com/base/sepolia");
-  console.log("• https://www.alchemy.com/faucets/base-sepolia");
-  console.log("• Search for 'Base Sepolia USDC faucet'");
-  console.log("• Or ask someone to send you test USDC");
+  console.log("\n=== READY TO UPDATE FRONTEND ===");
 }
 
 main().catch(console.error);
