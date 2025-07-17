@@ -3,10 +3,10 @@ import { ethers } from 'ethers';
 
 const router = Router();
 
-// Contract addresses and ABIs - V5 Updated
+// Contract addresses and ABIs - V5 Final with fresh BVIX
 const MOCK_USDC_ADDRESS = '0x79640e0f510a7c6d59737442649d9600C84b035f';
-const BVIX_ADDRESS = '0xcA7aC262190a3d126971281c496a521F5dD0f8D0';
-const MINT_REDEEM_ADDRESS = '0xFe9c81A98F33F15B279DE45ba022302113245D9F'; // V5 Simple
+const BVIX_ADDRESS = '0xa60289981b67139fb7a9F3d31dD2D2BaA414A263'; // Fresh BVIX
+const MINT_REDEEM_ADDRESS = '0xa0133C6380bf9618e97Ab9a855aF2035e9498829'; // V5 Final
 const BASE_SEPOLIA_RPC_URL = 'https://sepolia.base.org';
 
 // Minimal ERC20 ABI for balance and supply queries
