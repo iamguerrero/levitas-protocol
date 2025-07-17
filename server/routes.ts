@@ -18,6 +18,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const BVIX_ADDRESS = '0xcA7aC262190a3d126971281c496a521F5dD0f8D0';
       const MINT_REDEEM_ADDRESS = '0x9d12b251f8F6c432b1Ecd6ef722Bf45A8aFdE6A8';
       const ORACLE_ADDRESS = '0x85485dD6cFaF5220150c413309C61a8EA24d24FE';
+      // EVIX contracts - correct checksummed address
+      const EVIX_MINT_REDEEM_ADDRESS = '0xe521441B7b9f2Dcaf5aC2b2Ac5CA5BfD6fB48a55';
       const BASE_SEPOLIA_RPC_URL = 'https://sepolia.base.org';
 
       // Minimal ERC20 ABI for balance and supply queries
@@ -39,33 +41,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const bvixContract = new ethers.Contract(BVIX_ADDRESS, ERC20_ABI, provider);
       const oracleContract = new ethers.Contract(ORACLE_ADDRESS, ORACLE_ABI, provider);
       
-      // Fetch data in parallel (just BVIX vault for now)
-      const [vaultUsdcBalance, bvixTotalSupply, bvixPrice] = await Promise.all([
+      // Fetch data in parallel from both vaults
+      const [bvixVaultUsdcBalance, evixVaultUsdcBalance, bvixTotalSupply, bvixPrice] = await Promise.all([
         usdcContract.balanceOf(MINT_REDEEM_ADDRESS),
+        usdcContract.balanceOf(EVIX_MINT_REDEEM_ADDRESS),
         bvixContract.totalSupply(),
         oracleContract.getPrice()
       ]);
       
       // Format values
-      const usdcValue = ethers.formatUnits(vaultUsdcBalance, 6); // USDC has 6 decimals
+      const bvixUsdcValue = ethers.formatUnits(bvixVaultUsdcBalance, 6);
+      const evixUsdcValue = ethers.formatUnits(evixVaultUsdcBalance, 6);
+      const totalUsdcValue = (parseFloat(bvixUsdcValue) + parseFloat(evixUsdcValue)).toString();
       const bvixSupply = ethers.formatEther(bvixTotalSupply); // BVIX has 18 decimals
       const price = ethers.formatEther(bvixPrice); // Price in ETH format
       
-      // Calculate collateral ratio
-      const usdcFloat = parseFloat(usdcValue);
+      // Calculate collateral ratio using BVIX vault only (as it should be)
+      const bvixUsdcFloat = parseFloat(bvixUsdcValue);
       const bvixFloat = parseFloat(bvixSupply);
       const priceFloat = parseFloat(price);
       
       const bvixValueInUsd = bvixFloat * priceFloat;
-      const collateralRatio = bvixValueInUsd > 0 ? (usdcFloat / bvixValueInUsd) * 100 : 0;
+      const collateralRatio = bvixValueInUsd > 0 ? (bvixUsdcFloat / bvixValueInUsd) * 100 : 0;
       
       res.json({
-        usdc: usdcValue,
+        usdc: totalUsdcValue, // Combined USDC from both vaults for display
         bvix: bvixSupply,
-        cr: Math.round(collateralRatio * 100) / 100, // Round to 2 decimal places
+        cr: Math.round(collateralRatio * 100) / 100, // BVIX vault CR only
         price: price,
-        usdcValue: usdcFloat,
-        bvixValueInUsd: bvixValueInUsd
+        usdcValue: parseFloat(totalUsdcValue),
+        bvixValueInUsd: bvixValueInUsd,
+        bvixVaultUsdc: bvixUsdcValue, // Individual vault amounts for debugging
+        evixVaultUsdc: evixUsdcValue
       });
       
     } catch (error) {
