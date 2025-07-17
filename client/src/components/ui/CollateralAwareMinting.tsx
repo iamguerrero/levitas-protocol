@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Slider } from "@/components/ui/slider";
 import { Info, AlertTriangle, TrendingUp, Loader2 } from "lucide-react";
 import { calculateMaxMintable, calculateSuggestedMint, formatCRWithStatus, type CollateralCalculation } from "@/lib/collateral-utils";
 import { useToast } from "@/hooks/use-toast";
@@ -26,52 +27,72 @@ export function CollateralAwareMinting({
   onMint, 
   isLoading 
 }: CollateralAwareMintingProps) {
-  const [usdcAmount, setUsdcAmount] = useState("");
+  const [targetCR, setTargetCR] = useState([150]); // Default to 150% CR
+  const [usdcToAdd, setUsdcToAdd] = useState("");
+  const [tokensToReceive, setTokensToReceive] = useState(0);
   const [calculation, setCalculation] = useState<CollateralCalculation | null>(null);
   const { toast } = useToast();
 
+  // Calculate how much USDC needed for collateral and how much tokens to receive
   useEffect(() => {
-    if (usdcAmount && vaultStats && tokenPrice) {
-      const amount = parseFloat(usdcAmount);
-      if (!isNaN(amount) && amount > 0) {
-        const calc = calculateMaxMintable(amount, tokenPrice, vaultStats);
-        setCalculation(calc);
-      } else {
-        setCalculation(null);
-      }
+    if (!vaultStats || !tokenPrice || vaultStats.usdc === '0.0') {
+      setTokensToReceive(0);
+      setUsdcToAdd("");
+      return;
+    }
+
+    const currentVaultUSDC = parseFloat(vaultStats.usdc);
+    const currentTokenSupply = parseFloat(vaultStats.bvix);
+    const selectedCR = targetCR[0];
+
+    if (currentVaultUSDC > 0 && currentTokenSupply > 0) {
+      // Calculate how much value we can mint at this CR
+      const maxTokenValueAtCR = currentVaultUSDC / (selectedCR / 100);
+      const currentTokenValueUSD = currentTokenSupply * tokenPrice;
+      const additionalTokenValue = Math.max(0, maxTokenValueAtCR - currentTokenValueUSD);
+      
+      // Calculate tokens to receive (accounting for 0.3% fee)
+      const tokensFromValue = additionalTokenValue / tokenPrice;
+      const tokensAfterFee = tokensFromValue * 0.997;
+      
+      // Calculate USDC needed to mint these tokens
+      const usdcNeededForTokens = tokensFromValue * tokenPrice;
+      
+      setTokensToReceive(Math.max(0, tokensAfterFee));
+      setUsdcToAdd(usdcNeededForTokens > 0 ? usdcNeededForTokens.toFixed(2) : "0");
     } else {
-      setCalculation(null);
+      setTokensToReceive(0);
+      setUsdcToAdd("0");
     }
-  }, [usdcAmount, vaultStats, tokenPrice]);
+  }, [targetCR, vaultStats, tokenPrice]);
 
-  const handleMaxClick = () => {
-    if (vaultStats && tokenPrice) {
-      const maxAmount = calculateSuggestedMint(vaultStats, tokenPrice, 150);
-      setUsdcAmount(Math.min(maxAmount, userBalance).toFixed(2));
-    }
-  };
-
-  const handleSafeClick = () => {
-    if (vaultStats && tokenPrice) {
-      const safeAmount = calculateSuggestedMint(vaultStats, tokenPrice, 180);
-      setUsdcAmount(Math.min(safeAmount, userBalance).toFixed(2));
-    }
+  const handleSliderChange = (value: number[]) => {
+    setTargetCR(value);
   };
 
   const handleSubmit = async () => {
-    if (!calculation?.isValid || !usdcAmount) {
+    if (!usdcToAdd || parseFloat(usdcToAdd) <= 0) {
       toast({
         title: "Invalid Amount",
-        description: calculation?.warningMessage || "Please enter a valid amount",
+        description: "Please select a valid collateral ratio",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (parseFloat(usdcToAdd) > userBalance) {
+      toast({
+        title: "Insufficient Balance",
+        description: `You need ${usdcToAdd} USDC but only have ${userBalance.toFixed(2)} USDC`,
         variant: "destructive",
       });
       return;
     }
 
     try {
-      await onMint(usdcAmount);
-      setUsdcAmount("");
-      setCalculation(null);
+      await onMint(usdcToAdd);
+      // Reset after successful mint
+      setTargetCR([150]);
     } catch (error: any) {
       toast({
         title: "Minting Failed",
@@ -81,8 +102,7 @@ export function CollateralAwareMinting({
     }
   };
 
-  const suggestedAmount = vaultStats && tokenPrice ? calculateSuggestedMint(vaultStats, tokenPrice, 150) : 0;
-  const crStatus = calculation ? formatCRWithStatus(calculation.futureCR) : null;
+  const canMint = vaultStats?.usdc !== '0.0' && tokensToReceive > 0 && parseFloat(usdcToAdd) <= userBalance;
 
   return (
     <Card>
@@ -109,60 +129,40 @@ export function CollateralAwareMinting({
           </div>
         </div>
 
-        {/* Smart Suggestions */}
+        {/* Collateral Ratio Slider */}
         {vaultStats?.usdc !== '0.0' && (
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Smart Suggestions</Label>
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleSafeClick}
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">
+                Target Collateral Ratio: {targetCR[0]}%
+              </Label>
+              <Slider
+                value={targetCR}
+                onValueChange={handleSliderChange}
+                min={120}
+                max={200}
+                step={5}
+                className="w-full"
                 disabled={isLoading}
-              >
-                Safe (180% CR)
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleMaxClick}
-                disabled={isLoading}
-              >
-                Optimal (150% CR)
-              </Button>
+              />
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>120% (Minimum)</span>
+                <span>150% (Optimal)</span>
+                <span>200% (Safe)</span>
+              </div>
             </div>
-          </div>
-        )}
 
-        {/* Input Field */}
-        <div className="space-y-2">
-          <Label htmlFor="usdc-amount">USDC Amount to Deposit</Label>
-          <div className="relative">
-            <Input
-              id="usdc-amount"
-              type="number"
-              placeholder="0.00"
-              value={usdcAmount}
-              onChange={(e) => setUsdcAmount(e.target.value)}
-              className="pr-16"
-              disabled={isLoading}
-            />
-            <div className="absolute right-3 top-2.5 text-sm text-gray-500">USDC</div>
-          </div>
-          <div className="text-xs text-gray-500">
-            Balance: {userBalance.toFixed(2)} USDC
-          </div>
-        </div>
-
-        {/* Calculation Results */}
-        {calculation && (
-          <div className="space-y-3">
+            {/* Mint Preview */}
             <div className="bg-blue-50 p-3 rounded-lg">
               <div className="text-sm font-medium text-blue-900 mb-2">Mint Preview</div>
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
                   <span>You'll receive:</span>
-                  <span className="font-medium">{(calculation.maxMintableTokens).toFixed(4)} {tokenSymbol}</span>
+                  <span className="font-medium">{tokensToReceive.toFixed(4)} {tokenSymbol}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>USDC needed:</span>
+                  <span className="font-medium">${usdcToAdd}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Exchange rate:</span>
@@ -170,37 +170,20 @@ export function CollateralAwareMinting({
                 </div>
                 <div className="flex justify-between">
                   <span>Mint fee (0.3%):</span>
-                  <span>${(parseFloat(usdcAmount) * 0.003).toFixed(2)}</span>
+                  <span>${(parseFloat(usdcToAdd || '0') * 0.003).toFixed(2)}</span>
                 </div>
               </div>
             </div>
 
-            <div className="bg-gray-50 p-3 rounded-lg">
-              <div className="text-sm font-medium mb-2">Collateral Impact</div>
-              <div className="space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span>Current CR:</span>
-                  <span className={calculation.currentCR >= 120 ? "text-green-600" : "text-red-600"}>
-                    {calculation.currentCR.toFixed(1)}%
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Future CR:</span>
-                  <span className={crStatus?.color}>
-                    {crStatus?.text}
-                  </span>
-                </div>
-              </div>
+            {/* Balance Check */}
+            <div className="text-xs text-gray-500">
+              Balance: {userBalance.toFixed(2)} USDC
+              {parseFloat(usdcToAdd) > userBalance && (
+                <span className="text-red-500 ml-2">
+                  (Need ${(parseFloat(usdcToAdd) - userBalance).toFixed(2)} more)
+                </span>
+              )}
             </div>
-
-            {calculation.warningMessage && (
-              <Alert className="border-red-200 bg-red-50">
-                <AlertTriangle className="h-4 w-4 text-red-600" />
-                <AlertDescription className="text-red-800">
-                  {calculation.warningMessage}
-                </AlertDescription>
-              </Alert>
-            )}
           </div>
         )}
 
@@ -218,7 +201,7 @@ export function CollateralAwareMinting({
         {/* Submit Button */}
         <Button 
           onClick={handleSubmit}
-          disabled={!calculation?.isValid || isLoading || !usdcAmount}
+          disabled={!canMint || isLoading}
           className="w-full"
         >
           {isLoading ? (
@@ -227,14 +210,14 @@ export function CollateralAwareMinting({
               Minting...
             </>
           ) : (
-            `Mint ${tokenSymbol}`
+            `Mint ${tokensToReceive.toFixed(4)} ${tokenSymbol}`
           )}
         </Button>
 
         {/* Educational Note */}
         <div className="text-xs text-gray-500 space-y-1">
-          <p>• Minimum collateral ratio: 120%</p>
-          <p>• Recommended safe range: 150-200%</p>
+          <p>• Slide to choose your target collateral ratio (120-200%)</p>
+          <p>• Higher ratios = safer but fewer tokens received</p>
           <p>• Protocol-wide collateral protects all token holders</p>
         </div>
       </CardContent>
