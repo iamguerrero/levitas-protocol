@@ -54,7 +54,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const evixUsdcValue = ethers.formatUnits(evixVaultUsdcBalance, 6);
       const totalUsdcValue = (parseFloat(bvixUsdcValue) + parseFloat(evixUsdcValue)).toString();
       const bvixSupply = ethers.formatEther(bvixTotalSupply); // BVIX has 18 decimals
-      const price = ethers.formatUnits(bvixPrice, 8); // Price has 8 decimals, not 18!
+      const price = ethers.formatEther(bvixPrice); // Oracle returns 18-decimal format
       
       // Calculate protocol-wide collateral ratio (total USDC vs total token value)
       // This should be the standard practice for protocol health
@@ -72,7 +72,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ]);
       
       const evixSupply = ethers.formatEther(evixTotalSupply);
-      const evixPriceFormatted = ethers.formatUnits(evixPrice, 8); // EVIX price also has 8 decimals
+      const evixPriceFormatted = ethers.formatEther(evixPrice); // EVIX oracle also returns 18-decimal format
       
       const bvixValueInUsd = bvixFloat * priceFloat;
       const evixValueInUsd = parseFloat(evixSupply) * parseFloat(evixPriceFormatted);
