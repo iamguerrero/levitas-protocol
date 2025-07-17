@@ -161,7 +161,7 @@ export default function TradingInterface() {
     }
   };
 
-  const handleMint = async (amount: string) => {
+  const handleMint = async (amount: string, targetCR: number = 150) => {
     if (!contractsDeployed) {
       toast({
         title: "Contracts Not Deployed",
@@ -188,7 +188,7 @@ export default function TradingInterface() {
       // Ensure user is on Base Sepolia
       await switchToBaseSepolia();
 
-      const tx = await mintBVIX(amount);
+      const tx = await mintBVIX(amount, targetCR);
 
       toast({
         title: "Transaction Submitted",
@@ -300,7 +300,7 @@ export default function TradingInterface() {
     }
   };
 
-  const handleMintEVIX = async (amount: string) => {
+  const handleMintEVIX = async (amount: string, targetCR: number = 150) => {
     if (!amount || parseFloat(amount) <= 0) {
       toast({
         title: "Invalid Amount",
@@ -314,7 +314,7 @@ export default function TradingInterface() {
     setMintingEVIX(true);
     try {
       await switchToBaseSepolia();
-      const tx = await mintEVIX(amount);
+      const tx = await mintEVIX(amount, targetCR);
       
       toast({
         title: "Transaction Submitted",
@@ -572,7 +572,7 @@ export default function TradingInterface() {
           tokenPrice={selectedToken === 'bvix' ? parseFloat(contractData.bvixPrice) : parseFloat(contractData.evixPrice)}
           vaultStats={vaultStats}
           userBalance={parseFloat(contractData.usdcBalance)}
-          onMint={selectedToken === 'bvix' ? handleMint : handleMintEVIX}
+          onMint={async (amount: string, cr: number = 150) => selectedToken === 'bvix' ? await handleMint(amount, cr) : await handleMintEVIX(amount, cr)}
           isLoading={selectedToken === 'bvix' ? mintingBVIX : mintingEVIX}
         />
 

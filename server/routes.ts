@@ -13,13 +13,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Vault statistics endpoint
   app.get("/api/v1/vault-stats", async (req, res) => {
     try {
-      // Contract addresses - Updated V4 final addresses (no collateral ratio check)
+      // Contract addresses - Updated V5 final addresses (with collateral ratio enforcement)
       const MOCK_USDC_ADDRESS = '0x79640e0f510a7c6d59737442649d9600C84b035f';
       const BVIX_ADDRESS = '0xcA7aC262190a3d126971281c496a521F5dD0f8D0';
-      const MINT_REDEEM_ADDRESS = '0x9d12b251f8F6c432b1Ecd6ef722Bf45A8aFdE6A8';
+      const MINT_REDEEM_ADDRESS = '0xFe9c81A98F33F15B279DE45ba022302113245D9F'; // V5 Simple
       const ORACLE_ADDRESS = '0x85485dD6cFaF5220150c413309C61a8EA24d24FE';
-      // EVIX contracts - correct checksummed address
-      const EVIX_MINT_REDEEM_ADDRESS = '0xe521441B10F5b9a28499Ae37d1C93b42223eCff6';
+      // EVIX contracts - V5 addresses
+      const EVIX_MINT_REDEEM_ADDRESS = '0x0C554bc816D5734712C8CE148faA9B97F4568D5E'; // V5 Simple
       const BASE_SEPOLIA_RPC_URL = 'https://sepolia.base.org';
 
       // Minimal ERC20 ABI for balance and supply queries
