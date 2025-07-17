@@ -19,7 +19,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const MINT_REDEEM_ADDRESS = '0x9d12b251f8F6c432b1Ecd6ef722Bf45A8aFdE6A8';
       const ORACLE_ADDRESS = '0x85485dD6cFaF5220150c413309C61a8EA24d24FE';
       // EVIX contracts - correct checksummed address
-      const EVIX_MINT_REDEEM_ADDRESS = '0xe521441B7b9f2Dcaf5aC2b2Ac5CA5BfD6fB48a55';
+      const EVIX_MINT_REDEEM_ADDRESS = '0xe521441B10F5b9a28499Ae37d1C93b42223eCff6';
       const BASE_SEPOLIA_RPC_URL = 'https://sepolia.base.org';
 
       // Minimal ERC20 ABI for balance and supply queries
@@ -56,21 +56,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const bvixSupply = ethers.formatEther(bvixTotalSupply); // BVIX has 18 decimals
       const price = ethers.formatEther(bvixPrice); // Price in ETH format
       
-      // Calculate collateral ratio using BVIX vault only (as it should be)
-      const bvixUsdcFloat = parseFloat(bvixUsdcValue);
+      // Calculate protocol-wide collateral ratio (total USDC vs total token value)
+      // This should be the standard practice for protocol health
+      const totalUsdcFloat = parseFloat(totalUsdcValue);
       const bvixFloat = parseFloat(bvixSupply);
       const priceFloat = parseFloat(price);
       
+      // Add EVIX data for complete protocol-wide collateral ratio
+      const evixContract = new ethers.Contract('0x37e3b45fEF91D54Ef4992B71382EC36307908463', ERC20_ABI, provider);
+      const evixOracleContract = new ethers.Contract('0xCd7441A771a7F84E58d98E598B7Ff23A3688094F', ['function getPrice() external view returns (uint256)'], provider);
+      
+      const [evixTotalSupply, evixPrice] = await Promise.all([
+        evixContract.totalSupply(),
+        evixOracleContract.getPrice()
+      ]);
+      
+      const evixSupply = ethers.formatEther(evixTotalSupply);
+      const evixPriceFormatted = ethers.formatEther(evixPrice);
+      
       const bvixValueInUsd = bvixFloat * priceFloat;
-      const collateralRatio = bvixValueInUsd > 0 ? (bvixUsdcFloat / bvixValueInUsd) * 100 : 0;
+      const evixValueInUsd = parseFloat(evixSupply) * parseFloat(evixPriceFormatted);
+      const totalTokenValueInUsd = bvixValueInUsd + evixValueInUsd;
+      
+      const collateralRatio = totalTokenValueInUsd > 0 ? (totalUsdcFloat / totalTokenValueInUsd) * 100 : 0;
       
       res.json({
         usdc: totalUsdcValue, // Combined USDC from both vaults for display
         bvix: bvixSupply,
-        cr: Math.round(collateralRatio * 100) / 100, // BVIX vault CR only
+        evix: evixSupply,
+        cr: Math.round(collateralRatio * 100) / 100, // Protocol-wide CR
         price: price,
+        evixPrice: evixPriceFormatted,
         usdcValue: parseFloat(totalUsdcValue),
         bvixValueInUsd: bvixValueInUsd,
+        evixValueInUsd: evixValueInUsd,
+        totalTokenValueInUsd: totalTokenValueInUsd,
         bvixVaultUsdc: bvixUsdcValue, // Individual vault amounts for debugging
         evixVaultUsdc: evixUsdcValue
       });
