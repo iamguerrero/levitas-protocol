@@ -132,8 +132,20 @@ export async function getUSDCBalance(address: string): Promise<string> {
   try {
     const provider = getProvider();
     const usdcContract = getUSDCContract(provider);
+    
+    // Force fresh call - no caching
     const balance = await usdcContract.balanceOf(address);
-    return ethers.formatUnits(balance, 6); // USDC has 6 decimals
+    const formattedBalance = ethers.formatUnits(balance, 6); // USDC has 6 decimals
+    
+    console.log("🔍 USDC Balance Debug:", { 
+      address, 
+      contract: MOCK_USDC_ADDRESS,
+      balance: balance.toString(), 
+      formatted: formattedBalance,
+      timestamp: new Date().toISOString()
+    });
+    
+    return formattedBalance;
   } catch (error) {
     console.error("Error getting USDC balance:", error);
     return "0.0";
