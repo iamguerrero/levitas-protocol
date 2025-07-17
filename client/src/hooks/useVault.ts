@@ -15,10 +15,10 @@ export interface VaultStatus {
 }
 
 export function useVault() {
-  const { data, error, isLoading, isError } = useQuery<VaultStats>({
+  const { data, error, isLoading, isError, refetch } = useQuery<VaultStats>({
     queryKey: ['/api/v1/vault-stats'],
-    refetchInterval: 15000, // Refetch every 15 seconds
-    staleTime: 10000, // Consider data stale after 10 seconds
+    refetchInterval: 5000, // Refetch every 5 seconds for faster updates
+    staleTime: 2000, // Consider data stale after 2 seconds
     retry: 3,
     retryDelay: 1000,
   });
@@ -42,5 +42,6 @@ export function useVault() {
     error,
     isLoading,
     isError,
+    refetch,
   };
 }

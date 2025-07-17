@@ -12,6 +12,8 @@ This project is a decentralized finance (DeFi) application called Levitas Financ
 ✓ **Bootstrap-Friendly Mint Logic** - V4 contract allows first mint without collateral ratio check for vault bootstrapping
 ✓ **Return Value Fixed** - MintRedeemV4 returns mint amount to prevent BigNumberish value errors in frontend
 ✓ **StaticCall Context Fix** - Removed staticCall that was causing ERC20InsufficientAllowance errors due to wrong execution context
+✓ **Vault Health Real-Time Updates** - Updated vault stats API to use V4 contracts and reduced refresh interval to 5 seconds for faster updates
+✓ **Post-Transaction Cache Invalidation** - Added automatic vault cache refresh after mint transactions for immediate collateral ratio updates
 ✓ **Comprehensive Debug Logging** - Added detailed console logging for mint process troubleshooting
 ✓ **Fresh Contract Architecture** - Clean deployment eliminating legacy ownership conflicts from previous versions
 ✓ **Collateral Ratio Slider Fixed** - Slider now properly calculates token amounts based on selected CR (150% CR = fewer tokens, 200% CR = even fewer)
