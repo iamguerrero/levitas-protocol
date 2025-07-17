@@ -8,9 +8,11 @@ import { Bitcoin, Zap, TrendingUp, Loader2, AlertCircle } from "lucide-react";
 import { VaultHealth } from "@/components/ui/VaultHealth";
 import { NetworkHelpers } from "@/components/ui/NetworkHelpers";
 import { VaultNotice } from "@/components/ui/VaultNotice";
+import { CollateralAwareMinting } from "@/components/ui/CollateralAwareMinting";
 import { useWallet } from "@/hooks/use-wallet";
 import { useToast } from "@/hooks/use-toast";
 import { usePosition } from "@/hooks/use-position";
+import { useQuery } from "@tanstack/react-query";
 import {
   getBVIXBalance,
   getEVIXBalance,
@@ -44,6 +46,7 @@ export default function TradingInterface() {
   const [isLoading, setIsLoading] = useState(true);
   const [debugInfo, setDebugInfo] = useState<any>(null);
   const [collateralRatio, setCollateralRatio] = useState<number | null>(null);
+  const [vaultStats, setVaultStats] = useState<any>(null);
 
   function explorerLink(hash: string) {
     return (
@@ -71,6 +74,19 @@ export default function TradingInterface() {
   // Check if contracts are deployed
   // ✅ treat both sides as plain strings
   const contractsDeployed = String(BVIX_ADDRESS) !== "0xBVIXAddressHere";
+
+  // Load vault stats
+  const { data: vaultData } = useQuery({
+    queryKey: ['/api/v1/vault-stats'],
+    refetchInterval: 15000,
+    enabled: true,
+  });
+
+  useEffect(() => {
+    if (vaultData) {
+      setVaultStats(vaultData);
+    }
+  }, [vaultData]);
 
   // Load contract data
   useEffect(() => {
@@ -124,7 +140,7 @@ export default function TradingInterface() {
     }
   };
 
-  const handleMint = async () => {
+  const handleMint = async (amount: string) => {
     if (!contractsDeployed) {
       toast({
         title: "Contracts Not Deployed",
@@ -135,7 +151,7 @@ export default function TradingInterface() {
       return;
     }
 
-    if (!mintAmount || parseFloat(mintAmount) <= 0) {
+    if (!amount || parseFloat(amount) <= 0) {
       toast({
         title: "Invalid Amount",
         description: "Please enter a valid amount to mint.",
@@ -150,7 +166,7 @@ export default function TradingInterface() {
       // Ensure user is on Base Sepolia
       await switchToBaseSepolia();
 
-      const tx = await mintBVIX(mintAmount);
+      const tx = await mintBVIX(amount);
 
       toast({
         title: "Transaction Submitted",
@@ -173,7 +189,6 @@ export default function TradingInterface() {
         ),
       });
 
-      setMintAmount("");
       await loadContractData(); // Refresh balances
     } catch (error: any) {
       console.error("Mint error:", error);
@@ -252,8 +267,8 @@ export default function TradingInterface() {
     }
   };
 
-  const handleMintEVIX = async () => {
-    if (!evixMintAmount || parseFloat(evixMintAmount) <= 0) {
+  const handleMintEVIX = async (amount: string) => {
+    if (!amount || parseFloat(amount) <= 0) {
       toast({
         title: "Invalid Amount",
         description: "Please enter a valid amount to mint EVIX.",
@@ -265,7 +280,7 @@ export default function TradingInterface() {
     setIsTransacting(true);
     try {
       await switchToBaseSepolia();
-      const tx = await mintEVIX(evixMintAmount);
+      const tx = await mintEVIX(amount);
       
       toast({
         title: "Transaction Submitted",
@@ -280,10 +295,9 @@ export default function TradingInterface() {
       
       toast({
         title: "EVIX Minted!",
-        description: `Successfully minted EVIX tokens for ${evixMintAmount} USDC`,
+        description: `Successfully minted EVIX tokens for ${amount} USDC`,
       });
       
-      setEvixMintAmount("");
       await loadContractData();
     } catch (error: any) {
       toast({
@@ -507,89 +521,15 @@ export default function TradingInterface() {
 
       {/* Trading Interface */}
       <div className="grid md:grid-cols-2 gap-8">
-        {/* Mint Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl">
-              Mint {selectedToken === 'bvix' ? 'BVIX' : 'EVIX'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div>
-              <Label
-                htmlFor="mint-amount"
-                className="text-sm font-medium text-gray-700"
-              >
-                Deposit Amount
-              </Label>
-              <div className="relative mt-2">
-                <Input
-                  id="mint-amount"
-                  type="number"
-                  placeholder="0.00"
-                  value={selectedToken === 'bvix' ? mintAmount : evixMintAmount}
-                  onChange={(e) => selectedToken === 'bvix' ? setMintAmount(e.target.value) : setEvixMintAmount(e.target.value)}
-                  className="pr-16"
-                />
-                <div className="absolute right-3 top-3 text-gray-500">USDC</div>
-              </div>
-              <div className="mt-2 text-sm text-gray-600">
-                <span
-                  className="cursor-pointer hover:underline"
-                  title="Click to use max"
-                  onClick={() => selectedToken === 'bvix' ? setMintAmount(contractData.usdcBalance) : setEvixMintAmount(contractData.usdcBalance)}
-                >
-                  Balance:&nbsp;
-                  {isLoading
-                    ? "..."
-                    : parseFloat(contractData.usdcBalance).toFixed(2)}{" "}
-                  USDC
-                </span>
-              </div>
-            </div>
-
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">You'll receive:</span>
-                <span className="font-medium text-black">
-                  {selectedToken === 'bvix' 
-                    ? (mintAmount && contractData.bvixPrice
-                        ? (parseFloat(mintAmount) / parseFloat(contractData.bvixPrice)).toFixed(4)
-                        : "0.00")
-                    : (evixMintAmount && contractData.evixPrice
-                        ? (parseFloat(evixMintAmount) / parseFloat(contractData.evixPrice)).toFixed(4)
-                        : "0.00")}
-                  {" "}{selectedToken === 'bvix' ? 'BVIX' : 'EVIX'}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm mt-2">
-                <span className="text-gray-600">Exchange rate:</span>
-                <span className="text-gray-600">
-                  1 USDC ={" "}
-                  {selectedToken === 'bvix' 
-                    ? (contractData.bvixPrice ? (1 / parseFloat(contractData.bvixPrice)).toFixed(6) : "...")
-                    : (contractData.evixPrice ? (1 / parseFloat(contractData.evixPrice)).toFixed(6) : "...")}
-                  {" "}{selectedToken === 'bvix' ? 'BVIX' : 'EVIX'}
-                </span>
-              </div>
-            </div>
-
-            <Button
-              onClick={selectedToken === 'bvix' ? handleMint : handleMintEVIX}
-              disabled={isTransacting || (selectedToken === 'bvix' ? !mintAmount : !evixMintAmount)}
-              className={`w-full ${selectedToken === 'bvix' ? 'bg-orange-600 hover:bg-orange-700' : 'bg-blue-600 hover:bg-blue-700'}`}
-            >
-              {isTransacting ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Minting...
-                </>
-              ) : (
-                `Mint ${selectedToken === 'bvix' ? 'BVIX' : 'EVIX'}`
-              )}
-            </Button>
-          </CardContent>
-        </Card>
+        {/* Collateral-Aware Mint Section */}
+        <CollateralAwareMinting
+          tokenSymbol={selectedToken === 'bvix' ? 'BVIX' : 'EVIX'}
+          tokenPrice={selectedToken === 'bvix' ? parseFloat(contractData.bvixPrice) : parseFloat(contractData.evixPrice)}
+          vaultStats={vaultStats}
+          userBalance={parseFloat(contractData.usdcBalance)}
+          onMint={selectedToken === 'bvix' ? handleMint : handleMintEVIX}
+          isLoading={isTransacting}
+        />
 
         {/* Redeem Section */}
         <Card>
