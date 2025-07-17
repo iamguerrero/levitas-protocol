@@ -182,7 +182,7 @@ export async function mintBVIX(
   const usdcBalance = await usdcContract.balanceOf(address);
   if (usdcBalance < usdcAmountWei) {
     throw new Error(
-      `Insufficient USDC balance. You have ${ethers.formatUnits(usdcBalance, 6)} USDC but need ${usdcAmount} USDC`,
+      `Insufficient USDC balance. You have ${ethers.formatUnits(usdcBalance, 6)} USDC but need ${usdcAmount} USDC. Get test USDC from Base Sepolia faucets to continue.`,
     );
   }
 

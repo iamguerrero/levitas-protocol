@@ -6,6 +6,8 @@ This project is a decentralized finance (DeFi) application called Levitas Financ
 
 ## Recent Changes (January 2025)
 
+✓ **Collateral Ratio Slider Fixed** - Slider now properly calculates token amounts based on selected CR (150% CR = fewer tokens, 200% CR = even fewer)
+✓ **USDC Balance Error Handling** - Added clear guidance when users have 0 USDC balance with faucet links for Base Sepolia test USDC
 ✓ **Industry-Standard Collateral-Aware Minting** - Complete DeFi-standard interface with safe mint amounts, smart suggestions, and clear collateral impact visualization
 ✓ **V2 Collateral Enforcement Fixed** - Deployed MintRedeemV2 (0x685FEc86...) with proper 120% collateral ratio enforcement that actually works
 ✓ **Network Setup UI** - Added Base Sepolia network helper and testnet ETH faucet buttons 
