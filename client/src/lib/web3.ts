@@ -157,8 +157,11 @@ export async function getEVIXPrice(): Promise<string> {
   try {
     const provider = getProvider();
     const evixOracle = getEVIXOracleContract(provider);
-    const price = await evixOracle.getPrice();
-    return ethers.formatEther(price);
+    const priceRaw = await evixOracle.getPrice();
+    // The oracle stores price as a large integer (e.g. 379800000000 for $37.98)
+    // Convert to proper decimal format
+    const price = parseFloat(ethers.formatUnits(priceRaw, 8)) / 10000000000;
+    return price.toFixed(2);
   } catch (error) {
     console.error("Error getting EVIX price:", error);
     return "37.98"; // Fallback price

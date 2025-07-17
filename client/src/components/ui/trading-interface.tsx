@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Bitcoin, Zap, TrendingUp, Loader2, AlertCircle } from "lucide-react";
 import { useWallet } from "@/hooks/use-wallet";
 import { useToast } from "@/hooks/use-toast";
@@ -35,6 +36,7 @@ export default function TradingInterface() {
   const [redeemAmount, setRedeemAmount] = useState("");
   const [evixMintAmount, setEvixMintAmount] = useState("");
   const [evixRedeemAmount, setEvixRedeemAmount] = useState("");
+  const [selectedToken, setSelectedToken] = useState<'bvix' | 'evix'>('bvix');
   const [isTransacting, setIsTransacting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [debugInfo, setDebugInfo] = useState<any>(null);
@@ -427,9 +429,12 @@ export default function TradingInterface() {
 
   return (
     <div className="space-y-8">
-      {/* Price Display */}
+      {/* Price Display - Clickable Cards */}
       <div className="grid md:grid-cols-2 gap-6">
-        <Card className="hover:shadow-lg transition-shadow">
+        <Card 
+          className={`hover:shadow-lg transition-all cursor-pointer ${selectedToken === 'bvix' ? 'ring-2 ring-orange-500 shadow-lg' : ''}`}
+          onClick={() => setSelectedToken('bvix')}
+        >
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-3">
@@ -453,10 +458,18 @@ export default function TradingInterface() {
             <div className="text-xs text-gray-600">
               Last updated: {new Date().toLocaleTimeString()}
             </div>
+            {selectedToken === 'bvix' && (
+              <div className="mt-2 text-xs text-orange-600 font-medium">
+                Selected for trading
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-lg transition-shadow">
+        <Card 
+          className={`hover:shadow-lg transition-all cursor-pointer ${selectedToken === 'evix' ? 'ring-2 ring-blue-500 shadow-lg' : ''}`}
+          onClick={() => setSelectedToken('evix')}
+        >
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-3">
@@ -480,6 +493,11 @@ export default function TradingInterface() {
             <div className="text-xs text-gray-600">
               Last updated: {new Date().toLocaleTimeString()}
             </div>
+            {selectedToken === 'evix' && (
+              <div className="mt-2 text-xs text-blue-600 font-medium">
+                Selected for trading
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -489,7 +507,9 @@ export default function TradingInterface() {
         {/* Mint Section */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl">Mint BVIX</CardTitle>
+            <CardTitle className="text-xl">
+              Mint {selectedToken === 'bvix' ? 'BVIX' : 'EVIX'}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div>
@@ -504,8 +524,8 @@ export default function TradingInterface() {
                   id="mint-amount"
                   type="number"
                   placeholder="0.00"
-                  value={mintAmount}
-                  onChange={(e) => setMintAmount(e.target.value)}
+                  value={selectedToken === 'bvix' ? mintAmount : evixMintAmount}
+                  onChange={(e) => selectedToken === 'bvix' ? setMintAmount(e.target.value) : setEvixMintAmount(e.target.value)}
                   className="pr-16"
                 />
                 <div className="absolute right-3 top-3 text-gray-500">USDC</div>
@@ -514,7 +534,7 @@ export default function TradingInterface() {
                 <span
                   className="cursor-pointer hover:underline"
                   title="Click to use max"
-                  onClick={() => setMintAmount(contractData.usdcBalance)}
+                  onClick={() => selectedToken === 'bvix' ? setMintAmount(contractData.usdcBalance) : setEvixMintAmount(contractData.usdcBalance)}
                 >
                   Balance:&nbsp;
                   {isLoading
@@ -529,31 +549,32 @@ export default function TradingInterface() {
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">You'll receive:</span>
                 <span className="font-medium text-black">
-                  {mintAmount && contractData.bvixPrice
-                    ? (
-                        parseFloat(mintAmount) /
-                        parseFloat(contractData.bvixPrice)
-                      ).toFixed(4)
-                    : "0.00"}{" "}
-                  BVIX
+                  {selectedToken === 'bvix' 
+                    ? (mintAmount && contractData.bvixPrice
+                        ? (parseFloat(mintAmount) / parseFloat(contractData.bvixPrice)).toFixed(4)
+                        : "0.00")
+                    : (evixMintAmount && contractData.evixPrice
+                        ? (parseFloat(evixMintAmount) / parseFloat(contractData.evixPrice)).toFixed(4)
+                        : "0.00")}
+                  {" "}{selectedToken === 'bvix' ? 'BVIX' : 'EVIX'}
                 </span>
               </div>
               <div className="flex justify-between text-sm mt-2">
                 <span className="text-gray-600">Exchange rate:</span>
                 <span className="text-gray-600">
                   1 USDC ={" "}
-                  {contractData.bvixPrice
-                    ? (1 / parseFloat(contractData.bvixPrice)).toFixed(6)
-                    : "..."}{" "}
-                  BVIX
+                  {selectedToken === 'bvix' 
+                    ? (contractData.bvixPrice ? (1 / parseFloat(contractData.bvixPrice)).toFixed(6) : "...")
+                    : (contractData.evixPrice ? (1 / parseFloat(contractData.evixPrice)).toFixed(6) : "...")}
+                  {" "}{selectedToken === 'bvix' ? 'BVIX' : 'EVIX'}
                 </span>
               </div>
             </div>
 
             <Button
-              onClick={handleMint}
-              disabled={isTransacting || !mintAmount}
-              className="w-full bg-blue-600 hover:bg-blue-700"
+              onClick={selectedToken === 'bvix' ? handleMint : handleMintEVIX}
+              disabled={isTransacting || (selectedToken === 'bvix' ? !mintAmount : !evixMintAmount)}
+              className={`w-full ${selectedToken === 'bvix' ? 'bg-orange-600 hover:bg-orange-700' : 'bg-blue-600 hover:bg-blue-700'}`}
             >
               {isTransacting ? (
                 <>
@@ -561,7 +582,7 @@ export default function TradingInterface() {
                   Minting...
                 </>
               ) : (
-                "Mint BVIX"
+                `Mint ${selectedToken === 'bvix' ? 'BVIX' : 'EVIX'}`
               )}
             </Button>
           </CardContent>
@@ -570,7 +591,9 @@ export default function TradingInterface() {
         {/* Redeem Section */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl">Redeem USDC</CardTitle>
+            <CardTitle className="text-xl">
+              Redeem {selectedToken === 'bvix' ? 'BVIX' : 'EVIX'}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div>
@@ -585,23 +608,25 @@ export default function TradingInterface() {
                   id="redeem-amount"
                   type="number"
                   placeholder="0.00"
-                  value={redeemAmount}
-                  onChange={(e) => setRedeemAmount(e.target.value)}
+                  value={selectedToken === 'bvix' ? redeemAmount : evixRedeemAmount}
+                  onChange={(e) => selectedToken === 'bvix' ? setRedeemAmount(e.target.value) : setEvixRedeemAmount(e.target.value)}
                   className="pr-16"
                 />
-                <div className="absolute right-3 top-3 text-gray-500">BVIX</div>
+                <div className="absolute right-3 top-3 text-gray-500">
+                  {selectedToken === 'bvix' ? 'BVIX' : 'EVIX'}
+                </div>
               </div>
               <div className="mt-2 text-sm text-gray-600">
                 <span
                   className="cursor-pointer hover:underline"
                   title="Click to use max"
-                  onClick={() => setRedeemAmount(contractData.bvixBalance)}
+                  onClick={() => selectedToken === 'bvix' ? setRedeemAmount(contractData.bvixBalance) : setEvixRedeemAmount(contractData.evixBalance)}
                 >
                   Balance:&nbsp;
                   {isLoading
                     ? "..."
-                    : Number(contractData.bvixBalance).toPrecision(6)}{" "}
-                  BVIX
+                    : Number(selectedToken === 'bvix' ? contractData.bvixBalance : contractData.evixBalance).toPrecision(6)}{" "}
+                  {selectedToken === 'bvix' ? 'BVIX' : 'EVIX'}
                 </span>
               </div>
             </div>
@@ -610,26 +635,27 @@ export default function TradingInterface() {
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">You'll receive:</span>
                 <span className="font-medium text-black">
-                  {redeemAmount && contractData.bvixPrice
-                    ? (
-                        parseFloat(redeemAmount) *
-                        parseFloat(contractData.bvixPrice)
-                      ).toFixed(2)
-                    : "0.00"}{" "}
+                  {selectedToken === 'bvix' 
+                    ? (redeemAmount && contractData.bvixPrice
+                        ? (parseFloat(redeemAmount) * parseFloat(contractData.bvixPrice)).toFixed(2)
+                        : "0.00")
+                    : (evixRedeemAmount && contractData.evixPrice
+                        ? (parseFloat(evixRedeemAmount) * parseFloat(contractData.evixPrice)).toFixed(2)
+                        : "0.00")}{" "}
                   USDC
                 </span>
               </div>
               <div className="flex justify-between text-sm mt-2">
                 <span className="text-gray-600">Exchange rate:</span>
                 <span className="text-gray-600">
-                  1 BVIX = {contractData.bvixPrice || "..."} USDC
+                  1 {selectedToken === 'bvix' ? 'BVIX' : 'EVIX'} = {selectedToken === 'bvix' ? contractData.bvixPrice : contractData.evixPrice || "..."} USDC
                 </span>
               </div>
             </div>
 
             <Button
-              onClick={handleRedeem}
-              disabled={isTransacting || !redeemAmount}
+              onClick={selectedToken === 'bvix' ? handleRedeem : handleRedeemEVIX}
+              disabled={isTransacting || (selectedToken === 'bvix' ? !redeemAmount : !evixRedeemAmount)}
               variant="destructive"
               className="w-full"
             >
@@ -639,7 +665,7 @@ export default function TradingInterface() {
                   Redeeming...
                 </>
               ) : (
-                "Redeem BVIX"
+                `Redeem ${selectedToken === 'bvix' ? 'BVIX' : 'EVIX'}`
               )}
             </Button>
           </CardContent>
