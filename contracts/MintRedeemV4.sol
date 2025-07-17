@@ -53,7 +53,7 @@ contract MintRedeemV4 is Ownable {
     /**
      * @notice Mint BVIX - simplified version
      */
-    function mint(uint256 amount) external {
+    function mint(uint256 amount) external returns (uint256) {
         require(amount > 0, "Amount must be > 0");
         
         // Calculate mint amount
@@ -70,7 +70,7 @@ contract MintRedeemV4 is Ownable {
             require(usdc.transferFrom(msg.sender, address(this), amount), "Transfer failed");
             bvix.mint(msg.sender, bvixToMint);
             emit Mint(msg.sender, amount, bvixToMint);
-            return;
+            return bvixToMint;
         }
         
         // For subsequent mints, check collateral ratio
@@ -89,6 +89,7 @@ contract MintRedeemV4 is Ownable {
         bvix.mint(msg.sender, bvixToMint);
         
         emit Mint(msg.sender, amount, bvixToMint);
+        return bvixToMint;
     }
 
     /**

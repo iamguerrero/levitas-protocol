@@ -204,7 +204,7 @@ export interface MintRedeemV4 extends BaseContract {
 
   minCollateralRatio: TypedContractMethod<[], [bigint], "view">;
 
-  mint: TypedContractMethod<[amount: BigNumberish], [void], "nonpayable">;
+  mint: TypedContractMethod<[amount: BigNumberish], [bigint], "nonpayable">;
 
   mintFee: TypedContractMethod<[], [bigint], "view">;
 
@@ -241,7 +241,7 @@ export interface MintRedeemV4 extends BaseContract {
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "mint"
-  ): TypedContractMethod<[amount: BigNumberish], [void], "nonpayable">;
+  ): TypedContractMethod<[amount: BigNumberish], [bigint], "nonpayable">;
   getFunction(
     nameOrSignature: "mintFee"
   ): TypedContractMethod<[], [bigint], "view">;
