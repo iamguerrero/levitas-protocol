@@ -1,0 +1,22 @@
+ Loading contract data for address: 0xe18d3b075a241379d77fffe01ed1317dda0e8bac
+web3.ts:140 🔍 USDC Balance Debug: Object
+web3.ts:126 Error getting EVIX balance: Error: could not decode result data (value="0x", info={ "method": "balanceOf", "signature": "balanceOf(address)" }, code=BAD_DATA, version=6.15.0)
+    at makeError (ethers.js?v=5f040986:337:15)
+    at assert (ethers.js?v=5f040986:350:11)
+    at _Interface.decodeFunctionResult (ethers.js?v=5f040986:12734:5)
+    at staticCallResult (ethers.js?v=5f040986:14841:31)
+    at async staticCall (ethers.js?v=5f040986:14809:20)
+    at async Proxy.balanceOf (ethers.js?v=5f040986:14846:14)
+    at async getEVIXBalance (web3.ts:123:21)
+    at async Promise.all (index 1)
+    at async loadContractData (trading-interface.tsx:124:86)
+getEVIXBalance @ web3.ts:126Understand this error
+trading-interface.tsx:133 📊 Contract data loaded: Object
+CollateralAwareMinting.tsx:92 🎯 V5 Collateral-aware mint: Spending 1000 USDC at 125% CR
+CollateralAwareMinting.tsx:93 💰 Token value you'll receive: $800.00 (CR enforced by contract)
+web3.ts:273 🚀 Starting EVIX mint process for 1000 USDC at 125% CR
+web3.ts:298 🔄 Approving USDC spending for EVIX...
+web3.ts:304 ✅ USDC approval confirmed for EVIX
+web3.ts:308 🎯 Using V5 EVIX mintWithCollateralRatio: 1000 USDC at 125% CR
+web3.ts:309 💰 Expected token value: $800.00
+inpage.js:1 MetaMask - RPC Error: Internal JSON-RPC error. Objectcode: -32603data: {code: 3, message: 'execution reverted', data: '0xfb8f41b2000000000000000000000000b5d7cc3523c21ea1…000000000000000000000000000000000000000003b9aca00', cause: null}message: "Internal JSON-RPC error."stack: "{\n  \"code\": -32603,\n  \"message\": \"Internal JSON-RPC error.\",\n  \"data\": {\n    \"code\": 3,\n    \"message\": \"execution reverted\",\n    \"data\": \"0xfb8f41b2000000000000000000000000b5d7cc3523c21ea1224d9ff4b657be3404aac9eb0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003b9aca00\",\n    \"cause\": null\n  },\n  \"stack\": \"Error: Internal JSON-RPC error.\\n    at new o (chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/common-3.js:3:5787)\\n    at a (chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/common-3.js:3:8878)\\n    at Object.internal (chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/common-3.js:3:9487)\\n    at chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/common-1.js:3:21663\\n    at async chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/common-2.js:3:64047\"\n}\n  at new o (chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/common-3.js:3:5787)\n  at a (chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/common-3.js:3:8878)\n  at Object.internal (chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/common-3.js:3:9487)\n  at chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/common-1.js:3:21663\n  at async chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/common-2.js:3:64047"[[Prototype]]: Object

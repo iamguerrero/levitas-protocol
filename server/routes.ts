@@ -19,7 +19,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const MINT_REDEEM_ADDRESS = '0xa0133C6380bf9618e97Ab9a855aF2035e9498829'; // V5 Final
       const ORACLE_ADDRESS = '0x85485dD6cFaF5220150c413309C61a8EA24d24FE';
       // EVIX contracts - V5 Final addresses
-      const EVIX_MINT_REDEEM_ADDRESS = '0xb5d7cc3523c21eA1224D9Ff4b657Be3404AaC9eb'; // Fresh V5 with proper ownership
+      const EVIX_MINT_REDEEM_ADDRESS = '0x340b71ce6E33E29b6D4220B59cA86fC8d1Fc3334'; // FINAL V5 with decimal fix
       const BASE_SEPOLIA_RPC_URL = 'https://sepolia.base.org';
 
       // Minimal ERC20 ABI for balance and supply queries
@@ -63,8 +63,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const priceFloat = parseFloat(price);
       
       // Add EVIX data for complete protocol-wide collateral ratio
-      const evixContract = new ethers.Contract('0xBF1B10cbB6b3B2dBd434b13353fe4f07dfAc344c', ERC20_ABI, provider);
+      const evixContract = new ethers.Contract('0x0E6e110d46b969135607Edb9Da9C314D271447Bd', ERC20_ABI, provider);
       const evixOracleContract = new ethers.Contract('0xCd7441A771a7F84E58d98E598B7Ff23A3688094F', ['function getPrice() external view returns (uint256)'], provider);
+      
+      console.log('Debug: Using EVIX contract address:', '0xBF1B10cbB6b3B2dBd434b13353fe4f07dfAc344c');
+      console.log('Debug: Using EVIX vault address:', EVIX_MINT_REDEEM_ADDRESS);
       
       const [evixTotalSupply, evixPrice] = await Promise.all([
         evixContract.totalSupply(),
