@@ -19,7 +19,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const MINT_REDEEM_ADDRESS = '0xa0133C6380bf9618e97Ab9a855aF2035e9498829'; // V5 Final
       const ORACLE_ADDRESS = '0x85485dD6cFaF5220150c413309C61a8EA24d24FE';
       // EVIX contracts - V5 Final addresses
-      const EVIX_MINT_REDEEM_ADDRESS = '0x30218E088a02ab32C28824F72DCe0Ef53C4E16F9'; // V5 Final
+      const EVIX_MINT_REDEEM_ADDRESS = '0x0D1957BB292d2b9C19EA0Bbf50E6da8b5d175c3c'; // V5 Fixed
       const BASE_SEPOLIA_RPC_URL = 'https://sepolia.base.org';
 
       // Minimal ERC20 ABI for balance and supply queries
