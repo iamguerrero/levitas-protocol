@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Bitcoin, Zap, TrendingUp, Loader2, AlertCircle } from "lucide-react";
 import { VaultHealth } from "@/components/ui/VaultHealth";
 import { NetworkHelpers } from "@/components/ui/NetworkHelpers";
-import { VaultNotice } from "@/components/ui/VaultNotice";
+// VaultNotice removed - V4 contracts work without collateral enforcement
 import { CollateralAwareMinting } from "@/components/ui/CollateralAwareMinting";
 import { useWallet } from "@/hooks/use-wallet";
 import { useToast } from "@/hooks/use-toast";
@@ -661,7 +661,7 @@ export default function TradingInterface() {
       </div>
 
       {/* Vault Migration Notice */}
-      <VaultNotice />
+
 
       {/* Network Setup and Vault Health */}
       <div className="grid lg:grid-cols-2 gap-6">
