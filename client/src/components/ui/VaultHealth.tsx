@@ -165,14 +165,15 @@ export function VaultHealth() {
                 status.level === 'red' && "bg-red-500"
               )}
               style={{ 
-                width: `${data.cr === 0 ? '0' : Math.min(Math.max((data.cr / 150) * 100, 10), 100)}%` 
+                width: `${data.cr === 0 ? '0' : Math.min((data.cr / 200) * 100, 100)}%` 
               }}
             />
           </div>
           <div className="flex justify-between text-xs text-gray-500 mt-1">
+            <span>0%</span>
             <span>110%</span>
             <span>120%</span>
-            <span>150%+</span>
+            <span>200%+</span>
           </div>
         </div>
       </CardContent>
