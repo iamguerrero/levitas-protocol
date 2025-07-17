@@ -6,6 +6,8 @@ This project is a decentralized finance (DeFi) application called Levitas Financ
 
 ## Recent Changes (January 2025)
 
+✓ **V2 Collateral Enforcement Contract** - Deployed MintRedeemV2 (0x5254533...) with mandatory >120% collateral ratio
+✓ **Network Setup UI** - Added Base Sepolia network helper and testnet ETH faucet buttons 
 ✓ **Live Vault Health Dashboard** - Complete collateral ratio monitoring with real-time API endpoint and UI widget
 ✓ **EVIX UI Token Switching** - Fixed clickable token cards that properly switch between BVIX/EVIX trading interfaces
 ✓ **EVIX Price Integration** - Corrected Oracle price format conversion for accurate $37.98 display

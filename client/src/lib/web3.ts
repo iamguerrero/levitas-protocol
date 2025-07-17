@@ -2,7 +2,7 @@ import { ethers } from "ethers";
 import BVIX_ABI from "../contracts/BVIXToken.abi.json";
 import EVIX_ABI from "../contracts/EVIXToken.abi.json";
 import Oracle_ABI from "../contracts/MockOracle.abi.json";
-import MintRedeem_ABI from "../contracts/MintRedeem.abi.json";
+import MintRedeem_ABI from "../contracts/MintRedeemV2.abi.json";
 import USDC_ABI from "../contracts/MockUSDC.abi.json";
 import EVIXOracle_ABI from "../contracts/EVIXOracle.abi.json";
 import EVIXMintRedeem_ABI from "../contracts/EVIXMintRedeem.abi.json";
@@ -24,8 +24,8 @@ declare global {
 export const BASE_SEPOLIA_CHAIN_ID = "0x14a34";
 export const BASE_SEPOLIA_RPC_URL = "https://sepolia.base.org";
 
-// Contract addresses - to be updated after deployment
-export const MINT_REDEEM_ADDRESS = "0x1f3FB11995F1650D469649C476defB753766b2A0";
+// Contract addresses - Updated with V2 collateral-enforced contract
+export const MINT_REDEEM_ADDRESS = "0x5254533747b373D13303AE8ACC9D464f80B6bfae";
 export const BVIX_ADDRESS = "0xEA3d08a5A5bC48Fc984F0F773826693B7480bF48";
 export const EVIX_ADDRESS = "0x37e3b45fEF91D54Ef4992B71382EC36307908463";
 export const ORACLE_ADDRESS = "0x85485dD6cFaF5220150c413309C61a8EA24d24FE";

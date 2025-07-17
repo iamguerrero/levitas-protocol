@@ -66,6 +66,14 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.MintRedeem__factory>;
     getContractFactory(
+      name: "MintRedeemV2",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.MintRedeemV2__factory>;
+    getContractFactory(
+      name: "MintRedeemWithCollateral",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.MintRedeemWithCollateral__factory>;
+    getContractFactory(
       name: "MockOracle",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.MockOracle__factory>;
@@ -140,6 +148,16 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.MintRedeem>;
     getContractAt(
+      name: "MintRedeemV2",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.MintRedeemV2>;
+    getContractAt(
+      name: "MintRedeemWithCollateral",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.MintRedeemWithCollateral>;
+    getContractAt(
       name: "MockOracle",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -203,6 +221,14 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.MintRedeem>;
     deployContract(
+      name: "MintRedeemV2",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.MintRedeemV2>;
+    deployContract(
+      name: "MintRedeemWithCollateral",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.MintRedeemWithCollateral>;
+    deployContract(
       name: "MockOracle",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.MockOracle>;
@@ -276,6 +302,16 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.MintRedeem>;
+    deployContract(
+      name: "MintRedeemV2",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.MintRedeemV2>;
+    deployContract(
+      name: "MintRedeemWithCollateral",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.MintRedeemWithCollateral>;
     deployContract(
       name: "MockOracle",
       args: any[],

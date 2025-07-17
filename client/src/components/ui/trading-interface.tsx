@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Bitcoin, Zap, TrendingUp, Loader2, AlertCircle } from "lucide-react";
 import { VaultHealth } from "@/components/ui/VaultHealth";
+import { NetworkHelpers } from "@/components/ui/NetworkHelpers";
 import { useWallet } from "@/hooks/use-wallet";
 import { useToast } from "@/hooks/use-toast";
 import { usePosition } from "@/hooks/use-position";
@@ -673,8 +674,11 @@ export default function TradingInterface() {
         </Card>
       </div>
 
-      {/* Vault Health Widget */}
-      <VaultHealth />
+      {/* Network Setup and Vault Health */}
+      <div className="grid lg:grid-cols-2 gap-6">
+        <NetworkHelpers />
+        <VaultHealth />
+      </div>
 
       {/* Wallet Overview */}
       <Card>
