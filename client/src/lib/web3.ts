@@ -31,7 +31,7 @@ export const EVIX_ADDRESS = "0x4dEaB86baa7CBDb7859665a7FE9766f22fB799C1"; // Fre
 export const ORACLE_ADDRESS = "0x85485dD6cFaF5220150c413309C61a8EA24d24FE";
 export const MOCK_USDC_ADDRESS = "0x79640e0f510a7c6d59737442649d9600C84b035f";
 export const EVIX_ORACLE_ADDRESS = "0xCd7441A771a7F84E58d98E598B7Ff23A3688094F";
-export const EVIX_MINT_REDEEM_ADDRESS = "0x667e594bD7B994c492cd973C805CEdd971a5F163"; // Fresh V5
+export const EVIX_MINT_REDEEM_ADDRESS = "0xe65a6e1425DB77C7eCA7460c93184B5E4132D9DD"; // Fixed V5 with proper decimal handling
 
 // Contract factory functions
 export const getBVIXContract = (providerOrSigner: any) =>
