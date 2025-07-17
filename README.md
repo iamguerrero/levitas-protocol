@@ -1,6 +1,6 @@
 # Levitas Protocol
 
-> **Mission** – Bring on-chain volatility indices (BVIX, EVIX, …) and fully-collateralised vaults to every blockchain user.  
+> **Mission** – Build the volatility layer of DeFi. Tokenize crypto native, fully collateralized and composable volatility indices on-chain.
 > Mint synthetic volatility, trade it permissionlessly, and earn fees by supplying liquidity – all on Base Sepolia today.
 
 ---
