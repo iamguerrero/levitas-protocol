@@ -28,16 +28,21 @@ export function CollateralAwareMinting({
   isLoading 
 }: CollateralAwareMintingProps) {
   const [targetCR, setTargetCR] = useState([150]); // Default to 150% CR
-  const [usdcToAdd, setUsdcToAdd] = useState("");
+  const [usdcInput, setUsdcInput] = useState(""); // User input amount
   const [tokensToReceive, setTokensToReceive] = useState(0);
   const [calculation, setCalculation] = useState<CollateralCalculation | null>(null);
   const { toast } = useToast();
 
-  // Calculate how much USDC needed for collateral and how much tokens to receive
+  // Calculate tokens to receive based on USDC input and CR
   useEffect(() => {
-    if (!vaultStats || !tokenPrice) {
+    if (!vaultStats || !tokenPrice || !usdcInput) {
       setTokensToReceive(0);
-      setUsdcToAdd("");
+      return;
+    }
+
+    const usdcAmount = parseFloat(usdcInput);
+    if (isNaN(usdcAmount) || usdcAmount <= 0) {
+      setTokensToReceive(0);
       return;
     }
 
@@ -45,67 +50,52 @@ export function CollateralAwareMinting({
     const currentTokenSupply = parseFloat(vaultStats.bvix);
     const selectedCR = targetCR[0];
 
-    if (currentVaultUSDC === 0 && currentTokenSupply > 0) {
-      // Vault has no USDC but has tokens - need to add collateral
-      const currentTokenValueUSD = currentTokenSupply * tokenPrice;
-      const minUsdcNeeded = (currentTokenValueUSD * selectedCR) / 100;
-      
-      // No new tokens can be minted until collateral is added
-      setTokensToReceive(0);
-      setUsdcToAdd(minUsdcNeeded.toFixed(2));
-    } else if (currentVaultUSDC === 0 && currentTokenSupply === 0) {
-      // Fresh vault - calculate for first mint
-      // Start with $100 worth of tokens as example
-      const targetTokenValueUSD = 100;
-      const requiredUSDC = (targetTokenValueUSD * selectedCR) / 100;
-      const tokensToMint = (targetTokenValueUSD / tokenPrice) * 0.997; // After fee
-      
-      setTokensToReceive(tokensToMint);
-      setUsdcToAdd(requiredUSDC.toFixed(2));
-    } else {
-      // Normal operation with existing collateral
-      const maxTokenValueAtCR = currentVaultUSDC / (selectedCR / 100);
-      const currentTokenValueUSD = currentTokenSupply * tokenPrice;
-      const additionalTokenValue = Math.max(0, maxTokenValueAtCR - currentTokenValueUSD);
-      
-      // Calculate tokens to receive (accounting for 0.3% fee)
-      const tokensFromValue = additionalTokenValue / tokenPrice;
-      const tokensAfterFee = tokensFromValue * 0.997;
-      
-      // Calculate USDC needed to mint these tokens
-      const usdcNeededForTokens = tokensFromValue * tokenPrice;
-      
-      setTokensToReceive(Math.max(0, tokensAfterFee));
-      setUsdcToAdd(usdcNeededForTokens > 0 ? usdcNeededForTokens.toFixed(2) : "0");
-    }
-  }, [targetCR, vaultStats, tokenPrice]);
+    // Calculate future vault state after adding USDC
+    const futureVaultUSDC = currentVaultUSDC + usdcAmount;
+    
+    // Calculate how much token value we can support at this CR
+    const maxTokenValueAtCR = futureVaultUSDC / (selectedCR / 100);
+    
+    // Current token value in USD
+    const currentTokenValueUSD = currentTokenSupply * tokenPrice;
+    
+    // Additional token value we can mint
+    const additionalTokenValue = Math.max(0, maxTokenValueAtCR - currentTokenValueUSD);
+    
+    // Convert to tokens (accounting for 0.3% mint fee)
+    const tokensFromValue = additionalTokenValue / tokenPrice;
+    const tokensAfterFee = tokensFromValue * 0.997;
+    
+    setTokensToReceive(Math.max(0, tokensAfterFee));
+  }, [usdcInput, targetCR, vaultStats, tokenPrice]);
 
   const handleSliderChange = (value: number[]) => {
     setTargetCR(value);
   };
 
   const handleSubmit = async () => {
-    if (!usdcToAdd || parseFloat(usdcToAdd) <= 0) {
+    if (!usdcInput || parseFloat(usdcInput) <= 0) {
       toast({
         title: "Invalid Amount",
-        description: "Please select a valid collateral ratio",
+        description: "Please enter a valid USDC amount",
         variant: "destructive",
       });
       return;
     }
 
-    if (parseFloat(usdcToAdd) > userBalance) {
+    if (parseFloat(usdcInput) > userBalance) {
       toast({
         title: "Insufficient Balance",
-        description: `You need ${usdcToAdd} USDC but only have ${userBalance.toFixed(2)} USDC`,
+        description: `You need ${usdcInput} USDC but only have ${userBalance.toFixed(2)} USDC`,
         variant: "destructive",
       });
       return;
     }
 
     try {
-      await onMint(usdcToAdd);
+      await onMint(usdcInput);
       // Reset after successful mint
+      setUsdcInput("");
       setTargetCR([150]);
     } catch (error: any) {
       toast({
@@ -116,7 +106,7 @@ export function CollateralAwareMinting({
     }
   };
 
-  const canMint = tokensToReceive >= 0 && parseFloat(usdcToAdd) > 0 && parseFloat(usdcToAdd) <= userBalance;
+  const canMint = tokensToReceive > 0 && parseFloat(usdcInput) > 0 && parseFloat(usdcInput) <= userBalance;
 
   return (
     <Card>
@@ -143,6 +133,28 @@ export function CollateralAwareMinting({
           </div>
         </div>
 
+        {/* USDC Input */}
+        <div className="space-y-2">
+          <Label htmlFor="usdc-input" className="text-sm font-medium">
+            USDC Amount to Spend
+          </Label>
+          <div className="relative">
+            <Input
+              id="usdc-input"
+              type="number"
+              placeholder="0.00"
+              value={usdcInput}
+              onChange={(e) => setUsdcInput(e.target.value)}
+              className="pr-16"
+              disabled={isLoading}
+            />
+            <div className="absolute right-3 top-2.5 text-sm text-gray-500">USDC</div>
+          </div>
+          <div className="text-xs text-gray-500">
+            Balance: {userBalance.toFixed(2)} USDC
+          </div>
+        </div>
+
         {/* Collateral Ratio Slider */}
         <div className="space-y-4">
           <div className="space-y-2">
@@ -166,37 +178,29 @@ export function CollateralAwareMinting({
           </div>
 
           {/* Mint Preview */}
-          <div className="bg-blue-50 p-3 rounded-lg">
-            <div className="text-sm font-medium text-blue-900 mb-2">Mint Preview</div>
-            <div className="space-y-1 text-sm">
-              <div className="flex justify-between">
-                <span>You'll receive:</span>
-                <span className="font-medium">{tokensToReceive.toFixed(4)} {tokenSymbol}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>USDC needed:</span>
-                <span className="font-medium">${usdcToAdd}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Exchange rate:</span>
-                <span>1 USDC = {(1 / tokenPrice).toFixed(6)} {tokenSymbol}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Mint fee (0.3%):</span>
-                <span>${(parseFloat(usdcToAdd || '0') * 0.003).toFixed(2)}</span>
+          {usdcInput && (
+            <div className="bg-blue-50 p-3 rounded-lg">
+              <div className="text-sm font-medium text-blue-900 mb-2">Mint Preview</div>
+              <div className="space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <span>You'll receive:</span>
+                  <span className="font-medium">{tokensToReceive.toFixed(4)} {tokenSymbol}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>USDC spending:</span>
+                  <span className="font-medium">${usdcInput}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Exchange rate:</span>
+                  <span>1 USDC = {(1 / tokenPrice).toFixed(6)} {tokenSymbol}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Mint fee (0.3%):</span>
+                  <span>${(parseFloat(usdcInput || '0') * 0.003).toFixed(2)}</span>
+                </div>
               </div>
             </div>
-          </div>
-
-          {/* Balance Check */}
-          <div className="text-xs text-gray-500">
-            Balance: {userBalance.toFixed(2)} USDC
-            {parseFloat(usdcToAdd) > userBalance && (
-              <span className="text-red-500 ml-2">
-                (Need ${(parseFloat(usdcToAdd) - userBalance).toFixed(2)} more)
-              </span>
-            )}
-          </div>
+          )}
         </div>
 
         {/* Vault Status Info */}
@@ -231,8 +235,10 @@ export function CollateralAwareMinting({
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               Minting...
             </>
-          ) : (
+          ) : tokensToReceive > 0 ? (
             `Mint ${tokensToReceive.toFixed(4)} ${tokenSymbol}`
+          ) : (
+            `Mint ${tokenSymbol}`
           )}
         </Button>
 
