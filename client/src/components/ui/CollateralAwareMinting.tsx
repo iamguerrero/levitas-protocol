@@ -221,6 +221,25 @@ export function CollateralAwareMinting({
           </Alert>
         )}
 
+        {/* No USDC Balance Alert */}
+        {userBalance === 0 && (
+          <Alert className="border-orange-200 bg-orange-50">
+            <AlertCircle className="h-4 w-4 text-orange-600" />
+            <AlertDescription className="text-orange-800">
+              <strong>No USDC Balance:</strong> You need test USDC to mint tokens. 
+              <br />
+              Get test USDC from these Base Sepolia faucets:
+              <div className="mt-2 space-y-1">
+                • <a href="https://faucet.quicknode.com/base/sepolia" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">QuickNode Base Sepolia Faucet</a>
+                <br />
+                • <a href="https://www.alchemy.com/faucets/base-sepolia" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">Alchemy Base Sepolia Faucet</a>
+                <br />
+                • Search for "Base Sepolia USDC faucet" online
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Submit Button */}
         <Button 
           onClick={handleSubmit}
@@ -232,6 +251,8 @@ export function CollateralAwareMinting({
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               Minting...
             </>
+          ) : userBalance === 0 ? (
+            `Need Test USDC to Mint ${tokenSymbol}`
           ) : tokensToReceive > 0 ? (
             `Mint ${tokensToReceive.toFixed(4)} ${tokenSymbol}`
           ) : (
