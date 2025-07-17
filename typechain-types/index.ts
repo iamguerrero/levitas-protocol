@@ -26,6 +26,8 @@ export type { EVIXMintRedeem } from "./contracts/EVIXMintRedeem.sol/EVIXMintRede
 export { EVIXMintRedeem__factory } from "./factories/contracts/EVIXMintRedeem.sol/EVIXMintRedeem__factory";
 export type { IOracle } from "./contracts/EVIXMintRedeem.sol/IOracle";
 export { IOracle__factory } from "./factories/contracts/EVIXMintRedeem.sol/IOracle__factory";
+export type { EVIXMintRedeemV5Simple } from "./contracts/EVIXMintRedeemV5Simple";
+export { EVIXMintRedeemV5Simple__factory } from "./factories/contracts/EVIXMintRedeemV5Simple__factory";
 export type { EVIXOracle } from "./contracts/EVIXOracle";
 export { EVIXOracle__factory } from "./factories/contracts/EVIXOracle__factory";
 export type { EVIXToken } from "./contracts/EVIXToken";
@@ -38,6 +40,8 @@ export type { MintRedeemV3 } from "./contracts/MintRedeemV3";
 export { MintRedeemV3__factory } from "./factories/contracts/MintRedeemV3__factory";
 export type { MintRedeemV4 } from "./contracts/MintRedeemV4";
 export { MintRedeemV4__factory } from "./factories/contracts/MintRedeemV4__factory";
+export type { MintRedeemV5Simple } from "./contracts/MintRedeemV5Simple";
+export { MintRedeemV5Simple__factory } from "./factories/contracts/MintRedeemV5Simple__factory";
 export type { MintRedeemWithCollateral } from "./contracts/MintRedeemWithCollateral";
 export { MintRedeemWithCollateral__factory } from "./factories/contracts/MintRedeemWithCollateral__factory";
 export type { MockOracle } from "./contracts/MockOracle";

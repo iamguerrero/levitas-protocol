@@ -2,10 +2,10 @@ import { ethers } from "ethers";
 import BVIX_ABI from "../contracts/BVIXToken.abi.json";
 import EVIX_ABI from "../contracts/EVIXToken.abi.json";
 import Oracle_ABI from "../contracts/MockOracle.abi.json";
-import MintRedeem_ABI from "../contracts/MintRedeemV4.abi.json";
+import MintRedeem_ABI from "../contracts/MintRedeemV5Simple.abi.json";
 import USDC_ABI from "../contracts/MockUSDC.abi.json";
 import EVIXOracle_ABI from "../contracts/EVIXOracle.abi.json";
-import EVIXMintRedeem_ABI from "../contracts/EVIXMintRedeem.abi.json";
+import EVIXMintRedeem_ABI from "../contracts/EVIXMintRedeemV5Simple.abi.json";
 import { BigNumber, utils } from "ethers";
 
 declare global {
@@ -24,14 +24,14 @@ declare global {
 export const BASE_SEPOLIA_CHAIN_ID = "0x14a34";
 export const BASE_SEPOLIA_RPC_URL = "https://sepolia.base.org";
 
-// Contract addresses - Updated with V4 final version (no collateral ratio check)
-export const MINT_REDEEM_ADDRESS = "0x9d12b251f8F6c432b1Ecd6ef722Bf45A8aFdE6A8";
+// Contract addresses - Updated with V5 contracts (proper collateral ratio enforcement)
+export const MINT_REDEEM_ADDRESS = "0xFe9c81A98F33F15B279DE45ba022302113245D9F"; // V5 Simple
 export const BVIX_ADDRESS = "0xcA7aC262190a3d126971281c496a521F5dD0f8D0";
 export const EVIX_ADDRESS = "0x37e3b45fEF91D54Ef4992B71382EC36307908463";
 export const ORACLE_ADDRESS = "0x85485dD6cFaF5220150c413309C61a8EA24d24FE";
 export const MOCK_USDC_ADDRESS = "0x79640e0f510a7c6d59737442649d9600C84b035f";
 export const EVIX_ORACLE_ADDRESS = "0xCd7441A771a7F84E58d98E598B7Ff23A3688094F";
-export const EVIX_MINT_REDEEM_ADDRESS = "0xe521441B10F5b9a28499Ae37d1C93b42223eCff6";
+export const EVIX_MINT_REDEEM_ADDRESS = "0x0C554bc816D5734712C8CE148faA9B97F4568D5E"; // V5 Simple
 
 // Contract factory functions
 export const getBVIXContract = (providerOrSigner: any) =>
@@ -182,8 +182,9 @@ export async function getEVIXPrice(): Promise<string> {
 
 export async function mintBVIX(
   usdcAmount: string,
+  targetCR: number = 150,
 ): Promise<ethers.ContractTransactionResponse> {
-  console.log("🚀 Starting BVIX mint process for", usdcAmount, "USDC");
+  console.log("🚀 Starting BVIX mint process for", usdcAmount, "USDC at", targetCR + "% CR");
   
   const signer = await getSigner();
   const address = await signer.getAddress();
@@ -195,7 +196,7 @@ export async function mintBVIX(
   console.log("🔍 Checking balances and allowances...");
   console.log("User address:", address);
   console.log("USDC contract:", MOCK_USDC_ADDRESS);
-  console.log("MintRedeem contract:", MINT_REDEEM_ADDRESS);
+  console.log("MintRedeem V5 contract:", MINT_REDEEM_ADDRESS);
 
   // Check USDC balance first
   const usdcBalance = await usdcContract.balanceOf(address);
@@ -228,17 +229,16 @@ export async function mintBVIX(
     console.log("✅ Sufficient allowance already exists");
   }
 
-  // Skip staticCall since it runs from wrong context and causes allowance errors
-  console.log("🚀 Proceeding directly to mint transaction (staticCall skipped due to context issues)...");
-
-  // Then mint BVIX
-  console.log("🚀 Executing actual mint transaction...");
-  const mintTx = await mintRedeemContract.mint(usdcAmountWei);
+  // Use V5 collateral-aware mint function
+  console.log(`🎯 Using V5 mintWithCollateralRatio: ${usdcAmount} USDC at ${targetCR}% CR`);
+  console.log(`💰 Expected token value: $${(parseFloat(usdcAmount) / (targetCR / 100)).toFixed(2)}`);
+  
+  const mintTx = await mintRedeemContract.mintWithCollateralRatio(usdcAmountWei, targetCR);
   console.log("📄 Transaction hash:", mintTx.hash);
   
   // Wait for transaction confirmation
   await mintTx.wait();
-  console.log("✅ Mint transaction confirmed!");
+  console.log("✅ V5 Mint transaction confirmed with proper CR enforcement!");
   
   return mintTx;
 }
@@ -268,7 +268,10 @@ export async function redeemBVIX(
 
 export async function mintEVIX(
   usdcAmount: string,
+  targetCR: number = 150,
 ): Promise<ethers.ContractTransactionResponse> {
+  console.log("🚀 Starting EVIX mint process for", usdcAmount, "USDC at", targetCR + "% CR");
+  
   const signer = await getSigner();
   const address = await signer.getAddress();
   const evixMintRedeemContract = getEVIXMintRedeemContract(signer);
@@ -292,18 +295,25 @@ export async function mintEVIX(
 
   // Only approve if needed
   if (currentAllowance < usdcAmountWei) {
-    console.log("Approving USDC spending for EVIX...");
+    console.log("🔄 Approving USDC spending for EVIX...");
     const approveTx = await usdcContract.approve(
       EVIX_MINT_REDEEM_ADDRESS,
       usdcAmountWei,
     );
     await approveTx.wait();
-    console.log("USDC approval confirmed for EVIX");
+    console.log("✅ USDC approval confirmed for EVIX");
   }
 
-  // Then mint EVIX
-  console.log("Minting EVIX tokens...");
-  const mintTx = await evixMintRedeemContract.mint(usdcAmountWei);
+  // Use V5 collateral-aware mint function
+  console.log(`🎯 Using V5 EVIX mintWithCollateralRatio: ${usdcAmount} USDC at ${targetCR}% CR`);
+  console.log(`💰 Expected token value: $${(parseFloat(usdcAmount) / (targetCR / 100)).toFixed(2)}`);
+  
+  const mintTx = await evixMintRedeemContract.mintWithCollateralRatio(usdcAmountWei, targetCR);
+  console.log("📄 EVIX Transaction hash:", mintTx.hash);
+  
+  await mintTx.wait();
+  console.log("✅ V5 EVIX Mint transaction confirmed with proper CR enforcement!");
+  
   return mintTx;
 }
 

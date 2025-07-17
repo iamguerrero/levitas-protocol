@@ -15,7 +15,7 @@ interface CollateralAwareMintingProps {
   tokenPrice: number;
   vaultStats: any;
   userBalance: number;
-  onMint: (amount: string) => Promise<void>;
+  onMint: (amount: string, targetCR?: number) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -85,27 +85,14 @@ export function CollateralAwareMinting({
     }
 
     try {
-      // V4 contracts don't have collateral ratio enforcement
-      // We need to send the full USDC amount and warn the user
+      // V5 contracts have proper collateral ratio enforcement
       const selectedCR = targetCR[0];
       const expectedTokenValue = parseFloat(usdcInput) / (selectedCR / 100);
-      const actualTokenValue = parseFloat(usdcInput); // What they'll actually get
       
-      console.log(`⚠️ V4 Contract Limitation: CR enforcement not available`);
-      console.log(`💰 Spending: ${usdcInput} USDC`);
-      console.log(`🎯 Expected token value at ${selectedCR}% CR: $${expectedTokenValue.toFixed(2)}`);
-      console.log(`📊 Actual token value you'll get: $${actualTokenValue.toFixed(2)}`);
+      console.log(`🎯 V5 Collateral-aware mint: Spending ${usdcInput} USDC at ${selectedCR}% CR`);
+      console.log(`💰 Token value you'll receive: $${expectedTokenValue.toFixed(2)} (CR enforced by contract)`);
       
-      // Show warning if CR is not 100%
-      if (selectedCR !== 100) {
-        toast({
-          title: "Contract Limitation",
-          description: `V4 contracts don't enforce collateral ratios. You'll receive $${actualTokenValue} worth of tokens instead of $${expectedTokenValue.toFixed(2)} expected at ${selectedCR}% CR.`,
-          variant: "default",
-        });
-      }
-      
-      await onMint(usdcInput);
+      await onMint(usdcInput, selectedCR);
       // Reset after successful mint
       setUsdcInput("");
       setTargetCR([150]);
@@ -167,12 +154,12 @@ export function CollateralAwareMinting({
           </div>
         </div>
 
-        {/* Collateral Ratio Slider - Currently for Display Only */}
+        {/* Collateral Ratio Slider - V5 Enforcement Active */}
         <div className="space-y-4">
           <div className="space-y-2">
             <Label className="text-sm font-medium">
               Target Collateral Ratio: {targetCR[0]}% 
-              <span className="text-xs text-orange-600 ml-2">(Display Only - V4 Contract Limitation)</span>
+              <span className="text-xs text-green-600 ml-2">(✅ V5 Enforcement Active)</span>
             </Label>
             <Slider
               value={targetCR}
@@ -259,13 +246,14 @@ export function CollateralAwareMinting({
           )}
         </Button>
 
-        {/* Important Notice */}
-        <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-          <div className="text-xs text-orange-800 space-y-1">
-            <div className="font-medium">⚠️ V4 Contract Limitation:</div>
-            <div>• Current contracts don't enforce collateral ratios</div>
-            <div>• You'll receive full token value for your USDC spend</div>
-            <div>• Collateral ratio is calculated protocol-wide for monitoring</div>
+        {/* Success Notice */}
+        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+          <div className="text-xs text-green-800 space-y-1">
+            <div className="font-medium">✅ V5 Contract Features:</div>
+            <div>• Proper collateral ratio enforcement</div>
+            <div>• Spend full USDC, receive proportional tokens</div>
+            <div>• 200% CR = half the tokens for your full USDC spend</div>
+            <div>• 150% CR = 67% of tokens for your full USDC spend</div>
           </div>
         </div>
       </CardContent>

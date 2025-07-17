@@ -3,10 +3,10 @@ import { ethers } from 'ethers';
 
 const router = Router();
 
-// Contract addresses and ABIs
-const MOCK_USDC_ADDRESS = '0x79640e0F510A7C6d59737442649D9600C84B035f';
-const BVIX_ADDRESS = '0xEA3d08A5A5bC48Fc984F0F773826693B7480bF48';
-const MINT_REDEEM_ADDRESS = '0x27F971cb582BF9E50F397e4d29a5C7A34f11faA2';
+// Contract addresses and ABIs - V5 Updated
+const MOCK_USDC_ADDRESS = '0x79640e0f510a7c6d59737442649d9600C84b035f';
+const BVIX_ADDRESS = '0xcA7aC262190a3d126971281c496a521F5dD0f8D0';
+const MINT_REDEEM_ADDRESS = '0xFe9c81A98F33F15B279DE45ba022302113245D9F'; // V5 Simple
 const BASE_SEPOLIA_RPC_URL = 'https://sepolia.base.org';
 
 // Minimal ERC20 ABI for balance and supply queries
@@ -20,7 +20,7 @@ const ORACLE_ABI = [
   'function getPrice() external view returns (uint256)',
 ];
 
-const ORACLE_ADDRESS = '0x8464135c8F25Da09e49BC8782676a84730C318bC';
+const ORACLE_ADDRESS = '0x85485dD6cFaF5220150c413309C61a8EA24d24FE';
 
 router.get('/api/v1/vault-stats', async (req, res) => {
   try {

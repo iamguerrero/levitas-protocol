@@ -6,12 +6,12 @@ This project is a decentralized finance (DeFi) application called Levitas Financ
 
 ## Recent Changes (January 2025)
 
-✓ **CRITICAL FIX: Authorization Issue Resolved** - Fixed OwnableUnauthorizedAccount error by deploying fresh contracts with proper ownership configuration
-✓ **V4 Final Contract Deployment** - New BVIX (0xcA7aC262190a3d126971281c496a521F5dD0f8D0) and MintRedeemV4 (0x9d12b251f8F6c432b1Ecd6ef722Bf45A8aFdE6A8) with no collateral ratio enforcement
-✓ **Ownership Configuration Fixed** - MintRedeemV4 now properly owns BVIX token enabling successful mint operations
-✓ **Bootstrap-Friendly Mint Logic** - V4 contract allows first mint without collateral ratio check for vault bootstrapping
-✓ **Return Value Fixed** - MintRedeemV4 returns mint amount to prevent BigNumberish value errors in frontend
-✓ **StaticCall Context Fix** - Removed staticCall that was causing ERC20InsufficientAllowance errors due to wrong execution context
+✓ **V5 CONTRACTS DEPLOYED WITH PROPER CR ENFORCEMENT** - Successfully deployed V5 Simple contracts: BVIX MintRedeem (0xFe9c81A98F33F15B279DE45ba022302113245D9F) and EVIX MintRedeem (0x0C554bc816D5734712C8CE148faA9B97F4568D5E)
+✓ **TRUE COLLATERAL RATIO ENFORCEMENT** - V5 contracts implement mintWithCollateralRatio(amount, targetCR) where users spend full USDC but receive proportional tokens based on selected CR
+✓ **FRONTEND UPDATED FOR V5** - Updated all mint functions to use V5 contracts, removed V4 warnings, added proper CR parameter passing
+✓ **VAULT STATS API UPDATED** - Backend now queries V5 contracts for accurate collateral ratio monitoring
+✓ **CONTRACT INTERFACE SIMPLIFIED** - Removed "Stack too deep" compilation errors by creating simplified V5Simple contracts
+✓ **PROPER DeFi MECHANICS** - 150% CR = 67% token value, 200% CR = 50% token value, exactly as required by users
 ✓ **Vault Health Real-Time Updates** - Updated vault stats API to use V4 contracts and reduced refresh interval to 5 seconds for faster updates
 ✓ **Post-Transaction Cache Invalidation** - Added automatic vault cache refresh after BVIX transactions for immediate collateral ratio updates (EVIX transactions don't affect BVIX vault)
 ✓ **Comprehensive Debug Logging** - Added detailed console logging for mint process troubleshooting
