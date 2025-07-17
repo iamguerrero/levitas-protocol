@@ -42,7 +42,7 @@ contract EVIXMintRedeemV5Simple is Ownable {
         uint256 netTokenValue = tokenValue - ((tokenValue * mintFee) / 10_000);
         
         uint256 price = uint256(oracle.getPrice());
-        uint256 tokensToMint = (netTokenValue * 1e8) / price;
+        uint256 tokensToMint = (netTokenValue * 1e18) / price;
         
         require(tokensToMint > 0, "Amount too small");
         
@@ -69,7 +69,7 @@ contract EVIXMintRedeemV5Simple is Ownable {
         require(evix.balanceOf(msg.sender) >= amount, "Insufficient balance");
         
         uint256 price = uint256(oracle.getPrice());
-        uint256 usdcValue = (amount * price) / 1e8;
+        uint256 usdcValue = (amount * price) / 1e18;
         uint256 netUSDC = usdcValue - ((usdcValue * mintFee) / 10_000);
         
         require(usdc.balanceOf(address(this)) >= netUSDC, "Insufficient vault USDC");
@@ -88,7 +88,7 @@ contract EVIXMintRedeemV5Simple is Ownable {
         uint256 price = uint256(oracle.getPrice());
         
         uint256 vaultUSDC18 = vaultUSDC * 1e12;
-        uint256 evixValueUSD = (totalSupply * price) / 1e8;
+        uint256 evixValueUSD = (totalSupply * price) / 1e18;
         
         if (evixValueUSD == 0) return 0;
         return (vaultUSDC18 * 100) / evixValueUSD;

@@ -254,6 +254,10 @@ export function CollateralAwareMinting({
             <div>• Spend full USDC, receive proportional tokens</div>
             <div>• 200% CR = half the tokens for your full USDC spend</div>
             <div>• 150% CR = 67% of tokens for your full USDC spend</div>
+            <div className="border-t border-green-300 pt-2 mt-2">
+              <div className="font-medium text-blue-700">Your Target CR: {targetCR[0]}%</div>
+              <div className="text-green-600">Vault CR: {vaultStats?.cr ? `${vaultStats.cr.toFixed(1)}%` : 'Loading...'}</div>
+            </div>
           </div>
         </div>
       </CardContent>

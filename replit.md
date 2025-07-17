@@ -6,13 +6,15 @@ This project is a decentralized finance (DeFi) application called Levitas Financ
 
 ## Recent Changes (January 2025)
 
-✓ **V5 FINAL CONTRACTS WITH PROPER OWNERSHIP** - Deployed fresh BVIX (0xa60289981b67139fb7a9F3d31dD2D2BaA414A263) and V5 contracts: BVIX MintRedeem (0xa0133C6380bf9618e97Ab9a855aF2035e9498829) and EVIX MintRedeem (0x30218E088a02ab32C28824F72DCe0Ef53C4E16F9)
+✓ **V5 FINAL CONTRACTS WITH PROPER OWNERSHIP** - Deployed fresh BVIX (0xa60289981b67139fb7a9F3d31dD2D2BaA414A263) and V5 contracts: BVIX MintRedeem (0xa0133C6380bf9618e97Ab9a855aF2035e9498829) and EVIX MintRedeem (0x0D1957BB292d2b9C19EA0Bbf50E6da8b5d175c3c)
 ✓ **TRUE COLLATERAL RATIO ENFORCEMENT** - V5 contracts implement mintWithCollateralRatio(amount, targetCR) where users spend full USDC but receive proportional tokens based on selected CR
 ✓ **FRONTEND UPDATED FOR V5** - Updated all mint functions to use V5 contracts, removed V4 warnings, added proper CR parameter passing
 ✓ **VAULT STATS API UPDATED** - Backend now queries V5 contracts for accurate collateral ratio monitoring
 ✓ **CONTRACT INTERFACE SIMPLIFIED** - Removed "Stack too deep" compilation errors by creating simplified V5Simple contracts
 ✓ **PROPER DeFi MECHANICS** - 150% CR = 67% token value, 200% CR = 50% token value, exactly as required by users
 ✓ **OWNERSHIP STRUCTURE FIXED** - Fresh BVIX token owned by V5 contract from deployment, eliminating previous ownership conflicts
+✓ **EVIX DECIMAL HANDLING FIXED** - Fixed EVIX contract decimal handling to resolve "Amount too small" error
+✓ **CR DISPLAY CLARIFICATION** - UI now clearly shows Target CR (user's selection) vs Vault CR (actual collateral ratio)
 ✓ **Vault Health Real-Time Updates** - Updated vault stats API to use V4 contracts and reduced refresh interval to 5 seconds for faster updates
 ✓ **Post-Transaction Cache Invalidation** - Added automatic vault cache refresh after BVIX transactions for immediate collateral ratio updates (EVIX transactions don't affect BVIX vault)
 ✓ **Comprehensive Debug Logging** - Added detailed console logging for mint process troubleshooting
