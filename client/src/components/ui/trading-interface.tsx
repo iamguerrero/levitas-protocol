@@ -325,9 +325,7 @@ export default function TradingInterface() {
       
       await loadContractData();
       
-      // Invalidate vault cache to trigger real-time update
-      queryClient.invalidateQueries({ queryKey: ['/api/v1/vault-stats'] });
-      refetchVault();
+      // Note: EVIX minting doesn't affect BVIX vault stats, so no vault cache invalidation needed
     } catch (error: any) {
       toast({
         title: "Mint Failed",
@@ -373,9 +371,7 @@ export default function TradingInterface() {
       setEvixRedeemAmount("");
       await loadContractData();
       
-      // Invalidate vault cache to trigger real-time update
-      queryClient.invalidateQueries({ queryKey: ['/api/v1/vault-stats'] });
-      refetchVault();
+      // Note: EVIX redemption doesn't affect BVIX vault stats, so no vault cache invalidation needed
     } catch (error: any) {
       toast({
         title: "Redeem Failed",
