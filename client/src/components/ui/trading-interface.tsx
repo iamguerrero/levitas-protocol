@@ -275,6 +275,10 @@ export default function TradingInterface() {
 
       setRedeemAmount("");
       await loadContractData(); // Refresh balances
+      
+      // Invalidate vault cache to trigger real-time update
+      queryClient.invalidateQueries({ queryKey: ['/api/v1/vault-stats'] });
+      refetchVault();
     } catch (error: any) {
       console.error("Redeem error:", error);
       toast({
@@ -320,6 +324,10 @@ export default function TradingInterface() {
       });
       
       await loadContractData();
+      
+      // Invalidate vault cache to trigger real-time update
+      queryClient.invalidateQueries({ queryKey: ['/api/v1/vault-stats'] });
+      refetchVault();
     } catch (error: any) {
       toast({
         title: "Mint Failed",
@@ -364,6 +372,10 @@ export default function TradingInterface() {
       
       setEvixRedeemAmount("");
       await loadContractData();
+      
+      // Invalidate vault cache to trigger real-time update
+      queryClient.invalidateQueries({ queryKey: ['/api/v1/vault-stats'] });
+      refetchVault();
     } catch (error: any) {
       toast({
         title: "Redeem Failed",
