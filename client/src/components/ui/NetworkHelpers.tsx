@@ -50,10 +50,18 @@ export function NetworkHelpers() {
   };
 
   const openBaseFaucet = () => {
-    window.open('https://www.coinbase.com/faucets/base-ethereum-sepolia-faucet', '_blank');
+    window.open('https://thirdweb.com/base-sepolia-testnet', '_blank');
     toast({
       title: "Faucet Opened",
       description: "Use your wallet address to get free testnet ETH.",
+    });
+  };
+
+  const getTestUSDC = () => {
+    window.open('https://sepolia.basescan.org/address/0x79640e0f510a7c6d59737442649d9600C84b035f#writeContract', '_blank');
+    toast({
+      title: "Test USDC Faucet",
+      description: "Use the 'mint' function to get test USDC tokens.",
     });
   };
 
@@ -85,12 +93,23 @@ export function NetworkHelpers() {
             Get Testnet ETH
             <ExternalLink className="w-3 h-3 ml-auto" />
           </Button>
+          
+          <Button
+            onClick={getTestUSDC}
+            variant="outline"
+            className="w-full justify-start"
+          >
+            <Coins className="w-4 h-4 mr-2" />
+            Get Test USDC
+            <ExternalLink className="w-3 h-3 ml-auto" />
+          </Button>
         </div>
         
         <div className="text-xs text-gray-600 space-y-1">
           <p>• Add the Base Sepolia testnet to MetaMask</p>
           <p>• Get free testnet ETH for transaction fees</p>
-          <p>• Both are required for trading BVIX tokens</p>
+          <p>• Get test USDC tokens for minting BVIX</p>
+          <p>• All three are required for trading BVIX tokens</p>
         </div>
       </CardContent>
     </Card>
