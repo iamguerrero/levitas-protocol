@@ -12,7 +12,8 @@ import { CollateralAwareMinting } from "@/components/ui/CollateralAwareMinting";
 import { useWallet } from "@/hooks/use-wallet";
 import { useToast } from "@/hooks/use-toast";
 import { usePosition } from "@/hooks/use-position";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useVault } from "@/hooks/useVault";
 import {
   getBVIXBalance,
   getEVIXBalance,
@@ -43,6 +44,10 @@ export default function TradingInterface() {
   const [evixRedeemAmount, setEvixRedeemAmount] = useState("");
   const [selectedToken, setSelectedToken] = useState<'bvix' | 'evix'>('bvix');
   const [isTransacting, setIsTransacting] = useState(false);
+  
+  // Import vault refresh functions
+  const { refetch: refetchVault } = useVault();
+  const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(true);
   const [debugInfo, setDebugInfo] = useState<any>(null);
   const [collateralRatio, setCollateralRatio] = useState<number | null>(null);
@@ -188,7 +193,7 @@ export default function TradingInterface() {
 
       await tx.wait();
       const hash = tx.hash;
-      await new Promise((res) => setTimeout(res, 4_000));
+      await new Promise((res) => setTimeout(res, 2_000));
       await loadContractData();
 
       toast({
@@ -202,6 +207,10 @@ export default function TradingInterface() {
       });
 
       await loadContractData(); // Refresh balances
+      
+      // Invalidate vault cache to trigger real-time update
+      queryClient.invalidateQueries({ queryKey: ['/api/v1/vault-stats'] });
+      refetchVault();
     } catch (error: any) {
       console.error("Mint error:", error);
       toast({

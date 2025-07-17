@@ -235,6 +235,11 @@ export async function mintBVIX(
   console.log("🚀 Executing actual mint transaction...");
   const mintTx = await mintRedeemContract.mint(usdcAmountWei);
   console.log("📄 Transaction hash:", mintTx.hash);
+  
+  // Wait for transaction confirmation
+  await mintTx.wait();
+  console.log("✅ Mint transaction confirmed!");
+  
   return mintTx;
 }
 
