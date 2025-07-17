@@ -16,7 +16,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Contract addresses (use proper checksums from web3.ts)
       const MOCK_USDC_ADDRESS = '0x79640e0f510a7c6d59737442649d9600C84b035f';
       const BVIX_ADDRESS = '0xEA3d08a5A5bC48Fc984F0F773826693B7480bF48';
-      const MINT_REDEEM_ADDRESS = '0x5254533747b373D13303AE8ACC9D464f80B6bfae';
+      const MINT_REDEEM_ADDRESS = '0x685FEc86F539a1C0e9aEEf02894D5D90bfC48098';
       const ORACLE_ADDRESS = '0x85485dD6cFaF5220150c413309C61a8EA24d24FE';
       const BASE_SEPOLIA_RPC_URL = 'https://sepolia.base.org';
 
