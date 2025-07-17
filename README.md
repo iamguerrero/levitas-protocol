@@ -9,20 +9,28 @@
 
 ```mermaid
 flowchart LR
-  subgraph Client (React + Vite)
-    A1[WalletConnect] --> A2[Trading Interface]
+  %% ---------- Front-end ----------
+  subgraph Client ["Client (React + Vite)"]
+    A[Browser SPA]
   end
-  subgraph Express API
-    B1[Positions RPC] --> B2[Collateral Stats]
+
+  %% ---------- Back-end ----------
+  subgraph Server ["Server (Node / Express)"]
+    B[REST + Auth]
   end
-  subgraph Smart Contracts
-    C1[mUSDC] --transfer--> C3[MintRedeem]
-    C2[BVIX]  --mint/burn--> C3
-    C3 --vault--> C4[Uniswap V3 Pool]
+
+  %% ---------- Blockchain ----------
+  subgraph "Base Sepolia"
+    C["BVIX • MockUSDC<br/>MintRedeem"]
+    D["Uniswap V3 Pool"]
   end
-  A2 <--ethers.js--> C3
-  A2 <--ethers.js--> C4
-  B1 <--pg-->  DB[(Neon Serverless Postgres)]
+
+  A -- ethers.js --> C
+  A -- fetch/axios --> B
+  B -- JSON-RPC --> C
+  C -- liquidity --> D
+```
+
 
 ### Deployed contracts (Base Sepolia)
 
