@@ -58,11 +58,4 @@ pnpm dev              # Express + Vite on http://localhost:5000
 🐦 X: @levitasfinance
 💬 Discord:https://discord.gg/dE5wV8Deya
 
-### Contract status
 
-| Contract | Address | Explorer | Status |
-|----------|---------|----------|--------|
-| **BVIXToken** | [`0xEA3d…bF48`](https://sepolia.basescan.org/address/0xEA3d08A5A5bC48Fc984F0F773826693B7480bF48) | BaseScan | ![Verified](https://img.shields.io/badge/verified-green?style=flat-square&logo=ethereum) |
-| **Mock USDC** | [`0x7964…b035f`](https://sepolia.basescan.org/address/0x79640e0F510A7C6D59737442649D9600C84B035f) | BaseScan | ![Verified](https://img.shields.io/badge/verified-green?style=flat-square&logo=ethereum) |
-| **MintRedeem (Vault)** | [`0x184D…b806`](https://sepolia.basescan.org/address/0x184D28dc8AA2E1069e47650DE028Dbb34C5Cb806) | BaseScan | ![Verified](https://img.shields.io/badge/verified-green?style=flat-square&logo=ethereum) |
-| **Uniswap V3 Pool** | [`0x7883…d190`](https://sepolia.basescan.org/address/0x7883Ba215Bd4C8d81eD8643E6cA7F15659fDd190) | BaseScan | – |
