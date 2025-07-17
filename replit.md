@@ -6,6 +6,7 @@ This project is a decentralized finance (DeFi) application called Levitas Financ
 
 ## Recent Changes (January 2025)
 
+✓ **EVIX Token Deployment** - Successfully deployed EVIX token contract to Base Sepolia at 0x37e3b45fEF91D54Ef4992B71382EC36307908463
 ✓ **Collateral Ratio Integration** - Added real-time collateral ratio display in wallet overview with helper function
 ✓ **Enhanced Logo & Branding** - Updated navigation with new Levitas logo (cyan circle design) and proper scaling  
 ✓ **Whitepaper Integration** - Connected whitepaper header to PDF file for easy access

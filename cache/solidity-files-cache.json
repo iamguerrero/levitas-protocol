@@ -382,6 +382,45 @@
       "artifacts": [
         "MockUSDC"
       ]
+    },
+    "/home/runner/workspace/contracts/EVIXToken.sol": {
+      "lastModificationDate": 1752760434107,
+      "contentHash": "eef9133e415ce9169171a2b929cc4ba7",
+      "sourceName": "contracts/EVIXToken.sol",
+      "solcConfig": {
+        "version": "0.8.21",
+        "settings": {
+          "evmVersion": "paris",
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/token/ERC20/ERC20.sol",
+        "@openzeppelin/contracts/access/Ownable.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.21"
+      ],
+      "artifacts": [
+        "EVIXToken"
+      ]
     }
   }
 }

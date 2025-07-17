@@ -2,6 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export { BVIXToken__factory } from "./BVIXToken__factory";
+export { EVIXToken__factory } from "./EVIXToken__factory";
 export { MintRedeem__factory } from "./MintRedeem__factory";
 export { MockOracle__factory } from "./MockOracle__factory";
 export { MockUSDC__factory } from "./MockUSDC__factory";
