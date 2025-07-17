@@ -78,21 +78,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const evixValueInUsd = parseFloat(evixSupply) * parseFloat(evixPriceFormatted);
       const totalTokenValueInUsd = bvixValueInUsd + evixValueInUsd;
       
-      const collateralRatio = totalTokenValueInUsd > 0 ? (totalUsdcFloat / totalTokenValueInUsd) * 100 : 0;
+      // Calculate individual vault CRs (more meaningful for users)
+      const bvixVaultCR = bvixValueInUsd > 0 ? (parseFloat(bvixUsdcValue) / bvixValueInUsd) * 100 : 0;
+      const evixVaultCR = evixValueInUsd > 0 ? (parseFloat(evixUsdcValue) / evixValueInUsd) * 100 : 0;
+      
+      // For display, show BVIX vault CR (since it's the primary vault being monitored)
+      const collateralRatio = bvixVaultCR;
       
       res.json({
-        usdc: totalUsdcValue, // Combined USDC from both vaults for display
+        usdc: bvixUsdcValue, // Show BVIX vault USDC (primary vault being monitored)
         bvix: bvixSupply,
         evix: evixSupply,
-        cr: Math.round(collateralRatio * 100) / 100, // Protocol-wide CR
+        cr: Math.round(bvixVaultCR * 100) / 100, // BVIX vault CR (what user expects)
         price: price,
         evixPrice: evixPriceFormatted,
-        usdcValue: parseFloat(totalUsdcValue),
+        usdcValue: parseFloat(bvixUsdcValue),
         bvixValueInUsd: bvixValueInUsd,
         evixValueInUsd: evixValueInUsd,
         totalTokenValueInUsd: totalTokenValueInUsd,
-        bvixVaultUsdc: bvixUsdcValue, // Individual vault amounts for debugging
-        evixVaultUsdc: evixUsdcValue
+        bvixVaultUsdc: bvixUsdcValue,
+        evixVaultUsdc: evixUsdcValue,
+        bvixVaultCR: Math.round(bvixVaultCR * 100) / 100,
+        evixVaultCR: Math.round(evixVaultCR * 100) / 100,
+        totalUsdcCombined: totalUsdcValue // For debugging
       });
       
     } catch (error) {

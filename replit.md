@@ -16,6 +16,7 @@ This project is a decentralized finance (DeFi) application called Levitas Financ
 ✓ **EVIX DECIMAL HANDLING FIXED** - Fixed EVIX contract decimal handling to resolve "Amount too small" error
 ✓ **CR DISPLAY CLARIFICATION** - UI now clearly shows Target CR (user's selection) vs Vault CR (actual collateral ratio)
 ✓ **CRITICAL CR CALCULATION FIX** - Fixed decimal handling bug in backend CR calculation (oracle uses 18 decimals, not 8)
+✓ **VAULT-SPECIFIC CR TRACKING** - Fixed CR calculation to show individual BVIX vault CR instead of confusing protocol-wide combined CR
 ✓ **Vault Health Real-Time Updates** - Updated vault stats API to use V4 contracts and reduced refresh interval to 5 seconds for faster updates
 ✓ **Post-Transaction Cache Invalidation** - Added automatic vault cache refresh after BVIX transactions for immediate collateral ratio updates (EVIX transactions don't affect BVIX vault)
 ✓ **Comprehensive Debug Logging** - Added detailed console logging for mint process troubleshooting
