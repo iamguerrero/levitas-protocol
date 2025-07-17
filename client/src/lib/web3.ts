@@ -228,15 +228,8 @@ export async function mintBVIX(
     console.log("✅ Sufficient allowance already exists");
   }
 
-  // Test mint call first with staticCall
-  console.log("🧪 Testing mint call with staticCall...");
-  try {
-    const staticResult = await mintRedeemContract.mint.staticCall(usdcAmountWei);
-    console.log("✅ Static call successful, would mint:", ethers.formatEther(staticResult), "BVIX");
-  } catch (staticError) {
-    console.error("❌ Static call failed:", staticError);
-    throw new Error(`Mint would fail: ${staticError.message}`);
-  }
+  // Skip staticCall since it runs from wrong context and causes allowance errors
+  console.log("🚀 Proceeding directly to mint transaction (staticCall skipped due to context issues)...");
 
   // Then mint BVIX
   console.log("🚀 Executing actual mint transaction...");

@@ -1,0 +1,24 @@
+MintRedeem contract: 0xb507A6743787E1Ee10365385F46DD5BFEa10Dcd5
+web3.ts:202 USDC balance: 999897933.844978
+web3.ts:203 Required amount: 100
+web3.ts:216 Current allowance: 0.0
+web3.ts:220 🔄 Approving USDC spending...
+web3.ts:226 ✅ USDC approval confirmed
+web3.ts:232 🧪 Testing mint call with staticCall...
+inpage.js:1 MetaMask - RPC Error: Internal JSON-RPC error. Object
+(anonymous) @ inpage.js:1Understand this warning
+web3.ts:237 ❌ Static call failed: Error: execution reverted (unknown custom error) (action="call", data="0xfb8f41b2000000000000000000000000b507a6743787e1ee10365385f46dd5bfea10dcd500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005f5e100", reason=null, transaction={ "data": "0xa0712d680000000000000000000000000000000000000000000000000000000005f5e100", "to": "0xb507A6743787E1Ee10365385F46DD5BFEa10Dcd5" }, invocation=null, revert=null, code=CALL_EXCEPTION, version=6.15.0)
+    at makeError (ethers.js?v=5f040986:337:15)
+    at getBuiltinCallException (ethers.js?v=5f040986:12020:10)
+    at _AbiCoder.getBuiltinCallException (ethers.js?v=5f040986:12091:12)
+    at _Interface.makeError (ethers.js?v=5f040986:12741:28)
+    at staticCallResult (ethers.js?v=5f040986:14836:34)
+    at async mint.staticCall (ethers.js?v=5f040986:14809:20)
+    at async mintBVIX (web3.ts:234:26)
+    at async handleMint (trading-interface.tsx:181:18)
+    at async handleSubmit (CollateralAwareMinting.tsx:91:7)
+mintBVIX @ web3.ts:237Understand this error
+trading-interface.tsx:206 Mint error: Error: Mint would fail: execution reverted (unknown custom error) (action="call", data="0xfb8f41b2000000000000000000000000b507a6743787e1ee10365385f46dd5bfea10dcd500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005f5e100", reason=null, transaction={ "data": "0xa0712d680000000000000000000000000000000000000000000000000000000005f5e100", "to": "0xb507A6743787E1Ee10365385F46DD5BFEa10Dcd5" }, invocation=null, revert=null, code=CALL_EXCEPTION, version=6.15.0)
+    at mintBVIX (web3.ts:238:11)
+    at async handleMint (trading-interface.tsx:181:18)
+    at async handleSubmit (CollateralAwareMinting.tsx:91:7)
