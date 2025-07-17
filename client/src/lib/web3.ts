@@ -24,9 +24,9 @@ declare global {
 export const BASE_SEPOLIA_CHAIN_ID = "0x14a34";
 export const BASE_SEPOLIA_RPC_URL = "https://sepolia.base.org";
 
-// Contract addresses - Updated with V4 fixed version with return value
-export const MINT_REDEEM_ADDRESS = "0xb507A6743787E1Ee10365385F46DD5BFEa10Dcd5";
-export const BVIX_ADDRESS = "0x4Cd0c0ed02363F27fC2A8a3D7dC9aEA88ddCCf5E";
+// Contract addresses - Updated with V4 final version (no collateral ratio check)
+export const MINT_REDEEM_ADDRESS = "0x9d12b251f8F6c432b1Ecd6ef722Bf45A8aFdE6A8";
+export const BVIX_ADDRESS = "0xcA7aC262190a3d126971281c496a521F5dD0f8D0";
 export const EVIX_ADDRESS = "0x37e3b45fEF91D54Ef4992B71382EC36307908463";
 export const ORACLE_ADDRESS = "0x85485dD6cFaF5220150c413309C61a8EA24d24FE";
 export const MOCK_USDC_ADDRESS = "0x79640e0f510a7c6d59737442649d9600C84b035f";
