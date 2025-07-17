@@ -118,16 +118,23 @@ export function CollateralAwareMinting({
       <CardContent className="space-y-4">
         {/* Current Vault Status */}
         <div className="bg-gray-50 p-3 rounded-lg">
-          <div className="text-sm text-gray-600 mb-1">Current Vault Status</div>
+          <div className="text-sm text-gray-600 mb-1">Vault Health & Your Target</div>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <span className="font-medium">USDC in Vault:</span> ${parseFloat(vaultStats?.usdc || '0').toFixed(2)}
             </div>
             <div>
-              <span className="font-medium">Current CR:</span> 
+              <span className="font-medium">Vault Health:</span> 
               <span className={cn("ml-1", vaultStats?.cr >= 120 ? "text-green-600" : "text-red-600")}>
                 {vaultStats?.cr ? `${vaultStats.cr.toFixed(1)}%` : '0%'}
               </span>
+            </div>
+          </div>
+          <div className="mt-2 pt-2 border-t border-gray-200">
+            <div className="text-sm">
+              <span className="font-medium text-blue-700">Your Target CR:</span> 
+              <span className="ml-1 text-blue-600 font-bold">{targetCR[0]}%</span>
+              <span className="text-xs text-gray-500 ml-2">(You'll get {(100/targetCR[0]*100).toFixed(0)}% token value)</span>
             </div>
           </div>
         </div>

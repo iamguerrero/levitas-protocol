@@ -6,7 +6,7 @@ This project is a decentralized finance (DeFi) application called Levitas Financ
 
 ## Recent Changes (January 2025)
 
-✓ **V5 FINAL CONTRACTS WITH PROPER OWNERSHIP** - Deployed fresh BVIX (0xa60289981b67139fb7a9F3d31dD2D2BaA414A263) and V5 contracts: BVIX MintRedeem (0xa0133C6380bf9618e97Ab9a855aF2035e9498829) and EVIX MintRedeem (0x0D1957BB292d2b9C19EA0Bbf50E6da8b5d175c3c)
+✓ **V5 FINAL CONTRACTS WITH PROPER OWNERSHIP** - Deployed fresh tokens and V5 contracts: Fresh BVIX (0xa60289981b67139fb7a9F3d31dD2D2BaA414A263), Fresh EVIX (0x4dEaB86baa7CBDb7859665a7FE9766f22fB799C1), BVIX MintRedeem (0xa0133C6380bf9618e97Ab9a855aF2035e9498829), EVIX MintRedeem (0x667e594bD7B994c492cd973C805CEdd971a5F163)
 ✓ **TRUE COLLATERAL RATIO ENFORCEMENT** - V5 contracts implement mintWithCollateralRatio(amount, targetCR) where users spend full USDC but receive proportional tokens based on selected CR
 ✓ **FRONTEND UPDATED FOR V5** - Updated all mint functions to use V5 contracts, removed V4 warnings, added proper CR parameter passing
 ✓ **VAULT STATS API UPDATED** - Backend now queries V5 contracts for accurate collateral ratio monitoring

@@ -27,11 +27,11 @@ export const BASE_SEPOLIA_RPC_URL = "https://sepolia.base.org";
 // Contract addresses - V5 Final with fresh BVIX and proper ownership
 export const BVIX_ADDRESS = "0xa60289981b67139fb7a9F3d31dD2D2BaA414A263"; // Fresh BVIX
 export const MINT_REDEEM_ADDRESS = "0xa0133C6380bf9618e97Ab9a855aF2035e9498829"; // V5 Final
-export const EVIX_ADDRESS = "0x37e3b45fEF91D54Ef4992B71382EC36307908463";
+export const EVIX_ADDRESS = "0x4dEaB86baa7CBDb7859665a7FE9766f22fB799C1"; // Fresh EVIX
 export const ORACLE_ADDRESS = "0x85485dD6cFaF5220150c413309C61a8EA24d24FE";
 export const MOCK_USDC_ADDRESS = "0x79640e0f510a7c6d59737442649d9600C84b035f";
 export const EVIX_ORACLE_ADDRESS = "0xCd7441A771a7F84E58d98E598B7Ff23A3688094F";
-export const EVIX_MINT_REDEEM_ADDRESS = "0x0D1957BB292d2b9C19EA0Bbf50E6da8b5d175c3c"; // V5 Fixed
+export const EVIX_MINT_REDEEM_ADDRESS = "0x667e594bD7B994c492cd973C805CEdd971a5F163"; // Fresh V5
 
 // Contract factory functions
 export const getBVIXContract = (providerOrSigner: any) =>
