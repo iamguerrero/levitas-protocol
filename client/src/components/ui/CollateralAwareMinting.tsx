@@ -84,8 +84,19 @@ export function CollateralAwareMinting({
       return;
     }
 
+    // Calculate the correct USDC amount to send to achieve target CR
+    // Since V4 contract doesn't enforce CR, we need to calculate how much USDC
+    // to actually send to get the desired token amount
+    const selectedCR = targetCR[0];
+    const desiredTokenValue = parseFloat(usdcInput) / (selectedCR / 100);
+    const actualUsdcToSend = desiredTokenValue.toString();
+
     try {
-      await onMint(usdcInput);
+      console.log(`🎯 Collateral-aware mint: Spending ${usdcInput} USDC at ${selectedCR}% CR`);
+      console.log(`📊 Desired token value: $${desiredTokenValue.toFixed(2)}`);
+      console.log(`💰 Actual USDC to send to contract: ${actualUsdcToSend}`);
+      
+      await onMint(actualUsdcToSend);
       // Reset after successful mint
       setUsdcInput("");
       setTargetCR([150]);
