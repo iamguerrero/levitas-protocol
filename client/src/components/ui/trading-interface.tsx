@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Bitcoin, Zap, TrendingUp, Loader2, AlertCircle } from "lucide-react";
 import { VaultHealth } from "@/components/ui/VaultHealth";
 import { NetworkHelpers } from "@/components/ui/NetworkHelpers";
+import { VaultNotice } from "@/components/ui/VaultNotice";
 import { useWallet } from "@/hooks/use-wallet";
 import { useToast } from "@/hooks/use-toast";
 import { usePosition } from "@/hooks/use-position";
@@ -674,6 +675,9 @@ export default function TradingInterface() {
         </Card>
       </div>
 
+      {/* Vault Migration Notice */}
+      <VaultNotice />
+
       {/* Network Setup and Vault Health */}
       <div className="grid lg:grid-cols-2 gap-6">
         <NetworkHelpers />
@@ -731,21 +735,7 @@ export default function TradingInterface() {
               >
                 Debug Contract Info
               </Button>
-              <Button
-                onClick={handleGetTestUSDC}
-                variant="outline"
-                size="sm"
-                disabled={!address || isTransacting}
-              >
-                {isTransacting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Getting USDC...
-                  </>
-                ) : (
-                  "Get Test USDC"
-                )}
-              </Button>
+
               <div className="text-xs text-gray-500 flex items-center">
                 Contract: {MOCK_USDC_ADDRESS.slice(0, 10)}...
               </div>

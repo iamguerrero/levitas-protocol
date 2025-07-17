@@ -112,7 +112,7 @@ export function VaultHealth() {
             "text-3xl font-bold",
             getStatusColor(status.level)
           )}>
-            {data.cr.toFixed(1)}%
+            {data.cr === 0 ? '0.0' : data.cr.toFixed(1)}%
           </div>
           <div className="text-sm text-gray-600 mt-1">
             Collateral Ratio
@@ -165,7 +165,7 @@ export function VaultHealth() {
                 status.level === 'red' && "bg-red-500"
               )}
               style={{ 
-                width: `${Math.min(Math.max((data.cr / 150) * 100, 10), 100)}%` 
+                width: `${data.cr === 0 ? '0' : Math.min(Math.max((data.cr / 150) * 100, 10), 100)}%` 
               }}
             />
           </div>
