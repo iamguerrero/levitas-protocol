@@ -51,15 +51,12 @@ export function CollateralAwareMinting({
     const selectedCR = targetCR[0];
 
     // Calculate tokens based on USDC input and selected CR
-    // Method 1: Direct calculation - Max token value at this CR from USDC
-    const maxTokenValueFromUSDC = usdcAmount / (selectedCR / 100);
-    const tokensFromCR = (maxTokenValueFromUSDC / tokenPrice) * 0.997; // After fee
-    
-    // Method 2: Simple division - what you'd get if just buying tokens
-    const tokensFromDirect = (usdcAmount * 0.997) / tokenPrice;
-    
-    // Use the smaller amount (the constraint is the limiting factor)
-    const tokensToMint = Math.min(tokensFromCR, tokensFromDirect);
+    // Higher CR = fewer tokens for same USDC (you're over-collateralizing)
+    // Formula: tokenValue = usdcAmount / (CR/100)
+    // At 150% CR: $150 USDC gets you $100 worth of tokens
+    // At 200% CR: $200 USDC gets you $100 worth of tokens
+    const tokenValueToMint = usdcAmount / (selectedCR / 100);
+    const tokensToMint = (tokenValueToMint / tokenPrice) * 0.997; // After 0.3% fee
     
     setTokensToReceive(tokensToMint);
   }, [usdcInput, targetCR, vaultStats, tokenPrice]);
