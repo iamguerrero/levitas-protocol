@@ -6,6 +6,9 @@ This project is a decentralized finance (DeFi) application called Levitas Financ
 
 ## Recent Changes (January 2025)
 
+✓ **Live Vault Health Dashboard** - Complete collateral ratio monitoring with real-time API endpoint and UI widget
+✓ **EVIX UI Token Switching** - Fixed clickable token cards that properly switch between BVIX/EVIX trading interfaces
+✓ **EVIX Price Integration** - Corrected Oracle price format conversion for accurate $37.98 display
 ✓ **EVIX Ecosystem Complete** - Deployed EVIX Oracle (0xCd7441A...) and MintRedeem (0xe521441B...) contracts with full trading functionality
 ✓ **EVIX Trading Interface** - Complete mint/redeem UI for EVIX tokens with real-time price feeds from deployed oracle
 ✓ **Dual Token Support** - Added EVIX balance tracking, pricing, and wallet overview integration alongside BVIX
@@ -38,10 +41,12 @@ Preferred communication style: Simple, everyday language.
 - **Smart Contracts**: Custom Solidity contracts (BVIXToken, MockOracle, MintRedeem)
 - **Contract ABIs**: Generated JSON ABIs stored in `client/src/contracts/`
 
-### Backend Architecture (Minimal)
-- **Runtime**: Node.js with Express.js framework (minimal, mostly serves frontend)
+### Backend Architecture
+- **Runtime**: Node.js with Express.js framework 
 - **Language**: TypeScript with ESM modules
 - **Development Server**: Custom Vite integration for hot reloading
+- **API Endpoints**: `/api/v1/vault-stats` for real-time collateral ratio monitoring
+- **Blockchain Integration**: Ethers.js for contract interaction with Base Sepolia RPC
 
 ## Key Components
 
@@ -68,6 +73,8 @@ Preferred communication style: Simple, everyday language.
 - Dark/light theme support with CSS variables
 - Responsive design with mobile-first approach
 - Toast notifications for user feedback
+- **VaultHealth Component**: Live collateral ratio monitoring with color-coded risk levels
+- **Dynamic Token Interface**: Clickable cards switch between BVIX/EVIX trading modes
 
 ## Data Flow
 
