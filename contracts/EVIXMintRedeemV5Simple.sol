@@ -71,7 +71,9 @@ contract EVIXMintRedeemV5Simple is Ownable {
         require(evix.balanceOf(msg.sender) >= amount, "Insufficient balance");
         
         uint256 price = uint256(oracle.getPrice());
-        uint256 usdcValue = (amount * price) / 1e18;
+        // amount is in 18 decimals, price is in 18 decimals
+        // Result should be in 6 decimals (USDC)
+        uint256 usdcValue = (amount * price) / 1e30;
         uint256 netUSDC = usdcValue - ((usdcValue * mintFee) / 10_000);
         
         require(usdc.balanceOf(address(this)) >= netUSDC, "Insufficient vault USDC");
