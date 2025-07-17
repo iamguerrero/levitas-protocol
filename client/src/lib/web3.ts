@@ -4,6 +4,8 @@ import EVIX_ABI from "../contracts/EVIXToken.abi.json";
 import Oracle_ABI from "../contracts/MockOracle.abi.json";
 import MintRedeem_ABI from "../contracts/MintRedeem.abi.json";
 import USDC_ABI from "../contracts/MockUSDC.abi.json";
+import EVIXOracle_ABI from "../contracts/EVIXOracle.abi.json";
+import EVIXMintRedeem_ABI from "../contracts/EVIXMintRedeem.abi.json";
 import { BigNumber, utils } from "ethers";
 
 declare global {
@@ -28,6 +30,8 @@ export const BVIX_ADDRESS = "0xEA3d08a5A5bC48Fc984F0F773826693B7480bF48";
 export const EVIX_ADDRESS = "0x37e3b45fEF91D54Ef4992B71382EC36307908463";
 export const ORACLE_ADDRESS = "0x85485dD6cFaF5220150c413309C61a8EA24d24FE";
 export const MOCK_USDC_ADDRESS = "0x79640e0f510a7c6d59737442649d9600C84b035f";
+export const EVIX_ORACLE_ADDRESS = "0xCd7441A771a7F84E58d98E598B7Ff23A3688094F";
+export const EVIX_MINT_REDEEM_ADDRESS = "0xe521441B10F5b9a28499Ae37d1C93b42223eCff6";
 
 // Contract factory functions
 export const getBVIXContract = (providerOrSigner: any) =>
@@ -44,6 +48,12 @@ export const getMintRedeemContract = (providerOrSigner: any) =>
 
 export const getUSDCContract = (providerOrSigner: any) =>
   new ethers.Contract(MOCK_USDC_ADDRESS, USDC_ABI, providerOrSigner);
+
+export const getEVIXOracleContract = (providerOrSigner: any) =>
+  new ethers.Contract(EVIX_ORACLE_ADDRESS, EVIXOracle_ABI, providerOrSigner);
+
+export const getEVIXMintRedeemContract = (providerOrSigner: any) =>
+  new ethers.Contract(EVIX_MINT_REDEEM_ADDRESS, EVIXMintRedeem_ABI, providerOrSigner);
 
 // Provider functions
 export function getProvider() {
@@ -106,6 +116,18 @@ export async function getBVIXBalance(address: string): Promise<string> {
   }
 }
 
+export async function getEVIXBalance(address: string): Promise<string> {
+  try {
+    const provider = getProvider();
+    const evixContract = getEVIXContract(provider);
+    const balance = await evixContract.balanceOf(address);
+    return ethers.formatEther(balance);
+  } catch (error) {
+    console.error("Error getting EVIX balance:", error);
+    return "0.0";
+  }
+}
+
 export async function getUSDCBalance(address: string): Promise<string> {
   try {
     const provider = getProvider();
@@ -130,15 +152,16 @@ export async function getOraclePrice(): Promise<string> {
   }
 }
 
-// Get EVIX price (placeholder oracle until real oracle is deployed)
+// Get EVIX price from oracle
 export async function getEVIXPrice(): Promise<string> {
   try {
-    // For now, return a fixed price of $37.98 for EVIX
-    // In production, this would connect to the actual EVIX oracle
-    return "37.98";
+    const provider = getProvider();
+    const evixOracle = getEVIXOracleContract(provider);
+    const price = await evixOracle.getPrice();
+    return ethers.formatEther(price);
   } catch (error) {
     console.error("Error getting EVIX price:", error);
-    return "0";
+    return "37.98"; // Fallback price
   }
 }
 
@@ -203,6 +226,70 @@ export async function redeemBVIX(
 
   console.log("Redeeming BVIX tokens...");
   const redeemTx = await mintRedeemContract.redeem(bvixAmountWei);
+  return redeemTx;
+}
+
+export async function mintEVIX(
+  usdcAmount: string,
+): Promise<ethers.ContractTransactionResponse> {
+  const signer = await getSigner();
+  const address = await signer.getAddress();
+  const evixMintRedeemContract = getEVIXMintRedeemContract(signer);
+  const usdcContract = getUSDCContract(signer);
+
+  const usdcAmountWei = ethers.parseUnits(usdcAmount, 6); // USDC has 6 decimals
+
+  // Check USDC balance first
+  const usdcBalance = await usdcContract.balanceOf(address);
+  if (usdcBalance < usdcAmountWei) {
+    throw new Error(
+      `Insufficient USDC balance. You have ${ethers.formatUnits(usdcBalance, 6)} USDC but need ${usdcAmount} USDC`,
+    );
+  }
+
+  // Check current allowance
+  const currentAllowance = await usdcContract.allowance(
+    address,
+    EVIX_MINT_REDEEM_ADDRESS,
+  );
+
+  // Only approve if needed
+  if (currentAllowance < usdcAmountWei) {
+    console.log("Approving USDC spending for EVIX...");
+    const approveTx = await usdcContract.approve(
+      EVIX_MINT_REDEEM_ADDRESS,
+      usdcAmountWei,
+    );
+    await approveTx.wait();
+    console.log("USDC approval confirmed for EVIX");
+  }
+
+  // Then mint EVIX
+  console.log("Minting EVIX tokens...");
+  const mintTx = await evixMintRedeemContract.mint(usdcAmountWei);
+  return mintTx;
+}
+
+export async function redeemEVIX(
+  evixAmount: string,
+): Promise<ethers.ContractTransactionResponse> {
+  const signer = await getSigner();
+  const address = await signer.getAddress();
+  const evixMintRedeemContract = getEVIXMintRedeemContract(signer);
+  const evixContract = getEVIXContract(signer);
+
+  const evixAmountWei = ethers.parseEther(evixAmount);
+
+  // Check EVIX balance first
+  const evixBalance = await evixContract.balanceOf(address);
+  if (evixBalance < evixAmountWei) {
+    throw new Error(
+      `Insufficient EVIX balance. You have ${ethers.formatEther(evixBalance)} EVIX but need ${evixAmount} EVIX`,
+    );
+  }
+
+  console.log("Redeeming EVIX tokens...");
+  const redeemTx = await evixMintRedeemContract.redeem(evixAmountWei);
   return redeemTx;
 }
 

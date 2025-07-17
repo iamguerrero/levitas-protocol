@@ -6,6 +6,9 @@ This project is a decentralized finance (DeFi) application called Levitas Financ
 
 ## Recent Changes (January 2025)
 
+✓ **EVIX Ecosystem Complete** - Deployed EVIX Oracle (0xCd7441A...) and MintRedeem (0xe521441B...) contracts with full trading functionality
+✓ **EVIX Trading Interface** - Complete mint/redeem UI for EVIX tokens with real-time price feeds from deployed oracle
+✓ **Dual Token Support** - Added EVIX balance tracking, pricing, and wallet overview integration alongside BVIX
 ✓ **EVIX Token Deployment** - Successfully deployed EVIX token contract to Base Sepolia at 0x37e3b45fEF91D54Ef4992B71382EC36307908463
 ✓ **Collateral Ratio Integration** - Added real-time collateral ratio display in wallet overview with helper function
 ✓ **Enhanced Logo & Branding** - Updated navigation with new Levitas logo (cyan circle design) and proper scaling  
