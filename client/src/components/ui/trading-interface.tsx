@@ -88,9 +88,18 @@ export default function TradingInterface() {
     }
   }, [vaultData]);
 
-  // Load contract data
+  // Load contract data with forced refresh
   useEffect(() => {
     if (address && contractsDeployed) {
+      // Clear any cached data
+      setContractData({
+        bvixPrice: "42.15",
+        evixPrice: "37.98", 
+        usdcBalance: "0.00",
+        bvixBalance: "0.00",
+        evixBalance: "0.00",
+        totalValue: "0.00",
+      });
       loadContractData();
     } else {
       setIsLoading(false);
@@ -102,6 +111,7 @@ export default function TradingInterface() {
 
     setIsLoading(true);
     try {
+      console.log("🔄 Loading contract data for address:", address);
       const [bvixBalance, evixBalance, usdcBalance, oraclePrice, evixPrice, ratio] = await Promise.all([
         getBVIXBalance(address),
         getEVIXBalance(address),
@@ -110,6 +120,8 @@ export default function TradingInterface() {
         getEVIXPrice(),
         getCollateralRatio(),
       ]);
+      
+      console.log("📊 Contract data loaded:", { bvixBalance, evixBalance, usdcBalance, oraclePrice, evixPrice, ratio });
       
       setCollateralRatio(ratio);
 
