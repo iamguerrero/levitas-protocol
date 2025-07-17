@@ -13,11 +13,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Vault statistics endpoint
   app.get("/api/v1/vault-stats", async (req, res) => {
     try {
-      // Contract addresses
-      const MOCK_USDC_ADDRESS = '0x79640e0F510A7C6d59737442649D9600C84B035f';
-      const BVIX_ADDRESS = '0xEA3d08A5A5bC48Fc984F0F773826693B7480bF48';
-      const MINT_REDEEM_ADDRESS = '0x27F971cb582BF9E50F397e4d29a5C7A34f11faA2';
-      const ORACLE_ADDRESS = '0x8464135c8F25Da09e49BC8782676a84730C318bC';
+      // Contract addresses (use proper checksums from web3.ts)
+      const MOCK_USDC_ADDRESS = '0x79640e0f510a7c6d59737442649d9600C84b035f';
+      const BVIX_ADDRESS = '0xEA3d08a5A5bC48Fc984F0F773826693B7480bF48';
+      const MINT_REDEEM_ADDRESS = '0x1f3FB11995F1650D469649C476defB753766b2A0';
+      const ORACLE_ADDRESS = '0x85485dD6cFaF5220150c413309C61a8EA24d24FE';
       const BASE_SEPOLIA_RPC_URL = 'https://sepolia.base.org';
 
       // Minimal ERC20 ABI for balance and supply queries
@@ -34,14 +34,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Initialize provider
       const provider = new ethers.JsonRpcProvider(BASE_SEPOLIA_RPC_URL);
       
-      // Initialize contracts
-      const usdcContract = new ethers.Contract(MOCK_USDC_ADDRESS, ERC20_ABI, provider);
-      const bvixContract = new ethers.Contract(BVIX_ADDRESS, ERC20_ABI, provider);
-      const oracleContract = new ethers.Contract(ORACLE_ADDRESS, ORACLE_ABI, provider);
+      // Initialize contracts with proper address checksumming
+      const usdcContract = new ethers.Contract(ethers.getAddress(MOCK_USDC_ADDRESS), ERC20_ABI, provider);
+      const bvixContract = new ethers.Contract(ethers.getAddress(BVIX_ADDRESS), ERC20_ABI, provider);
+      const oracleContract = new ethers.Contract(ethers.getAddress(ORACLE_ADDRESS), ORACLE_ABI, provider);
       
       // Fetch data in parallel
       const [vaultUsdcBalance, bvixTotalSupply, bvixPrice] = await Promise.all([
-        usdcContract.balanceOf(MINT_REDEEM_ADDRESS),
+        usdcContract.balanceOf(ethers.getAddress(MINT_REDEEM_ADDRESS)),
         bvixContract.totalSupply(),
         oracleContract.getPrice()
       ]);
