@@ -7,8 +7,10 @@ This project is a decentralized finance (DeFi) application called Levitas Financ
 ## Recent Changes (January 2025)
 
 ✓ **CRITICAL FIX: Authorization Issue Resolved** - Fixed OwnableUnauthorizedAccount error by deploying fresh contracts with proper ownership configuration
-✓ **V4 Contract Deployment** - New BVIX (0x5cAd54Ad8CcEacB7bF0c34E58c72D6EB6eC884B8) and MintRedeemV2 (0xCC9A824EF39a8925581616ad41ee61C8Bb43D6DF) with correct ownership
-✓ **Ownership Configuration Fixed** - MintRedeemV2 now properly owns BVIX token enabling successful mint operations
+✓ **V4 Contract Deployment** - New BVIX (0x4Cd0c0ed02363F27fC2A8a3D7dC9aEA88ddCCf5E) and MintRedeemV4 (0xb507A6743787E1Ee10365385F46DD5BFEa10Dcd5) with correct ownership
+✓ **Ownership Configuration Fixed** - MintRedeemV4 now properly owns BVIX token enabling successful mint operations
+✓ **Bootstrap-Friendly Mint Logic** - V4 contract allows first mint without collateral ratio check for vault bootstrapping
+✓ **Return Value Fixed** - MintRedeemV4 returns mint amount to prevent BigNumberish value errors in frontend
 ✓ **Comprehensive Debug Logging** - Added detailed console logging for mint process troubleshooting
 ✓ **Fresh Contract Architecture** - Clean deployment eliminating legacy ownership conflicts from previous versions
 ✓ **Collateral Ratio Slider Fixed** - Slider now properly calculates token amounts based on selected CR (150% CR = fewer tokens, 200% CR = even fewer)
