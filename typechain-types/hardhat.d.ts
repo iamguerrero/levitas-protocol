@@ -70,6 +70,14 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.MintRedeemV2__factory>;
     getContractFactory(
+      name: "MintRedeemV3",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.MintRedeemV3__factory>;
+    getContractFactory(
+      name: "MintRedeemV4",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.MintRedeemV4__factory>;
+    getContractFactory(
       name: "MintRedeemWithCollateral",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.MintRedeemWithCollateral__factory>;
@@ -153,6 +161,16 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.MintRedeemV2>;
     getContractAt(
+      name: "MintRedeemV3",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.MintRedeemV3>;
+    getContractAt(
+      name: "MintRedeemV4",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.MintRedeemV4>;
+    getContractAt(
       name: "MintRedeemWithCollateral",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -225,6 +243,14 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.MintRedeemV2>;
     deployContract(
+      name: "MintRedeemV3",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.MintRedeemV3>;
+    deployContract(
+      name: "MintRedeemV4",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.MintRedeemV4>;
+    deployContract(
       name: "MintRedeemWithCollateral",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.MintRedeemWithCollateral>;
@@ -307,6 +333,16 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.MintRedeemV2>;
+    deployContract(
+      name: "MintRedeemV3",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.MintRedeemV3>;
+    deployContract(
+      name: "MintRedeemV4",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.MintRedeemV4>;
     deployContract(
       name: "MintRedeemWithCollateral",
       args: any[],

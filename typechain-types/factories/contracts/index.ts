@@ -7,6 +7,8 @@ export { EVIXOracle__factory } from "./EVIXOracle__factory";
 export { EVIXToken__factory } from "./EVIXToken__factory";
 export { MintRedeem__factory } from "./MintRedeem__factory";
 export { MintRedeemV2__factory } from "./MintRedeemV2__factory";
+export { MintRedeemV3__factory } from "./MintRedeemV3__factory";
+export { MintRedeemV4__factory } from "./MintRedeemV4__factory";
 export { MintRedeemWithCollateral__factory } from "./MintRedeemWithCollateral__factory";
 export { MockOracle__factory } from "./MockOracle__factory";
 export { MockUSDC__factory } from "./MockUSDC__factory";

@@ -8,6 +8,8 @@ export type { EVIXOracle } from "./EVIXOracle";
 export type { EVIXToken } from "./EVIXToken";
 export type { MintRedeem } from "./MintRedeem";
 export type { MintRedeemV2 } from "./MintRedeemV2";
+export type { MintRedeemV3 } from "./MintRedeemV3";
+export type { MintRedeemV4 } from "./MintRedeemV4";
 export type { MintRedeemWithCollateral } from "./MintRedeemWithCollateral";
 export type { MockOracle } from "./MockOracle";
 export type { MockUSDC } from "./MockUSDC";

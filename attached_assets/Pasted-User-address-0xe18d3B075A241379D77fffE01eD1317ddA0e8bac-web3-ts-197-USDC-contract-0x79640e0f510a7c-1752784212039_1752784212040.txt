@@ -1,0 +1,26 @@
+User address: 0xe18d3B075A241379D77fffE01eD1317ddA0e8bac
+web3.ts:197 USDC contract: 0x79640e0f510a7c6d59737442649d9600C84b035f
+web3.ts:198 MintRedeem contract: 0xCC9A824EF39a8925581616ad41ee61C8Bb43D6DF
+web3.ts:202 USDC balance: 999897933.844978
+web3.ts:203 Required amount: 100
+web3.ts:216 Current allowance: 0.0
+web3.ts:220 🔄 Approving USDC spending...
+web3.ts:226 ✅ USDC approval confirmed
+web3.ts:232 🧪 Testing mint call with staticCall...
+inpage.js:1 MetaMask - RPC Error: Internal JSON-RPC error. Object
+(anonymous) @ inpage.js:1Understand this warning
+web3.ts:237 ❌ Static call failed: Error: execution reverted: "Would violate minimum collateral ratio" (action="call", data="0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000026576f756c642076696f6c617465206d696e696d756d20636f6c6c61746572616c20726174696f0000000000000000000000000000000000000000000000000000", reason="Would violate minimum collateral ratio", transaction={ "data": "0xa0712d680000000000000000000000000000000000000000000000000000000005f5e100", "to": "0xCC9A824EF39a8925581616ad41ee61C8Bb43D6DF" }, invocation=null, revert={ "args": [ "Would violate minimum collateral ratio" ], "name": "Error", "signature": "Error(string)" }, code=CALL_EXCEPTION, version=6.15.0)
+    at makeError (ethers.js?v=5f040986:337:15)
+    at getBuiltinCallException (ethers.js?v=5f040986:12020:10)
+    at _AbiCoder.getBuiltinCallException (ethers.js?v=5f040986:12091:12)
+    at _Interface.makeError (ethers.js?v=5f040986:12741:28)
+    at staticCallResult (ethers.js?v=5f040986:14836:34)
+    at async mint.staticCall (ethers.js?v=5f040986:14809:20)
+    at async mintBVIX (web3.ts:234:26)
+    at async handleMint (trading-interface.tsx:181:18)
+    at async handleSubmit (CollateralAwareMinting.tsx:91:7)
+mintBVIX @ web3.ts:237Understand this error
+trading-interface.tsx:206 Mint error: Error: Mint would fail: execution reverted: "Would violate minimum collateral ratio" (action="call", data="0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000026576f756c642076696f6c617465206d696e696d756d20636f6c6c61746572616c20726174696f0000000000000000000000000000000000000000000000000000", reason="Would violate minimum collateral ratio", transaction={ "data": "0xa0712d680000000000000000000000000000000000000000000000000000000005f5e100", "to": "0xCC9A824EF39a8925581616ad41ee61C8Bb43D6DF" }, invocation=null, revert={ "args": [ "Would violate minimum collateral ratio" ], "name": "Error", "signature": "Error(string)" }, code=CALL_EXCEPTION, version=6.15.0)
+    at mintBVIX (web3.ts:238:11)
+    at async handleMint (trading-interface.tsx:181:18)
+    at async handleSubmit (CollateralAwareMinting.tsx:91:7)
