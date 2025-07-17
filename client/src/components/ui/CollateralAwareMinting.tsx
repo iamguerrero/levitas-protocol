@@ -50,25 +50,11 @@ export function CollateralAwareMinting({
     const currentTokenSupply = parseFloat(vaultStats.bvix);
     const selectedCR = targetCR[0];
 
-    // Match contract mint logic exactly
-    // 1. Calculate how many tokens we'd mint from this USDC
+    // Always show how many tokens you'd get from your USDC input
     const netAmount = usdcAmount * 0.997; // After 0.3% fee
     const tokensToMint = netAmount / tokenPrice;
     
-    // 2. Calculate future vault state
-    const futureVaultUSDC = currentVaultUSDC + usdcAmount;
-    const futureTotalTokens = currentTokenSupply + tokensToMint;
-    
-    // 3. Calculate future collateral ratio
-    const futureTotalTokenValueUSD = futureTotalTokens * tokenPrice;
-    const futureCollateralRatio = futureTotalTokenValueUSD > 0 ? (futureVaultUSDC / futureTotalTokenValueUSD) * 100 : 0;
-    
-    // 4. Only allow mint if future CR >= selected CR
-    if (futureCollateralRatio >= selectedCR) {
-      setTokensToReceive(tokensToMint);
-    } else {
-      setTokensToReceive(0);
-    }
+    setTokensToReceive(tokensToMint);
   }, [usdcInput, targetCR, vaultStats, tokenPrice]);
 
   const handleSliderChange = (value: number[]) => {
