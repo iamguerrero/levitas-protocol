@@ -1,5 +1,6 @@
 import { ethers } from "ethers";
 import BVIX_ABI from "../contracts/BVIXToken.abi.json";
+import EVIX_ABI from "../contracts/EVIXToken.abi.json";
 import Oracle_ABI from "../contracts/MockOracle.abi.json";
 import MintRedeem_ABI from "../contracts/MintRedeem.abi.json";
 import USDC_ABI from "../contracts/MockUSDC.abi.json";
@@ -24,12 +25,16 @@ export const BASE_SEPOLIA_RPC_URL = "https://sepolia.base.org";
 // Contract addresses - to be updated after deployment
 export const MINT_REDEEM_ADDRESS = "0x1f3FB11995F1650D469649C476defB753766b2A0";
 export const BVIX_ADDRESS = "0xEA3d08a5A5bC48Fc984F0F773826693B7480bF48";
+export const EVIX_ADDRESS = "0x37e3b45fEF91D54Ef4992B71382EC36307908463";
 export const ORACLE_ADDRESS = "0x85485dD6cFaF5220150c413309C61a8EA24d24FE";
 export const MOCK_USDC_ADDRESS = "0x79640e0f510a7c6d59737442649d9600C84b035f";
 
 // Contract factory functions
 export const getBVIXContract = (providerOrSigner: any) =>
   new ethers.Contract(BVIX_ADDRESS, BVIX_ABI, providerOrSigner);
+
+export const getEVIXContract = (providerOrSigner: any) =>
+  new ethers.Contract(EVIX_ADDRESS, EVIX_ABI, providerOrSigner);
 
 export const getOracleContract = (providerOrSigner: any) =>
   new ethers.Contract(ORACLE_ADDRESS, Oracle_ABI, providerOrSigner);
@@ -122,6 +127,18 @@ export async function getOraclePrice(): Promise<string> {
   } catch (error) {
     console.error("Error getting oracle price:", error);
     return "42.15"; // Fallback price
+  }
+}
+
+// Get EVIX price (placeholder oracle until real oracle is deployed)
+export async function getEVIXPrice(): Promise<string> {
+  try {
+    // For now, return a fixed price of $37.98 for EVIX
+    // In production, this would connect to the actual EVIX oracle
+    return "37.98";
+  } catch (error) {
+    console.error("Error getting EVIX price:", error);
+    return "0";
   }
 }
 

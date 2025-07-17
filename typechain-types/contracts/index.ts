@@ -2,6 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export type { BVIXToken } from "./BVIXToken";
+export type { EVIXToken } from "./EVIXToken";
 export type { MintRedeem } from "./MintRedeem";
 export type { MockOracle } from "./MockOracle";
 export type { MockUSDC } from "./MockUSDC";

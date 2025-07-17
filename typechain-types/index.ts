@@ -22,6 +22,8 @@ export type { IERC20 } from "./@openzeppelin/contracts/token/ERC20/IERC20";
 export { IERC20__factory } from "./factories/@openzeppelin/contracts/token/ERC20/IERC20__factory";
 export type { BVIXToken } from "./contracts/BVIXToken";
 export { BVIXToken__factory } from "./factories/contracts/BVIXToken__factory";
+export type { EVIXToken } from "./contracts/EVIXToken";
+export { EVIXToken__factory } from "./factories/contracts/EVIXToken__factory";
 export type { MintRedeem } from "./contracts/MintRedeem";
 export { MintRedeem__factory } from "./factories/contracts/MintRedeem__factory";
 export type { MockOracle } from "./contracts/MockOracle";
