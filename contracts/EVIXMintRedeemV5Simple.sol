@@ -42,7 +42,9 @@ contract EVIXMintRedeemV5Simple is Ownable {
         uint256 netTokenValue = tokenValue - ((tokenValue * mintFee) / 10_000);
         
         uint256 price = uint256(oracle.getPrice());
-        uint256 tokensToMint = (netTokenValue * 1e18) / price;
+        // Price from oracle is in 18 decimals, netTokenValue is in 6 decimals (USDC)
+        // Convert netTokenValue to 18 decimals before division
+        uint256 tokensToMint = (netTokenValue * 1e30) / price;
         
         require(tokensToMint > 0, "Amount too small");
         

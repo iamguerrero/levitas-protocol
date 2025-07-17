@@ -19,7 +19,7 @@ This project is a decentralized finance (DeFi) application called Levitas Financ
 ✓ **VAULT-SPECIFIC CR TRACKING** - Fixed CR calculation to show individual BVIX vault CR instead of confusing protocol-wide combined CR  
 ✓ **PROTOCOL-WIDE CR RESTORED** - Reverted to correct protocol-wide CR calculation per user feedback
 🔧 **EVIX MINTING BUG IDENTIFIED** - EVIX mint creates almost no tokens despite spending USDC, causing incorrect CR behavior
-✅ **EVIX MINTING BUG FIXED** - Deployed fresh EVIX ecosystem: EVIX Token (0xBF1B10cbB6b3B2dBd434b13353fe4f07dfAc344c), MintRedeem (0xb5d7cc3523c21eA1224D9Ff4b657Be3404AaC9eb) with proper ownership structure
+✅ **EVIX MINTING BUG FIXED** - Deployed FINAL EVIX ecosystem: EVIX Token (0x0E6e110d46b969135607Edb9Da9C314D271447Bd), MintRedeem (0x340b71ce6E33E29b6D4220B59cA86fC8d1Fc3334) with proper decimal handling and ownership
 ✓ **Vault Health Real-Time Updates** - Updated vault stats API to use V4 contracts and reduced refresh interval to 5 seconds for faster updates
 ✓ **Post-Transaction Cache Invalidation** - Added automatic vault cache refresh after BVIX transactions for immediate collateral ratio updates (EVIX transactions don't affect BVIX vault)
 ✓ **Comprehensive Debug Logging** - Added detailed console logging for mint process troubleshooting
