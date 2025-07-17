@@ -44,6 +44,10 @@ export default function TradingInterface() {
   const [evixRedeemAmount, setEvixRedeemAmount] = useState("");
   const [selectedToken, setSelectedToken] = useState<'bvix' | 'evix'>('bvix');
   const [isTransacting, setIsTransacting] = useState(false);
+  const [mintingBVIX, setMintingBVIX] = useState(false);
+  const [redeemingBVIX, setRedeemingBVIX] = useState(false);
+  const [mintingEVIX, setMintingEVIX] = useState(false);
+  const [redeemingEVIX, setRedeemingEVIX] = useState(false);
   
   // Import vault refresh functions
   const { refetch: refetchVault } = useVault();
@@ -178,6 +182,7 @@ export default function TradingInterface() {
     }
 
     setIsTransacting(true);
+    setMintingBVIX(true);
 
     try {
       // Ensure user is on Base Sepolia
@@ -221,6 +226,7 @@ export default function TradingInterface() {
       });
     } finally {
       setIsTransacting(false);
+      setMintingBVIX(false);
     }
   };
 
@@ -245,6 +251,7 @@ export default function TradingInterface() {
     }
 
     setIsTransacting(true);
+    setRedeemingBVIX(true);
 
     try {
       // Ensure user is on Base Sepolia
@@ -289,6 +296,7 @@ export default function TradingInterface() {
       });
     } finally {
       setIsTransacting(false);
+      setRedeemingBVIX(false);
     }
   };
 
@@ -303,6 +311,7 @@ export default function TradingInterface() {
     }
 
     setIsTransacting(true);
+    setMintingEVIX(true);
     try {
       await switchToBaseSepolia();
       const tx = await mintEVIX(amount);
@@ -325,7 +334,9 @@ export default function TradingInterface() {
       
       await loadContractData();
       
-      // Note: EVIX minting doesn't affect BVIX vault stats, so no vault cache invalidation needed
+      // Force vault cache refresh to show combined USDC totals
+      queryClient.invalidateQueries({ queryKey: ['/api/v1/vault-stats'] });
+      refetchVault();
     } catch (error: any) {
       toast({
         title: "Mint Failed",
@@ -334,6 +345,7 @@ export default function TradingInterface() {
       });
     } finally {
       setIsTransacting(false);
+      setMintingEVIX(false);
     }
   };
 
@@ -348,6 +360,7 @@ export default function TradingInterface() {
     }
 
     setIsTransacting(true);
+    setRedeemingEVIX(true);
     try {
       await switchToBaseSepolia();
       const tx = await redeemEVIX(evixRedeemAmount);
@@ -371,7 +384,9 @@ export default function TradingInterface() {
       setEvixRedeemAmount("");
       await loadContractData();
       
-      // Note: EVIX redemption doesn't affect BVIX vault stats, so no vault cache invalidation needed
+      // Force vault cache refresh to show combined USDC totals
+      queryClient.invalidateQueries({ queryKey: ['/api/v1/vault-stats'] });
+      refetchVault();
     } catch (error: any) {
       toast({
         title: "Redeem Failed",
@@ -380,6 +395,7 @@ export default function TradingInterface() {
       });
     } finally {
       setIsTransacting(false);
+      setRedeemingEVIX(false);
     }
   };
 
@@ -557,7 +573,7 @@ export default function TradingInterface() {
           vaultStats={vaultStats}
           userBalance={parseFloat(contractData.usdcBalance)}
           onMint={selectedToken === 'bvix' ? handleMint : handleMintEVIX}
-          isLoading={isTransacting}
+          isLoading={selectedToken === 'bvix' ? mintingBVIX : mintingEVIX}
         />
 
         {/* Redeem Section */}
@@ -627,11 +643,11 @@ export default function TradingInterface() {
 
             <Button
               onClick={selectedToken === 'bvix' ? handleRedeem : handleRedeemEVIX}
-              disabled={isTransacting || (selectedToken === 'bvix' ? !redeemAmount : !evixRedeemAmount)}
+              disabled={(selectedToken === 'bvix' ? redeemingBVIX : redeemingEVIX) || (selectedToken === 'bvix' ? !redeemAmount : !evixRedeemAmount)}
               variant="destructive"
               className="w-full"
             >
-              {isTransacting ? (
+              {(selectedToken === 'bvix' ? redeemingBVIX : redeemingEVIX) ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Redeeming...
