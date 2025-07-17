@@ -183,6 +183,8 @@ export async function getEVIXPrice(): Promise<string> {
 export async function mintBVIX(
   usdcAmount: string,
 ): Promise<ethers.ContractTransactionResponse> {
+  console.log("🚀 Starting BVIX mint process for", usdcAmount, "USDC");
+  
   const signer = await getSigner();
   const address = await signer.getAddress();
   const mintRedeemContract = getMintRedeemContract(signer);
@@ -190,11 +192,19 @@ export async function mintBVIX(
 
   const usdcAmountWei = ethers.parseUnits(usdcAmount, 6); // USDC has 6 decimals
 
+  console.log("🔍 Checking balances and allowances...");
+  console.log("User address:", address);
+  console.log("USDC contract:", MOCK_USDC_ADDRESS);
+  console.log("MintRedeem contract:", MINT_REDEEM_ADDRESS);
+
   // Check USDC balance first
   const usdcBalance = await usdcContract.balanceOf(address);
+  console.log("USDC balance:", ethers.formatUnits(usdcBalance, 6));
+  console.log("Required amount:", usdcAmount);
+  
   if (usdcBalance < usdcAmountWei) {
     throw new Error(
-      `Insufficient USDC balance. You have ${ethers.formatUnits(usdcBalance, 6)} USDC but need ${usdcAmount} USDC. Get test USDC from Base Sepolia faucets to continue.`,
+      `Insufficient USDC balance. You have ${ethers.formatUnits(usdcBalance, 6)} USDC but need ${usdcAmount} USDC.`,
     );
   }
 
@@ -203,21 +213,35 @@ export async function mintBVIX(
     address,
     MINT_REDEEM_ADDRESS,
   );
+  console.log("Current allowance:", ethers.formatUnits(currentAllowance, 6));
 
   // Only approve if needed
   if (currentAllowance < usdcAmountWei) {
-    console.log("Approving USDC spending...");
+    console.log("🔄 Approving USDC spending...");
     const approveTx = await usdcContract.approve(
       MINT_REDEEM_ADDRESS,
       usdcAmountWei,
     );
     await approveTx.wait();
-    console.log("USDC approval confirmed");
+    console.log("✅ USDC approval confirmed");
+  } else {
+    console.log("✅ Sufficient allowance already exists");
+  }
+
+  // Test mint call first with staticCall
+  console.log("🧪 Testing mint call with staticCall...");
+  try {
+    const staticResult = await mintRedeemContract.mint.staticCall(usdcAmountWei);
+    console.log("✅ Static call successful, would mint:", ethers.formatEther(staticResult), "BVIX");
+  } catch (staticError) {
+    console.error("❌ Static call failed:", staticError);
+    throw new Error(`Mint would fail: ${staticError.message}`);
   }
 
   // Then mint BVIX
-  console.log("Minting BVIX tokens...");
+  console.log("🚀 Executing actual mint transaction...");
   const mintTx = await mintRedeemContract.mint(usdcAmountWei);
+  console.log("📄 Transaction hash:", mintTx.hash);
   return mintTx;
 }
 
