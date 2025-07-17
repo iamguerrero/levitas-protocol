@@ -35,7 +35,7 @@ export function CollateralAwareMinting({
 
   // Calculate how much USDC needed for collateral and how much tokens to receive
   useEffect(() => {
-    if (!vaultStats || !tokenPrice || vaultStats.usdc === '0.0') {
+    if (!vaultStats || !tokenPrice) {
       setTokensToReceive(0);
       setUsdcToAdd("");
       return;
@@ -45,8 +45,25 @@ export function CollateralAwareMinting({
     const currentTokenSupply = parseFloat(vaultStats.bvix);
     const selectedCR = targetCR[0];
 
-    if (currentVaultUSDC > 0 && currentTokenSupply > 0) {
-      // Calculate how much value we can mint at this CR
+    if (currentVaultUSDC === 0 && currentTokenSupply > 0) {
+      // Vault has no USDC but has tokens - need to add collateral
+      const currentTokenValueUSD = currentTokenSupply * tokenPrice;
+      const minUsdcNeeded = (currentTokenValueUSD * selectedCR) / 100;
+      
+      // No new tokens can be minted until collateral is added
+      setTokensToReceive(0);
+      setUsdcToAdd(minUsdcNeeded.toFixed(2));
+    } else if (currentVaultUSDC === 0 && currentTokenSupply === 0) {
+      // Fresh vault - calculate for first mint
+      // Start with $100 worth of tokens as example
+      const targetTokenValueUSD = 100;
+      const requiredUSDC = (targetTokenValueUSD * selectedCR) / 100;
+      const tokensToMint = (targetTokenValueUSD / tokenPrice) * 0.997; // After fee
+      
+      setTokensToReceive(tokensToMint);
+      setUsdcToAdd(requiredUSDC.toFixed(2));
+    } else {
+      // Normal operation with existing collateral
       const maxTokenValueAtCR = currentVaultUSDC / (selectedCR / 100);
       const currentTokenValueUSD = currentTokenSupply * tokenPrice;
       const additionalTokenValue = Math.max(0, maxTokenValueAtCR - currentTokenValueUSD);
@@ -60,9 +77,6 @@ export function CollateralAwareMinting({
       
       setTokensToReceive(Math.max(0, tokensAfterFee));
       setUsdcToAdd(usdcNeededForTokens > 0 ? usdcNeededForTokens.toFixed(2) : "0");
-    } else {
-      setTokensToReceive(0);
-      setUsdcToAdd("0");
     }
   }, [targetCR, vaultStats, tokenPrice]);
 
@@ -102,7 +116,7 @@ export function CollateralAwareMinting({
     }
   };
 
-  const canMint = vaultStats?.usdc !== '0.0' && tokensToReceive > 0 && parseFloat(usdcToAdd) <= userBalance;
+  const canMint = tokensToReceive >= 0 && parseFloat(usdcToAdd) > 0 && parseFloat(usdcToAdd) <= userBalance;
 
   return (
     <Card>
@@ -130,70 +144,78 @@ export function CollateralAwareMinting({
         </div>
 
         {/* Collateral Ratio Slider */}
-        {vaultStats?.usdc !== '0.0' && (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">
-                Target Collateral Ratio: {targetCR[0]}%
-              </Label>
-              <Slider
-                value={targetCR}
-                onValueChange={handleSliderChange}
-                min={120}
-                max={200}
-                step={5}
-                className="w-full"
-                disabled={isLoading}
-              />
-              <div className="flex justify-between text-xs text-gray-500">
-                <span>120% (Minimum)</span>
-                <span>150% (Optimal)</span>
-                <span>200% (Safe)</span>
-              </div>
-            </div>
-
-            {/* Mint Preview */}
-            <div className="bg-blue-50 p-3 rounded-lg">
-              <div className="text-sm font-medium text-blue-900 mb-2">Mint Preview</div>
-              <div className="space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span>You'll receive:</span>
-                  <span className="font-medium">{tokensToReceive.toFixed(4)} {tokenSymbol}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>USDC needed:</span>
-                  <span className="font-medium">${usdcToAdd}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Exchange rate:</span>
-                  <span>1 USDC = {(1 / tokenPrice).toFixed(6)} {tokenSymbol}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Mint fee (0.3%):</span>
-                  <span>${(parseFloat(usdcToAdd || '0') * 0.003).toFixed(2)}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Balance Check */}
-            <div className="text-xs text-gray-500">
-              Balance: {userBalance.toFixed(2)} USDC
-              {parseFloat(usdcToAdd) > userBalance && (
-                <span className="text-red-500 ml-2">
-                  (Need ${(parseFloat(usdcToAdd) - userBalance).toFixed(2)} more)
-                </span>
-              )}
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">
+              Target Collateral Ratio: {targetCR[0]}%
+            </Label>
+            <Slider
+              value={targetCR}
+              onValueChange={handleSliderChange}
+              min={120}
+              max={200}
+              step={5}
+              className="w-full"
+              disabled={isLoading}
+            />
+            <div className="flex justify-between text-xs text-gray-500">
+              <span>120% (Minimum)</span>
+              <span>150% (Optimal)</span>
+              <span>200% (Safe)</span>
             </div>
           </div>
-        )}
 
-        {/* No Collateral Warning */}
-        {vaultStats?.usdc === '0.0' && (
+          {/* Mint Preview */}
+          <div className="bg-blue-50 p-3 rounded-lg">
+            <div className="text-sm font-medium text-blue-900 mb-2">Mint Preview</div>
+            <div className="space-y-1 text-sm">
+              <div className="flex justify-between">
+                <span>You'll receive:</span>
+                <span className="font-medium">{tokensToReceive.toFixed(4)} {tokenSymbol}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>USDC needed:</span>
+                <span className="font-medium">${usdcToAdd}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Exchange rate:</span>
+                <span>1 USDC = {(1 / tokenPrice).toFixed(6)} {tokenSymbol}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Mint fee (0.3%):</span>
+                <span>${(parseFloat(usdcToAdd || '0') * 0.003).toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Balance Check */}
+          <div className="text-xs text-gray-500">
+            Balance: {userBalance.toFixed(2)} USDC
+            {parseFloat(usdcToAdd) > userBalance && (
+              <span className="text-red-500 ml-2">
+                (Need ${(parseFloat(usdcToAdd) - userBalance).toFixed(2)} more)
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Vault Status Info */}
+        {vaultStats?.usdc === '0.0' && vaultStats.bvix !== '0' && (
           <Alert className="border-yellow-200 bg-yellow-50">
             <Info className="h-4 w-4 text-yellow-600" />
             <AlertDescription className="text-yellow-800">
-              <strong>No Collateral in Vault:</strong> Before minting, someone needs to add USDC collateral to the vault. 
-              Use the "Get Test USDC" button and the addCollateral function to fund the vault.
+              <strong>Vault Needs Collateral:</strong> The vault has {parseFloat(vaultStats.bvix).toFixed(2)} BVIX tokens but no USDC collateral.
+              The amount shown above is the minimum USDC needed to restore the selected collateral ratio.
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {vaultStats?.usdc === '0.0' && vaultStats.bvix === '0' && (
+          <Alert className="border-blue-200 bg-blue-50">
+            <Info className="h-4 w-4 text-blue-600" />
+            <AlertDescription className="text-blue-800">
+              <strong>Fresh Vault:</strong> This is the first mint to the vault. The amount shown represents 
+              minting $100 worth of {tokenSymbol} tokens at your selected collateral ratio.
             </AlertDescription>
           </Alert>
         )}
