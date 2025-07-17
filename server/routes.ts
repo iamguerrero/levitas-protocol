@@ -13,10 +13,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Vault statistics endpoint
   app.get("/api/v1/vault-stats", async (req, res) => {
     try {
-      // Contract addresses - Updated V4 addresses
+      // Contract addresses - Updated V4 final addresses (no collateral ratio check)
       const MOCK_USDC_ADDRESS = '0x79640e0f510a7c6d59737442649d9600C84b035f';
-      const BVIX_ADDRESS = '0x4Cd0c0ed02363F27fC2A8a3D7dC9aEA88ddCCf5E';
-      const MINT_REDEEM_ADDRESS = '0xb507A6743787E1Ee10365385F46DD5BFEa10Dcd5';
+      const BVIX_ADDRESS = '0xcA7aC262190a3d126971281c496a521F5dD0f8D0';
+      const MINT_REDEEM_ADDRESS = '0x9d12b251f8F6c432b1Ecd6ef722Bf45A8aFdE6A8';
       const ORACLE_ADDRESS = '0x85485dD6cFaF5220150c413309C61a8EA24d24FE';
       const BASE_SEPOLIA_RPC_URL = 'https://sepolia.base.org';
 

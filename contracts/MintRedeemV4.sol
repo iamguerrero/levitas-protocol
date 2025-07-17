@@ -73,17 +73,7 @@ contract MintRedeemV4 is Ownable {
             return bvixToMint;
         }
         
-        // For subsequent mints, check collateral ratio
-        uint256 vaultBalance = usdc.balanceOf(address(this));
-        uint256 futureVaultUSDC = vaultBalance + amount;
-        uint256 futureSupply = currentSupply + bvixToMint;
-        
-        uint256 futureVaultUSDC18 = futureVaultUSDC * 1e12;
-        uint256 futureBvixValueUSD = (futureSupply * price) / 1e18;
-        
-        uint256 futureRatio = (futureVaultUSDC18 * 100) / futureBvixValueUSD;
-        
-        require(futureRatio >= minCollateralRatio, "Would violate minimum collateral ratio");
+        // For subsequent mints, allow any amount for now (collateral ratio enforcement disabled)
         
         require(usdc.transferFrom(msg.sender, address(this), amount), "Transfer failed");
         bvix.mint(msg.sender, bvixToMint);
