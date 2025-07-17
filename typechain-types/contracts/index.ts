@@ -7,5 +7,7 @@ export type { BVIXToken } from "./BVIXToken";
 export type { EVIXOracle } from "./EVIXOracle";
 export type { EVIXToken } from "./EVIXToken";
 export type { MintRedeem } from "./MintRedeem";
+export type { MintRedeemV2 } from "./MintRedeemV2";
+export type { MintRedeemWithCollateral } from "./MintRedeemWithCollateral";
 export type { MockOracle } from "./MockOracle";
 export type { MockUSDC } from "./MockUSDC";
