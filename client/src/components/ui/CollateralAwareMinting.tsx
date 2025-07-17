@@ -50,21 +50,16 @@ export function CollateralAwareMinting({
     const currentTokenSupply = parseFloat(vaultStats.bvix);
     const selectedCR = targetCR[0];
 
-    // Calculate future vault state after adding USDC
-    const futureVaultUSDC = currentVaultUSDC + usdcAmount;
+    // Simple calculation: User spends USDC, gets tokens based on price
+    // The USDC they spend becomes collateral in the vault
+    // We need to ensure the resulting CR is at least the selected CR
     
-    // Calculate how much token value we can support at this CR
-    const maxTokenValueAtCR = futureVaultUSDC / (selectedCR / 100);
-    
-    // Current token value in USD
-    const currentTokenValueUSD = currentTokenSupply * tokenPrice;
-    
-    // Additional token value we can mint
-    const additionalTokenValue = Math.max(0, maxTokenValueAtCR - currentTokenValueUSD);
+    // Maximum token value we can mint with this USDC at the selected CR
+    const maxTokenValueFromUSDC = usdcAmount / (selectedCR / 100);
     
     // Convert to tokens (accounting for 0.3% mint fee)
-    const tokensFromValue = additionalTokenValue / tokenPrice;
-    const tokensAfterFee = tokensFromValue * 0.997;
+    const tokensBeforeFee = maxTokenValueFromUSDC / tokenPrice;
+    const tokensAfterFee = tokensBeforeFee * 0.997;
     
     setTokensToReceive(Math.max(0, tokensAfterFee));
   }, [usdcInput, targetCR, vaultStats, tokenPrice]);
@@ -106,7 +101,7 @@ export function CollateralAwareMinting({
     }
   };
 
-  const canMint = tokensToReceive > 0 && parseFloat(usdcInput) > 0 && parseFloat(usdcInput) <= userBalance;
+  const canMint = parseFloat(usdcInput) > 0 && parseFloat(usdcInput) <= userBalance;
 
   return (
     <Card>
@@ -187,8 +182,8 @@ export function CollateralAwareMinting({
                   <span className="font-medium">{tokensToReceive.toFixed(4)} {tokenSymbol}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>USDC spending:</span>
-                  <span className="font-medium">${usdcInput}</span>
+                  <span>{tokenSymbol} price:</span>
+                  <span className="font-medium">${tokenPrice.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Exchange rate:</span>
