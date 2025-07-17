@@ -9,15 +9,20 @@ import { useToast } from "@/hooks/use-toast";
 import { usePosition } from "@/hooks/use-position";
 import {
   getBVIXBalance,
+  getEVIXBalance,
   getUSDCBalance,
   getOraclePrice,
+  getEVIXPrice,
   getCollateralRatio,
   mintBVIX,
   redeemBVIX,
+  mintEVIX,
+  redeemEVIX,
   switchToBaseSepolia,
   getContractDebugInfo,
   getTestUSDC,
   BVIX_ADDRESS,
+  EVIX_ADDRESS,
   ORACLE_ADDRESS,
   MINT_REDEEM_ADDRESS,
   MOCK_USDC_ADDRESS,
@@ -28,6 +33,8 @@ export default function TradingInterface() {
   const { toast } = useToast();
   const [mintAmount, setMintAmount] = useState("");
   const [redeemAmount, setRedeemAmount] = useState("");
+  const [evixMintAmount, setEvixMintAmount] = useState("");
+  const [evixRedeemAmount, setEvixRedeemAmount] = useState("");
   const [isTransacting, setIsTransacting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [debugInfo, setDebugInfo] = useState<any>(null);
@@ -49,9 +56,10 @@ export default function TradingInterface() {
   // Real contract data
   const [contractData, setContractData] = useState({
     bvixPrice: "42.15",
-    evixPrice: "37.98", // EVIX not implemented yet
+    evixPrice: "37.98",
     usdcBalance: "0.00",
     bvixBalance: "0.00",
+    evixBalance: "0.00",
     totalValue: "0.00",
   });
 
@@ -73,10 +81,12 @@ export default function TradingInterface() {
 
     setIsLoading(true);
     try {
-      const [bvixBalance, usdcBalance, oraclePrice, ratio] = await Promise.all([
+      const [bvixBalance, evixBalance, usdcBalance, oraclePrice, evixPrice, ratio] = await Promise.all([
         getBVIXBalance(address),
+        getEVIXBalance(address),
         getUSDCBalance(address),
         getOraclePrice(),
+        getEVIXPrice(),
         getCollateralRatio(),
       ]);
       
@@ -84,14 +94,16 @@ export default function TradingInterface() {
 
       const totalValue = (
         parseFloat(bvixBalance) * parseFloat(oraclePrice) +
+        parseFloat(evixBalance) * parseFloat(evixPrice) +
         parseFloat(usdcBalance)
       ).toFixed(2);
 
       setContractData({
         bvixPrice: oraclePrice,
-        evixPrice: "37.98", // EVIX not implemented yet
+        evixPrice,
         usdcBalance,
         bvixBalance,
+        evixBalance,
         totalValue,
       });
     } catch (error) {
@@ -228,6 +240,94 @@ export default function TradingInterface() {
         title: "Redeem Failed",
         description:
           error.message || "Failed to redeem BVIX tokens. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsTransacting(false);
+    }
+  };
+
+  const handleMintEVIX = async () => {
+    if (!evixMintAmount || parseFloat(evixMintAmount) <= 0) {
+      toast({
+        title: "Invalid Amount",
+        description: "Please enter a valid amount to mint EVIX.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsTransacting(true);
+    try {
+      await switchToBaseSepolia();
+      const tx = await mintEVIX(evixMintAmount);
+      
+      toast({
+        title: "Transaction Submitted",
+        description: (
+          <div>
+            EVIX minting transaction submitted. {explorerLink(tx.hash)}
+          </div>
+        ),
+      });
+
+      await tx.wait();
+      
+      toast({
+        title: "EVIX Minted!",
+        description: `Successfully minted EVIX tokens for ${evixMintAmount} USDC`,
+      });
+      
+      setEvixMintAmount("");
+      await loadContractData();
+    } catch (error: any) {
+      toast({
+        title: "Mint Failed",
+        description: error.message || "Failed to mint EVIX tokens",
+        variant: "destructive",
+      });
+    } finally {
+      setIsTransacting(false);
+    }
+  };
+
+  const handleRedeemEVIX = async () => {
+    if (!evixRedeemAmount || parseFloat(evixRedeemAmount) <= 0) {
+      toast({
+        title: "Invalid Amount",
+        description: "Please enter a valid amount to redeem EVIX.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsTransacting(true);
+    try {
+      await switchToBaseSepolia();
+      const tx = await redeemEVIX(evixRedeemAmount);
+      
+      toast({
+        title: "Transaction Submitted",
+        description: (
+          <div>
+            EVIX redemption transaction submitted. {explorerLink(tx.hash)}
+          </div>
+        ),
+      });
+
+      await tx.wait();
+      
+      toast({
+        title: "EVIX Redeemed!",
+        description: `Successfully redeemed ${evixRedeemAmount} EVIX tokens`,
+      });
+      
+      setEvixRedeemAmount("");
+      await loadContractData();
+    } catch (error: any) {
+      toast({
+        title: "Redeem Failed",
+        description: error.message || "Failed to redeem EVIX tokens",
         variant: "destructive",
       });
     } finally {
@@ -372,13 +472,13 @@ export default function TradingInterface() {
               </div>
               <div className="text-right">
                 <div className="text-2xl font-bold text-black">
-                  ${contractData.evixPrice}
+                  ${isLoading ? "..." : contractData.evixPrice}
                 </div>
-                <div className="text-sm text-gray-500">Coming Soon</div>
+                <div className="text-sm text-green-600">Live Price</div>
               </div>
             </div>
             <div className="text-xs text-gray-600">
-              EVIX implementation pending
+              Last updated: {new Date().toLocaleTimeString()}
             </div>
           </CardContent>
         </Card>

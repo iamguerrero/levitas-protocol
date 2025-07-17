@@ -46,6 +46,18 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.BVIXToken__factory>;
     getContractFactory(
+      name: "EVIXMintRedeem",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.EVIXMintRedeem__factory>;
+    getContractFactory(
+      name: "IOracle",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IOracle__factory>;
+    getContractFactory(
+      name: "EVIXOracle",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.EVIXOracle__factory>;
+    getContractFactory(
       name: "EVIXToken",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.EVIXToken__factory>;
@@ -103,6 +115,21 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.BVIXToken>;
     getContractAt(
+      name: "EVIXMintRedeem",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.EVIXMintRedeem>;
+    getContractAt(
+      name: "IOracle",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IOracle>;
+    getContractAt(
+      name: "EVIXOracle",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.EVIXOracle>;
+    getContractAt(
       name: "EVIXToken",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -156,6 +183,18 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.BVIXToken>;
     deployContract(
+      name: "EVIXMintRedeem",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.EVIXMintRedeem>;
+    deployContract(
+      name: "IOracle",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IOracle>;
+    deployContract(
+      name: "EVIXOracle",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.EVIXOracle>;
+    deployContract(
       name: "EVIXToken",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.EVIXToken>;
@@ -212,6 +251,21 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.BVIXToken>;
+    deployContract(
+      name: "EVIXMintRedeem",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.EVIXMintRedeem>;
+    deployContract(
+      name: "IOracle",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IOracle>;
+    deployContract(
+      name: "EVIXOracle",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.EVIXOracle>;
     deployContract(
       name: "EVIXToken",
       args: any[],

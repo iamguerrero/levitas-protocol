@@ -421,6 +421,85 @@
       "artifacts": [
         "EVIXToken"
       ]
+    },
+    "/home/runner/workspace/contracts/EVIXMintRedeem.sol": {
+      "lastModificationDate": 1752761777052,
+      "contentHash": "75fecd84bd8781b57ee16be70a14b181",
+      "sourceName": "contracts/EVIXMintRedeem.sol",
+      "solcConfig": {
+        "version": "0.8.21",
+        "settings": {
+          "evmVersion": "paris",
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "@openzeppelin/contracts/access/Ownable.sol",
+        "./EVIXToken.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.21"
+      ],
+      "artifacts": [
+        "EVIXMintRedeem",
+        "IOracle"
+      ]
+    },
+    "/home/runner/workspace/contracts/EVIXOracle.sol": {
+      "lastModificationDate": 1752761719044,
+      "contentHash": "0e86b652bed271f98765c6587a33580d",
+      "sourceName": "contracts/EVIXOracle.sol",
+      "solcConfig": {
+        "version": "0.8.21",
+        "settings": {
+          "evmVersion": "paris",
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/access/Ownable.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.21"
+      ],
+      "artifacts": [
+        "EVIXOracle"
+      ]
     }
   }
 }
