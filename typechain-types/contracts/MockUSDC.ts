@@ -30,6 +30,7 @@ export interface MockUSDCInterface extends Interface {
       | "approve"
       | "balanceOf"
       | "decimals"
+      | "faucet"
       | "mint"
       | "name"
       | "owner"
@@ -58,6 +59,7 @@ export interface MockUSDCInterface extends Interface {
     values: [AddressLike]
   ): string;
   encodeFunctionData(functionFragment: "decimals", values?: undefined): string;
+  encodeFunctionData(functionFragment: "faucet", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "mint",
     values: [AddressLike, BigNumberish]
@@ -90,6 +92,7 @@ export interface MockUSDCInterface extends Interface {
   decodeFunctionResult(functionFragment: "approve", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "balanceOf", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "decimals", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "faucet", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "mint", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "name", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
@@ -221,6 +224,8 @@ export interface MockUSDC extends BaseContract {
 
   decimals: TypedContractMethod<[], [bigint], "view">;
 
+  faucet: TypedContractMethod<[], [void], "nonpayable">;
+
   mint: TypedContractMethod<
     [to: AddressLike, amount: BigNumberish],
     [void],
@@ -279,6 +284,9 @@ export interface MockUSDC extends BaseContract {
   getFunction(
     nameOrSignature: "decimals"
   ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "faucet"
+  ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "mint"
   ): TypedContractMethod<

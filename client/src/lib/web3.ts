@@ -25,13 +25,13 @@ export const BASE_SEPOLIA_CHAIN_ID = "0x14a34";
 export const BASE_SEPOLIA_RPC_URL = "https://sepolia.base.org";
 
 // Contract addresses - V5 Final with fresh BVIX and proper ownership
-export const BVIX_ADDRESS = "0xa60289981b67139fb7a9F3d31dD2D2BaA414A263"; // Fresh BVIX
-export const MINT_REDEEM_ADDRESS = "0xa0133C6380bf9618e97Ab9a855aF2035e9498829"; // V5 Final
-export const EVIX_ADDRESS = "0xe59DAe2Fea60B0Bb1a7093018069B08135279367"; // FINAL EVIX with mint/redeem fix
+export const BVIX_ADDRESS = "0xdcCCCC3A977cC0166788265eD4B683D41f3AED09"; // Fresh BVIX with faucet USDC
+export const MINT_REDEEM_ADDRESS = "0x4d0ddFBCBa76f2e72B0Fef2fdDcaE9ddd6922397"; // V5 with faucet USDC
+export const EVIX_ADDRESS = "0x089C132BC246bF2060F40B0608Cb14b2A0cC9127"; // EVIX with faucet USDC
 export const ORACLE_ADDRESS = "0x85485dD6cFaF5220150c413309C61a8EA24d24FE";
-export const MOCK_USDC_ADDRESS = "0x79640e0f510a7c6d59737442649d9600C84b035f";
+export const MOCK_USDC_ADDRESS = "0x9CC37B36FDd8CF5c0297BE15b75663Bf2a193297"; // MockUSDC with public faucet
 export const EVIX_ORACLE_ADDRESS = "0xCd7441A771a7F84E58d98E598B7Ff23A3688094F";
-export const EVIX_MINT_REDEEM_ADDRESS = "0x0D378e5e877217138ff78A80e0C175393949c4A3"; // FINAL V5 with mint/redeem fix
+export const EVIX_MINT_REDEEM_ADDRESS = "0xb187c5Ff48D69BB0b477dAf30Eec779E0D07771D"; // EVIX V5 with faucet USDC
 
 // Contract factory functions
 export const getBVIXContract = (providerOrSigner: any) =>

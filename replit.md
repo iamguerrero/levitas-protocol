@@ -19,7 +19,7 @@ This project is a decentralized finance (DeFi) application called Levitas Financ
 ✓ **VAULT-SPECIFIC CR TRACKING** - Fixed CR calculation to show individual BVIX vault CR instead of confusing protocol-wide combined CR  
 ✓ **PROTOCOL-WIDE CR RESTORED** - Reverted to correct protocol-wide CR calculation per user feedback
 🔧 **EVIX MINTING BUG IDENTIFIED** - EVIX mint creates almost no tokens despite spending USDC, causing incorrect CR behavior
-✅ **EVIX ECOSYSTEM COMPLETE** - Deployed FINAL EVIX with mint/redeem: EVIX Token (0xe59DAe2Fea60B0Bb1a7093018069B08135279367), MintRedeem (0x0D378e5e877217138ff78A80e0C175393949c4A3) with fixed decimal handling for both mint and redeem functions
+✅ **COMPLETE PROTOCOL WITH FAUCET** - Deployed final contracts with MockUSDC faucet: MockUSDC (0x9CC37B36FDd8CF5c0297BE15b75663Bf2a193297), BVIX (0xdcCCCC3A977cC0166788265eD4B683D41f3AED09), BVIX MintRedeem (0x4d0ddFBCBa76f2e72B0Fef2fdDcaE9ddd6922397), EVIX (0x089C132BC246bF2060F40B0608Cb14b2A0cC9127), EVIX MintRedeem (0xb187c5Ff48D69BB0b477dAf30Eec779E0D07771D). Users can now get test USDC via faucet button.
 ✓ **Vault Health Real-Time Updates** - Updated vault stats API to use V4 contracts and reduced refresh interval to 5 seconds for faster updates
 ✓ **Post-Transaction Cache Invalidation** - Added automatic vault cache refresh after BVIX transactions for immediate collateral ratio updates (EVIX transactions don't affect BVIX vault)
 ✓ **Comprehensive Debug Logging** - Added detailed console logging for mint process troubleshooting

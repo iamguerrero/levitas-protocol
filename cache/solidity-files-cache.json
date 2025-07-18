@@ -345,8 +345,8 @@
       ]
     },
     "/home/runner/workspace/contracts/MockUSDC.sol": {
-      "lastModificationDate": 1752490802080,
-      "contentHash": "d6f498345e6a712b677f0c3792050259",
+      "lastModificationDate": 1752827279158,
+      "contentHash": "1bffaeadfbdb2e24788f7c9dad2f2cce",
       "sourceName": "contracts/MockUSDC.sol",
       "solcConfig": {
         "version": "0.8.21",

@@ -13,6 +13,12 @@ contract MockUSDC is ERC20, Ownable {
         _mint(to, amount);
     }
 
+    // Public faucet function for users to get test USDC
+    function faucet() external {
+        uint256 faucetAmount = 10000 * 10**decimals(); // 10,000 USDC
+        _mint(msg.sender, faucetAmount);
+    }
+
     function decimals() public pure override returns (uint8) {
         return 6;
     }

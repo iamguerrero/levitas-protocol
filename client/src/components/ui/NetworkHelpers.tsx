@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ExternalLink, Plus, Coins } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { ethers } from "ethers";
 
 export function NetworkHelpers() {
   const { toast } = useToast();
@@ -50,19 +51,53 @@ export function NetworkHelpers() {
   };
 
   const openBaseFaucet = () => {
-    window.open('https://thirdweb.com/base-sepolia-testnet', '_blank');
+    window.open('https://docs.base.org/base-chain/tools/network-faucets', '_blank');
     toast({
-      title: "Faucet Opened",
+      title: "Faucet Opened", 
       description: "Use your wallet address to get free testnet ETH.",
     });
   };
 
-  const getTestUSDC = () => {
-    window.open('https://sepolia.basescan.org/address/0x79640e0f510a7c6d59737442649d9600C84b035f#writeContract', '_blank');
-    toast({
-      title: "Test USDC Faucet",
-      description: "Use the 'mint' function to get test USDC tokens.",
-    });
+  const getTestUSDC = async () => {
+    try {
+      if (!window.ethereum) {
+        toast({
+          title: "Wallet Required",
+          description: "Please connect MetaMask to get test USDC.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      
+      // MockUSDC contract with faucet function
+      const mockUSDCContract = new ethers.Contract(
+        "0x9CC37B36FDd8CF5c0297BE15b75663Bf2a193297",
+        ["function faucet() external"],
+        signer
+      );
+
+      toast({
+        title: "Getting Test USDC...",
+        description: "Transaction pending, please wait.",
+      });
+
+      const tx = await mockUSDCContract.faucet();
+      await tx.wait();
+
+      toast({
+        title: "Success!",
+        description: "You received 10,000 test USDC tokens!",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to get test USDC",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

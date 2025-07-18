@@ -14,12 +14,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/v1/vault-stats", async (req, res) => {
     try {
       // Contract addresses - V5 Final with fresh BVIX and proper ownership
-      const MOCK_USDC_ADDRESS = '0x79640e0f510a7c6d59737442649d9600C84b035f';
-      const BVIX_ADDRESS = '0xa60289981b67139fb7a9F3d31dD2D2BaA414A263'; // Fresh BVIX
-      const MINT_REDEEM_ADDRESS = '0xa0133C6380bf9618e97Ab9a855aF2035e9498829'; // V5 Final
+      const MOCK_USDC_ADDRESS = '0x9CC37B36FDd8CF5c0297BE15b75663Bf2a193297'; // MockUSDC with public faucet
+      const BVIX_ADDRESS = '0xdcCCCC3A977cC0166788265eD4B683D41f3AED09'; // Fresh BVIX with faucet USDC
+      const MINT_REDEEM_ADDRESS = '0x4d0ddFBCBa76f2e72B0Fef2fdDcaE9ddd6922397'; // V5 with faucet USDC
       const ORACLE_ADDRESS = '0x85485dD6cFaF5220150c413309C61a8EA24d24FE';
       // EVIX contracts - V5 Final addresses
-      const EVIX_MINT_REDEEM_ADDRESS = '0x0D378e5e877217138ff78A80e0C175393949c4A3'; // FINAL V5 with mint/redeem fix
+      const EVIX_MINT_REDEEM_ADDRESS = '0xb187c5Ff48D69BB0b477dAf30Eec779E0D07771D'; // EVIX V5 with faucet USDC
       const BASE_SEPOLIA_RPC_URL = 'https://sepolia.base.org';
 
       // Minimal ERC20 ABI for balance and supply queries
@@ -63,10 +63,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const priceFloat = parseFloat(price);
       
       // Add EVIX data for complete protocol-wide collateral ratio
-      const evixContract = new ethers.Contract('0xe59DAe2Fea60B0Bb1a7093018069B08135279367', ERC20_ABI, provider);
+      const evixContract = new ethers.Contract('0x089C132BC246bF2060F40B0608Cb14b2A0cC9127', ERC20_ABI, provider);
       const evixOracleContract = new ethers.Contract('0xCd7441A771a7F84E58d98E598B7Ff23A3688094F', ['function getPrice() external view returns (uint256)'], provider);
       
-      console.log('Debug: Using EVIX contract address:', '0xe59DAe2Fea60B0Bb1a7093018069B08135279367');
+      console.log('Debug: Using EVIX contract address:', '0x089C132BC246bF2060F40B0608Cb14b2A0cC9127');
       console.log('Debug: Using EVIX vault address:', EVIX_MINT_REDEEM_ADDRESS);
       
       const [evixTotalSupply, evixPrice] = await Promise.all([
