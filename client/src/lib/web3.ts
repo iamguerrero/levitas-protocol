@@ -160,7 +160,7 @@ export async function getNetworkName(): Promise<string> {
     if (chainId === CHAIN_IDS.baseSepolia) {
       return "Base Sepolia Testnet";
     } else if (chainId === CHAIN_IDS.sepolia) {
-      return "ETH Sepolia testnet";
+      return "ETH Sepolia Testnet";
     }
     return "Unknown Network";
   } catch (error) {
@@ -298,8 +298,43 @@ export async function getOraclePrice(): Promise<string> {
     const decimals = chainId === CHAIN_IDS.sepolia ? 18 : 8;
     const formattedPrice = ethers.formatUnits(price, decimals);
     
+    console.log("🔍 BVIX Price Debug:", {
+      chainId,
+      decimals,
+      rawPrice: price.toString(),
+      formattedPrice,
+      finalPrice: parseFloat(formattedPrice).toFixed(2)
+    });
+    
+    // Validate the price is reasonable (between $0.01 and $100,000)
+    const priceFloat = parseFloat(formattedPrice);
+    if (priceFloat < 0.01 || priceFloat > 100000) {
+      console.warn("⚠️ BVIX price seems unreasonable:", priceFloat, "using fallback");
+      
+      // Try alternative decimal formats if the price seems wrong
+      if (chainId === CHAIN_IDS.sepolia) {
+        // Try with 8 decimals instead of 18 for ETH Sepolia
+        const altFormattedPrice = ethers.formatUnits(price, 8);
+        const altPriceFloat = parseFloat(altFormattedPrice);
+        if (altPriceFloat >= 0.01 && altPriceFloat <= 100000) {
+          console.log("✅ Fixed BVIX price with 8 decimals:", altPriceFloat);
+          return altPriceFloat.toFixed(2);
+        }
+      } else {
+        // Try with 18 decimals instead of 8 for Base Sepolia
+        const altFormattedPrice = ethers.formatUnits(price, 18);
+        const altPriceFloat = parseFloat(altFormattedPrice);
+        if (altPriceFloat >= 0.01 && altPriceFloat <= 100000) {
+          console.log("✅ Fixed BVIX price with 18 decimals:", altPriceFloat);
+          return altPriceFloat.toFixed(2);
+        }
+      }
+      
+      return "42.15"; // Fallback price
+    }
+    
     // Parse and format to 2 decimal places
-    return parseFloat(formattedPrice).toFixed(2);
+    return priceFloat.toFixed(2);
   } catch (error) {
     console.error("Error getting oracle price:", error);
     return "42.15"; // Fallback price
@@ -318,8 +353,43 @@ export async function getEVIXPrice(): Promise<string> {
     const decimals = chainId === CHAIN_IDS.sepolia ? 18 : 8;
     const formattedPrice = ethers.formatUnits(priceRaw, decimals);
     
+    console.log("🔍 EVIX Price Debug:", {
+      chainId,
+      decimals,
+      rawPrice: priceRaw.toString(),
+      formattedPrice,
+      finalPrice: parseFloat(formattedPrice).toFixed(2)
+    });
+    
+    // Validate the price is reasonable (between $0.01 and $100,000)
+    const priceFloat = parseFloat(formattedPrice);
+    if (priceFloat < 0.01 || priceFloat > 100000) {
+      console.warn("⚠️ EVIX price seems unreasonable:", priceFloat, "using fallback");
+      
+      // Try alternative decimal formats if the price seems wrong
+      if (chainId === CHAIN_IDS.sepolia) {
+        // Try with 8 decimals instead of 18 for ETH Sepolia
+        const altFormattedPrice = ethers.formatUnits(priceRaw, 8);
+        const altPriceFloat = parseFloat(altFormattedPrice);
+        if (altPriceFloat >= 0.01 && altPriceFloat <= 100000) {
+          console.log("✅ Fixed EVIX price with 8 decimals:", altPriceFloat);
+          return altPriceFloat.toFixed(2);
+        }
+      } else {
+        // Try with 18 decimals instead of 8 for Base Sepolia
+        const altFormattedPrice = ethers.formatUnits(priceRaw, 18);
+        const altPriceFloat = parseFloat(altFormattedPrice);
+        if (altPriceFloat >= 0.01 && altPriceFloat <= 100000) {
+          console.log("✅ Fixed EVIX price with 18 decimals:", altPriceFloat);
+          return altPriceFloat.toFixed(2);
+        }
+      }
+      
+      return "37.98"; // Fallback price
+    }
+    
     // Parse and format to 2 decimal places
-    return parseFloat(formattedPrice).toFixed(2);
+    return priceFloat.toFixed(2);
   } catch (error) {
     console.error("Error getting EVIX price:", error);
     return "37.98"; // Fallback price
@@ -496,6 +566,19 @@ export function formatBalance(balance: string, decimals: number = 18): string {
     return num.toFixed(4);
   } catch {
     return "0.0000";
+  }
+}
+
+// Helper function to format prices safely
+export function formatPrice(price: string | number): string {
+  try {
+    const priceFloat = typeof price === 'string' ? parseFloat(price) : price;
+    if (isNaN(priceFloat) || priceFloat < 0.01 || priceFloat > 100000) {
+      return "42.15"; // Fallback price
+    }
+    return priceFloat.toFixed(2);
+  } catch (error) {
+    return "42.15"; // Fallback price
   }
 }
 
