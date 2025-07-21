@@ -52,6 +52,14 @@ export default function Navigation() {
               Whitepaper
             </a>
             <a
+              href="/attached_assets/Levitas Litepaper_1753091498988.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-600 hover:text-black transition-colors"
+            >
+              Litepaper
+            </a>
+            <a
               href="https://app.uniswap.org/add/0x036cbd53842c5426634e7929541ec2318f3dcf7e/0xa0b86a33e6ba6d57e9e8fa4c9f23de33a3b76b6f?chain=base_sepolia"
               target="_blank"
               rel="noopener noreferrer"
@@ -97,6 +105,14 @@ export default function Navigation() {
               className="block py-2 text-gray-600 hover:text-black"
             >
               Whitepaper
+            </a>
+            <a
+              href="/attached_assets/Levitas Litepaper_1753091498988.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block py-2 text-gray-600 hover:text-black"
+            >
+              Litepaper
             </a>
             <a
               href="https://app.uniswap.org/add/0x036cbd53842c5426634e7929541ec2318f3dcf7e/0xa0b86a33e6ba6d57e9e8fa4c9f23de33a3b76b6f?chain=base_sepolia"

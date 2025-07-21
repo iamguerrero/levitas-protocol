@@ -1,0 +1,4 @@
+q
+cat .env
+q
+echo $PRIVATE_KEY

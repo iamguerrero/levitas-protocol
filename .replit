@@ -4,12 +4,17 @@ hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["python312Packages.slither-analyzer"]
+packages = ["python312Packages.slither-analyzer", "nano", "lsof", "psmisc"]
 
 [deployment]
 deploymentTarget = "autoscale"
 build = ["npm", "run", "build"]
 run = ["npm", "run", "start"]
+
+[[ports]]
+localPort = 3000
+externalPort = 3000
+exposeLocalhost = true
 
 [[ports]]
 localPort = 5000

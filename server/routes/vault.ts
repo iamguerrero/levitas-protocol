@@ -65,7 +65,7 @@ router.get('/api/v1/vault-stats', async (req, res) => {
     console.error('Error fetching vault stats:', error);
     res.status(500).json({ 
       error: 'Failed to fetch vault statistics',
-      details: error.message 
+      details: error instanceof Error ? error.message : String(error)
     });
   }
 });

@@ -4,6 +4,7 @@
 export * as evixMintRedeemSol from "./EVIXMintRedeem.sol";
 export { BVIXToken__factory } from "./BVIXToken__factory";
 export { EVIXMintRedeemV5Simple__factory } from "./EVIXMintRedeemV5Simple__factory";
+export { EVIXMintRedeemV6__factory } from "./EVIXMintRedeemV6__factory";
 export { EVIXOracle__factory } from "./EVIXOracle__factory";
 export { EVIXToken__factory } from "./EVIXToken__factory";
 export { MintRedeem__factory } from "./MintRedeem__factory";
@@ -11,6 +12,7 @@ export { MintRedeemV2__factory } from "./MintRedeemV2__factory";
 export { MintRedeemV3__factory } from "./MintRedeemV3__factory";
 export { MintRedeemV4__factory } from "./MintRedeemV4__factory";
 export { MintRedeemV5Simple__factory } from "./MintRedeemV5Simple__factory";
+export { MintRedeemV6__factory } from "./MintRedeemV6__factory";
 export { MintRedeemWithCollateral__factory } from "./MintRedeemWithCollateral__factory";
 export { MockOracle__factory } from "./MockOracle__factory";
 export { MockUSDC__factory } from "./MockUSDC__factory";
