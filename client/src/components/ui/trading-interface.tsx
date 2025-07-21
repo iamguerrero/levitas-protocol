@@ -29,6 +29,7 @@ import {
   switchToBaseSepolia,
   getContractDebugInfo,
   getTestUSDC,
+  formatPrice,
   BVIX_ADDRESS,
   EVIX_ADDRESS,
   ORACLE_ADDRESS,
@@ -187,6 +188,15 @@ export default function TradingInterface() {
         parseFloat(evixBalance) * parseFloat(evixPrice) +
         parseFloat(usdcBalance)
       ).toFixed(2);
+
+      console.log("💰 Setting contract data:", {
+        bvixPrice: oraclePrice,
+        evixPrice,
+        usdcBalance,
+        bvixBalance,
+        evixBalance,
+        totalValue,
+      });
 
       setContractData({
         bvixPrice: oraclePrice,
@@ -565,7 +575,7 @@ export default function TradingInterface() {
     ratePerToken = (singleBeforeFee * 0.997).toFixed(4);
   } else if (redeemNum > 0) {
     // Fallback to price-based if no position (though shouldn't happen)
-    const price = parseFloat(selectedToken === 'bvix' ? contractData.bvixPrice : contractData.evixPrice);
+    const price = parseFloat(selectedToken === 'bvix' ? formatPrice(contractData.bvixPrice) : formatPrice(contractData.evixPrice));
     expectedRefund = (redeemNum * price * 0.997).toFixed(2);
     ratePerToken = (price * 0.997).toFixed(4);
   }
@@ -593,7 +603,7 @@ export default function TradingInterface() {
               </div>
               <div className="text-right">
                 <div className="text-2xl font-bold text-black">
-                  ${isLoading ? "..." : contractData.bvixPrice}
+                  ${isLoading ? "..." : formatPrice(contractData.bvixPrice)}
                 </div>
                 <div className="text-sm text-green-600">Live Price</div>
               </div>
@@ -628,7 +638,7 @@ export default function TradingInterface() {
               </div>
               <div className="text-right">
                 <div className="text-2xl font-bold text-black">
-                  ${isLoading ? "..." : contractData.evixPrice}
+                  ${isLoading ? "..." : formatPrice(contractData.evixPrice)}
                 </div>
                 <div className="text-sm text-green-600">Live Price</div>
               </div>
@@ -650,7 +660,7 @@ export default function TradingInterface() {
         {/* Collateral-Aware Mint Section */}
         <CollateralAwareMinting
           tokenSymbol={selectedToken === 'bvix' ? 'BVIX' : 'EVIX'}
-          tokenPrice={selectedToken === 'bvix' ? parseFloat(contractData.bvixPrice) : parseFloat(contractData.evixPrice)}
+          tokenPrice={selectedToken === 'bvix' ? parseFloat(formatPrice(contractData.bvixPrice)) : parseFloat(formatPrice(contractData.evixPrice))}
           vaultStats={vaultStats}
           userBalance={parseFloat(contractData.usdcBalance)}
           onMint={async (amount: string, cr: number = 150) => selectedToken === 'bvix' ? await handleMint(amount, cr) : await handleMintEVIX(amount, cr)}
@@ -783,11 +793,11 @@ export default function TradingInterface() {
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
                   <span className="text-gray-600">Current Price</span>
-                  <span className="font-mono font-semibold text-green-600">${contractData.bvixPrice}</span>
+                  <span className="font-mono font-semibold text-green-600">${formatPrice(contractData.bvixPrice)}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
                   <span className="text-gray-600">Portfolio Value</span>
-                  <span className="font-mono font-semibold text-blue-600">${(parseFloat(contractData.bvixBalance) * parseFloat(contractData.bvixPrice)).toFixed(2)}</span>
+                  <span className="font-mono font-semibold text-blue-600">${(parseFloat(contractData.bvixBalance) * parseFloat(formatPrice(contractData.bvixPrice))).toFixed(2)}</span>
                 </div>
                 {userPosition?.bvix && parseFloat(userPosition.bvix.collateral) > 0 && (
                   <div className="pt-4">
@@ -828,11 +838,11 @@ export default function TradingInterface() {
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
                   <span className="text-gray-600">Current Price</span>
-                  <span className="font-mono font-semibold text-green-600">${contractData.evixPrice}</span>
+                  <span className="font-mono font-semibold text-green-600">${formatPrice(contractData.evixPrice)}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
                   <span className="text-gray-600">Portfolio Value</span>
-                  <span className="font-mono font-semibold text-blue-600">${(parseFloat(contractData.evixBalance) * parseFloat(contractData.evixPrice)).toFixed(2)}</span>
+                  <span className="font-mono font-semibold text-blue-600">${(parseFloat(contractData.evixBalance) * parseFloat(formatPrice(contractData.evixPrice))).toFixed(2)}</span>
                 </div>
                 {userPosition?.evix && parseFloat(userPosition.evix.collateral) > 0 && (
                   <div className="pt-4">
@@ -869,13 +879,13 @@ export default function TradingInterface() {
                 if (userPosition?.bvix && parseFloat(userPosition.bvix.collateral) > 0) {
                   totalCollateral += parseFloat(userPosition.bvix.collateral);
                   bvixDebt = parseFloat(userPosition.bvix.debt);
-                  totalDebtValue += bvixDebt * parseFloat(contractData.bvixPrice);
+                  totalDebtValue += bvixDebt * parseFloat(formatPrice(contractData.bvixPrice));
                 }
                 
                 if (userPosition?.evix && parseFloat(userPosition.evix.collateral) > 0) {
                   totalCollateral += parseFloat(userPosition.evix.collateral);
                   evixDebt = parseFloat(userPosition.evix.debt);
-                  totalDebtValue += evixDebt * parseFloat(contractData.evixPrice);
+                  totalDebtValue += evixDebt * parseFloat(formatPrice(contractData.evixPrice));
                 }
                 
                 const vaultCR = totalDebtValue > 0 ? (totalCollateral / totalDebtValue) * 100 : 0;

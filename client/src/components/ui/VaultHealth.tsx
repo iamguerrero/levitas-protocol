@@ -4,6 +4,7 @@ import { AlertTriangle, TrendingUp, Shield } from 'lucide-react';
 import { useVault } from '@/hooks/useVault';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { formatPrice } from '@/lib/web3';
 
 export function VaultHealth() {
   const { data, status, isLoading, isError } = useVault();
@@ -145,7 +146,7 @@ export function VaultHealth() {
           <div className="flex justify-between items-center">
             <span className="text-sm font-medium text-gray-700">BVIX Price</span>
             <span className="text-sm font-mono">
-              ${parseFloat(data.price).toFixed(2)}
+              ${formatPrice(data.price)}
             </span>
           </div>
         </div>
