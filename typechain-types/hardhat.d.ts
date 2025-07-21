@@ -58,6 +58,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.EVIXMintRedeemV5Simple__factory>;
     getContractFactory(
+      name: "EVIXMintRedeemV6",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.EVIXMintRedeemV6__factory>;
+    getContractFactory(
       name: "EVIXOracle",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.EVIXOracle__factory>;
@@ -85,6 +89,10 @@ declare module "hardhat/types/runtime" {
       name: "MintRedeemV5Simple",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.MintRedeemV5Simple__factory>;
+    getContractFactory(
+      name: "MintRedeemV6",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.MintRedeemV6__factory>;
     getContractFactory(
       name: "MintRedeemWithCollateral",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -154,6 +162,11 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.EVIXMintRedeemV5Simple>;
     getContractAt(
+      name: "EVIXMintRedeemV6",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.EVIXMintRedeemV6>;
+    getContractAt(
       name: "EVIXOracle",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -188,6 +201,11 @@ declare module "hardhat/types/runtime" {
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.MintRedeemV5Simple>;
+    getContractAt(
+      name: "MintRedeemV6",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.MintRedeemV6>;
     getContractAt(
       name: "MintRedeemWithCollateral",
       address: string | ethers.Addressable,
@@ -249,6 +267,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.EVIXMintRedeemV5Simple>;
     deployContract(
+      name: "EVIXMintRedeemV6",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.EVIXMintRedeemV6>;
+    deployContract(
       name: "EVIXOracle",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.EVIXOracle>;
@@ -276,6 +298,10 @@ declare module "hardhat/types/runtime" {
       name: "MintRedeemV5Simple",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.MintRedeemV5Simple>;
+    deployContract(
+      name: "MintRedeemV6",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.MintRedeemV6>;
     deployContract(
       name: "MintRedeemWithCollateral",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -345,6 +371,11 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.EVIXMintRedeemV5Simple>;
     deployContract(
+      name: "EVIXMintRedeemV6",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.EVIXMintRedeemV6>;
+    deployContract(
       name: "EVIXOracle",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -379,6 +410,11 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.MintRedeemV5Simple>;
+    deployContract(
+      name: "MintRedeemV6",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.MintRedeemV6>;
     deployContract(
       name: "MintRedeemWithCollateral",
       args: any[],

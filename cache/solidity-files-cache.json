@@ -584,8 +584,8 @@
       ]
     },
     "/home/runner/workspace/contracts/MintRedeemV3.sol": {
-      "lastModificationDate": 1752784297676,
-      "contentHash": "47c8becaa4df589e38fb23923a99d551",
+      "lastModificationDate": 1752853954015,
+      "contentHash": "d350f9f9b5b8272b01486091af9d6b4c",
       "sourceName": "contracts/MintRedeemV3.sol",
       "solcConfig": {
         "version": "0.8.21",
@@ -745,6 +745,88 @@
       ],
       "artifacts": [
         "EVIXMintRedeemV5Simple"
+      ]
+    },
+    "/home/runner/workspace/contracts/MintRedeemV6.sol": {
+      "lastModificationDate": 1752840788998,
+      "contentHash": "5b4cbe2d7dca045e74453f002d4ef211",
+      "sourceName": "contracts/MintRedeemV6.sol",
+      "solcConfig": {
+        "version": "0.8.21",
+        "settings": {
+          "evmVersion": "paris",
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "./BVIXToken.sol",
+        "./MockOracle.sol",
+        "@openzeppelin/contracts/access/Ownable.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.21"
+      ],
+      "artifacts": [
+        "MintRedeemV6"
+      ]
+    },
+    "/home/runner/workspace/contracts/EVIXMintRedeemV6.sol": {
+      "lastModificationDate": 1752848173297,
+      "contentHash": "85b94d82e78901979642b42ab7a71c61",
+      "sourceName": "contracts/EVIXMintRedeemV6.sol",
+      "solcConfig": {
+        "version": "0.8.21",
+        "settings": {
+          "evmVersion": "paris",
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "./EVIXToken.sol",
+        "./EVIXOracle.sol",
+        "@openzeppelin/contracts/access/Ownable.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.21"
+      ],
+      "artifacts": [
+        "EVIXMintRedeemV6"
       ]
     }
   }

@@ -2,11 +2,10 @@ import { ethers } from "ethers";
 import BVIX_ABI from "../contracts/BVIXToken.abi.json";
 import EVIX_ABI from "../contracts/EVIXToken.abi.json";
 import Oracle_ABI from "../contracts/MockOracle.abi.json";
-import MintRedeem_ABI from "../contracts/MintRedeemV5Simple.abi.json";
+import MintRedeem_ABI from "../contracts/MintRedeemV6.abi.json";
 import USDC_ABI from "../contracts/MockUSDC.abi.json";
 import EVIXOracle_ABI from "../contracts/EVIXOracle.abi.json";
-import EVIXMintRedeem_ABI from "../contracts/EVIXMintRedeemV5Simple.abi.json";
-import { BigNumber, utils } from "ethers";
+import EVIXMintRedeem_ABI from "../contracts/EVIXMintRedeemV6.abi.json";
 
 declare global {
   interface Window {
@@ -24,14 +23,21 @@ declare global {
 export const BASE_SEPOLIA_CHAIN_ID = "0x14a34";
 export const BASE_SEPOLIA_RPC_URL = "https://sepolia.base.org";
 
-// Contract addresses - V5 Final with fresh BVIX and proper ownership
-export const BVIX_ADDRESS = "0xdcCCCC3A977cC0166788265eD4B683D41f3AED09"; // Fresh BVIX with faucet USDC
-export const MINT_REDEEM_ADDRESS = "0x4d0ddFBCBa76f2e72B0Fef2fdDcaE9ddd6922397"; // V5 with faucet USDC
-export const EVIX_ADDRESS = "0x089C132BC246bF2060F40B0608Cb14b2A0cC9127"; // EVIX with faucet USDC
+// Contract addresses - V6 with position tracking and surplus refunding
+export const BVIX_ADDRESS = "0x2E3bef50887aD2A30069c79D19Bb91085351C92a"; // Fresh BVIX token
+
+// V6 contract addresses deployed to Base Sepolia
+export const BVIX_MINT_REDEEM_V6_ADDRESS = '0x65Bec0Ab96ab751Fd0b1D9c907342d9A61FB1117'; // BVIX V6
+export const EVIX_MINT_REDEEM_V6_ADDRESS = '0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf'; // EVIX V6
+
+// Legacy V5 addresses (for backward compatibility)
+export const MINT_REDEEM_ADDRESS = '0x4d0ddFBCBa76f2e72B0Fef2fdDcaE9ddd6922397'; // V5 with faucet USDC
+export const EVIX_MINT_REDEEM_ADDRESS = "0xb187c5Ff48D69BB0b477dAf30Eec779E0D07771D"; // EVIX V5 with faucet USDC
+
+export const EVIX_ADDRESS = "0x7066700CAf442501B308fAe34d5919091e1b2380"; // Fresh EVIX token
 export const ORACLE_ADDRESS = "0x85485dD6cFaF5220150c413309C61a8EA24d24FE";
 export const MOCK_USDC_ADDRESS = "0x9CC37B36FDd8CF5c0297BE15b75663Bf2a193297"; // MockUSDC with public faucet
 export const EVIX_ORACLE_ADDRESS = "0xCd7441A771a7F84E58d98E598B7Ff23A3688094F";
-export const EVIX_MINT_REDEEM_ADDRESS = "0xb187c5Ff48D69BB0b477dAf30Eec779E0D07771D"; // EVIX V5 with faucet USDC
 
 // Contract factory functions
 export const getBVIXContract = (providerOrSigner: any) =>
@@ -44,7 +50,7 @@ export const getOracleContract = (providerOrSigner: any) =>
   new ethers.Contract(ORACLE_ADDRESS, Oracle_ABI, providerOrSigner);
 
 export const getMintRedeemContract = (providerOrSigner: any) =>
-  new ethers.Contract(MINT_REDEEM_ADDRESS, MintRedeem_ABI, providerOrSigner);
+  new ethers.Contract(BVIX_MINT_REDEEM_V6_ADDRESS, MintRedeem_ABI, providerOrSigner);
 
 export const getUSDCContract = (providerOrSigner: any) =>
   new ethers.Contract(MOCK_USDC_ADDRESS, USDC_ABI, providerOrSigner);
@@ -53,7 +59,10 @@ export const getEVIXOracleContract = (providerOrSigner: any) =>
   new ethers.Contract(EVIX_ORACLE_ADDRESS, EVIXOracle_ABI, providerOrSigner);
 
 export const getEVIXMintRedeemContract = (providerOrSigner: any) =>
-  new ethers.Contract(EVIX_MINT_REDEEM_ADDRESS, EVIXMintRedeem_ABI, providerOrSigner);
+  new ethers.Contract(EVIX_MINT_REDEEM_V6_ADDRESS, EVIXMintRedeem_ABI, providerOrSigner);
+
+export const getEVIXMintRedeemContractV6 = (providerOrSigner: any) =>
+  new ethers.Contract(EVIX_MINT_REDEEM_V6_ADDRESS, EVIXMintRedeem_ABI, providerOrSigner);
 
 // Provider functions
 export function getProvider() {
@@ -196,7 +205,7 @@ export async function mintBVIX(
   console.log("🔍 Checking balances and allowances...");
   console.log("User address:", address);
   console.log("USDC contract:", MOCK_USDC_ADDRESS);
-  console.log("MintRedeem V5 contract:", MINT_REDEEM_ADDRESS);
+      console.log("MintRedeem V6 contract:", BVIX_MINT_REDEEM_V6_ADDRESS);
 
   // Check USDC balance first
   const usdcBalance = await usdcContract.balanceOf(address);
@@ -212,7 +221,7 @@ export async function mintBVIX(
   // Check current allowance
   const currentAllowance = await usdcContract.allowance(
     address,
-    MINT_REDEEM_ADDRESS,
+    BVIX_MINT_REDEEM_V6_ADDRESS,
   );
   console.log("Current allowance:", ethers.formatUnits(currentAllowance, 6));
 
@@ -220,7 +229,7 @@ export async function mintBVIX(
   if (currentAllowance < usdcAmountWei) {
     console.log("🔄 Approving USDC spending...");
     const approveTx = await usdcContract.approve(
-      MINT_REDEEM_ADDRESS,
+      BVIX_MINT_REDEEM_V6_ADDRESS,
       usdcAmountWei,
     );
     await approveTx.wait();
@@ -229,8 +238,8 @@ export async function mintBVIX(
     console.log("✅ Sufficient allowance already exists");
   }
 
-  // Use V5 collateral-aware mint function
-  console.log(`🎯 Using V5 mintWithCollateralRatio: ${usdcAmount} USDC at ${targetCR}% CR`);
+  // Use V6 collateral-aware mint function
+  console.log(`🎯 Using V6 mintWithCollateralRatio: ${usdcAmount} USDC at ${targetCR}% CR`);
   console.log(`💰 Expected token value: $${(parseFloat(usdcAmount) / (targetCR / 100)).toFixed(2)}`);
   
   const mintTx = await mintRedeemContract.mintWithCollateralRatio(usdcAmountWei, targetCR);
@@ -238,7 +247,7 @@ export async function mintBVIX(
   
   // Wait for transaction confirmation
   await mintTx.wait();
-  console.log("✅ V5 Mint transaction confirmed with proper CR enforcement!");
+  console.log("✅ V6 Mint transaction confirmed with proper CR enforcement!");
   
   return mintTx;
 }
@@ -290,29 +299,29 @@ export async function mintEVIX(
   // Check current allowance
   const currentAllowance = await usdcContract.allowance(
     address,
-    EVIX_MINT_REDEEM_ADDRESS,
+    EVIX_MINT_REDEEM_V6_ADDRESS,
   );
 
   // Only approve if needed
   if (currentAllowance < usdcAmountWei) {
     console.log("🔄 Approving USDC spending for EVIX...");
     const approveTx = await usdcContract.approve(
-      EVIX_MINT_REDEEM_ADDRESS,
+      EVIX_MINT_REDEEM_V6_ADDRESS,
       usdcAmountWei,
     );
     await approveTx.wait();
     console.log("✅ USDC approval confirmed for EVIX");
   }
 
-  // Use V5 collateral-aware mint function
-  console.log(`🎯 Using V5 EVIX mintWithCollateralRatio: ${usdcAmount} USDC at ${targetCR}% CR`);
+  // Use V6 collateral-aware mint function
+  console.log(`🎯 Using V6 EVIX mintWithCollateralRatio: ${usdcAmount} USDC at ${targetCR}% CR`);
   console.log(`💰 Expected token value: $${(parseFloat(usdcAmount) / (targetCR / 100)).toFixed(2)}`);
   
   const mintTx = await evixMintRedeemContract.mintWithCollateralRatio(usdcAmountWei, targetCR);
   console.log("📄 EVIX Transaction hash:", mintTx.hash);
   
   await mintTx.wait();
-  console.log("✅ V5 EVIX Mint transaction confirmed with proper CR enforcement!");
+  console.log("✅ V6 EVIX Mint transaction confirmed with proper CR enforcement!");
   
   return mintTx;
 }
@@ -409,7 +418,7 @@ export async function getContractDebugInfo(): Promise<any> {
     };
   } catch (error) {
     console.error("Error getting debug info:", error);
-    return { error: error.message };
+    return { error: error instanceof Error ? error.message : String(error) };
   }
 }
 
@@ -444,4 +453,119 @@ export const getCollateralRatio = async (): Promise<number> => {
     return 0;
   }
 };
+
+export async function getUserPosition(user: string) {
+  try {
+    // V6 contracts have individual position tracking
+    const provider = getProvider();
+    const contract = getMintRedeemContract(provider);
+    
+    console.log('🔍 Getting BVIX position for user:', user);
+    console.log('🔍 Using V6 contract address:', BVIX_MINT_REDEEM_V6_ADDRESS);
+    
+    // Get user's position from V6 contract using positions(address) function
+    const position = await contract.positions(user);
+    
+    console.log('🔍 Raw position data:', position);
+    
+    if (position && (position.collateral > 0 || position.debt > 0)) {
+      const formattedPosition = {
+        collateral: ethers.formatUnits(position.collateral, 6), // USDC has 6 decimals
+        debt: ethers.formatEther(position.debt) // BVIX has 18 decimals
+      };
+      console.log('🔍 Formatted BVIX position:', formattedPosition);
+      return formattedPosition;
+    }
+    
+    console.log('🔍 No BVIX position found');
+    return {
+      collateral: '0',
+      debt: '0'
+    };
+  } catch (error) {
+    console.error('Error getting user position:', error);
+    return { collateral: '0', debt: '0' };
+  }
+}
+
+export async function getUserCollateralRatio(user: string): Promise<number> {
+  try {
+    // V6 contracts have individual CR tracking
+    const provider = getProvider();
+    const contract = getMintRedeemContract(provider);
+    
+    console.log('🔍 Getting BVIX CR for user:', user);
+    
+    // Get user's individual collateral ratio from V6 contract
+    const ratio = await contract.getUserCollateralRatio(user);
+    // The contract returns CR as percentage (e.g., 200 for 200%), no need for formatEther
+    const crPercentage = Number(ratio);
+    
+    console.log('🔍 BVIX CR raw ratio:', ratio.toString());
+    console.log('🔍 BVIX CR percentage:', crPercentage);
+    
+    return crPercentage;
+  } catch (error) {
+    console.error('Error getting user CR:', error);
+    return 0;
+  }
+}
+
+export async function getUserPositionEVIX(user: string) {
+  try {
+    // V6 contracts have individual position tracking
+    const provider = getProvider();
+    const contract = getEVIXMintRedeemContract(provider);
+    
+    console.log('🔍 Getting EVIX position for user:', user);
+    console.log('🔍 Using EVIX V6 contract address:', EVIX_MINT_REDEEM_V6_ADDRESS);
+    
+    // Get user's position from V6 contract using positions(address) function
+    const position = await contract.positions(user);
+    
+    console.log('🔍 Raw EVIX position data:', position);
+    
+    if (position && (position.collateral > 0 || position.debt > 0)) {
+      const formattedPosition = {
+        collateral: ethers.formatUnits(position.collateral, 6), // USDC has 6 decimals
+        debt: ethers.formatEther(position.debt) // EVIX has 18 decimals
+      };
+      console.log('🔍 Formatted EVIX position:', formattedPosition);
+      return formattedPosition;
+    }
+    
+    console.log('🔍 No EVIX position found');
+    return {
+      collateral: '0',
+      debt: '0'
+    };
+  } catch (error) {
+    console.error('Error getting EVIX position:', error);
+    return { collateral: '0', debt: '0' };
+  }
+}
+
+export async function getUserCollateralRatioEVIX(user: string): Promise<number> {
+  try {
+    // V6 contracts have individual CR tracking
+    const provider = getProvider();
+    const contract = getEVIXMintRedeemContract(provider);
+    
+    console.log('🔍 Getting EVIX CR for user:', user);
+    console.log('🔍 Using EVIX V6 contract address:', EVIX_MINT_REDEEM_V6_ADDRESS);
+    
+    // Get user's individual collateral ratio from V6 contract
+    const ratio = await contract.getUserCollateralRatio(user);
+    // The contract returns CR as percentage (e.g., 200 for 200%), no need for formatEther
+    const crPercentage = Number(ratio);
+    
+    console.log('🔍 EVIX CR raw ratio:', ratio.toString());
+    console.log('🔍 EVIX CR percentage:', crPercentage);
+    
+    return crPercentage;
+  } catch (error) {
+    console.error('Error getting EVIX CR:', error);
+    return 0;
+  }
+}
 

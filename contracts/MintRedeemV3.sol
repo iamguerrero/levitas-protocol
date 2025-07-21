@@ -7,22 +7,29 @@ import "./MockOracle.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
- * @title MintRedeem V3 - Protocol-Wide Collateral Enforcement with Bootstrap
- * @notice Enforces minimum 120% collateral ratio for the entire protocol
- * @dev Handles first mint scenario gracefully
+ * @title MintRedeem V3 - Position-Aware Surplus-Refunding Vault
+ * @notice ERC-4626 inspired vault with per-user position tracking for proper surplus refunding
+ * @dev Each user has an individual position (CDP-style) for collateral and debt tracking
  */
 contract MintRedeemV3 is Ownable {
-    IERC20   public usdc;
+    IERC20 public usdc;
     BVIXToken public bvix;
     MockOracle public oracle;
 
-    uint256 public mintFee = 30;  // 0.30%
-    uint256 public redeemFee = 30;  // 0.30%
-    uint256 public minCollateralRatio = 120; // 120% minimum
+    uint256 public mintFee = 30; // 0.30%
+    uint256 public redeemFee = 30; // 0.30%
+    uint256 public minCollateralRatio = 120; // 120%
 
-    event Mint(address indexed user, uint256 usdcAmount, uint256 bvixMinted);
-    event Redeem(address indexed user, uint256 bvixAmount, uint256 usdcRedeemed);
-    event CollateralRatioUpdated(uint256 newRatio);
+    struct Position {
+        uint256 collateral; // USDC deposited (6 decimals)
+        uint256 debt; // BVIX minted (18 decimals)
+    }
+
+    mapping(address => Position) public positions;
+
+    event Mint(address indexed user, uint256 collateral, uint256 debt);
+    event Redeem(address indexed user, uint256 debt, uint256 refunded);
+    event PositionUpdated(address indexed user, uint256 newCollateral, uint256 newDebt);
 
     constructor(
         address _usdc,
@@ -36,111 +43,89 @@ contract MintRedeemV3 is Ownable {
     }
 
     /**
-     * @notice Get current protocol collateral ratio
-     * @return ratio Current collateral ratio as percentage (e.g., 150 = 150%)
+     * @notice Get user's collateral ratio
+     * @param user User address
+     * @return ratio CR percentage (e.g. 150)
      */
-    function getCollateralRatio() public view returns (uint256 ratio) {
-        uint256 totalSupply = bvix.totalSupply();
-        if (totalSupply == 0) return 0;
-        
-        uint256 vaultUSDC = usdc.balanceOf(address(this));
+    function getUserCollateralRatio(address user) public view returns (uint256) {
+        Position memory pos = positions[user];
+        if (pos.debt == 0) return type(uint256).max;
+
         uint256 price = oracle.getPrice(); // 18 decimals
-        
-        // Convert USDC (6 decimals) to 18 decimals
-        uint256 vaultUSDC18 = vaultUSDC * 1e12;
-        
-        // Calculate total BVIX value in USD (18 decimals)
-        uint256 bvixValueUSD = (totalSupply * price) / 1e18;
-        
-        if (bvixValueUSD == 0) return 0;
-        
-        // Return ratio as percentage
-        return (vaultUSDC18 * 100) / bvixValueUSD;
+        uint256 debtValue = (pos.debt * price) / 1e18; // 18 decimals
+        uint256 collateral18 = pos.collateral * 1e12; // 6 -> 18 decimals
+
+        return (collateral18 * 100) / (debtValue / 1e12);
     }
 
     /**
-     * @notice Mint BVIX with collateral ratio enforcement
-     * @param amount USDC amount to deposit (6 decimals)
+     * @notice Mint BVIX by depositing collateral (ERC-4626 deposit style)
+     * @param collateralAmount USDC to deposit
+     * @param minDebtAmount Minimum BVIX to mint (slippage protection)
+     * @return debtMinted BVIX minted
      */
-    function mint(uint256 amount) external {
-        require(amount > 0, "Amount must be > 0");
+    function deposit(uint256 collateralAmount, uint256 minDebtAmount) external returns (uint256 debtMinted) {
+        require(collateralAmount > 0, "Amount must be > 0");
         
         uint256 price = oracle.getPrice();
-        uint256 netAmount = amount - ((amount * mintFee) / 10_000);
-        uint256 bvixToMint = (netAmount * 1e30) / price; // Combined 1e12 * 1e18
-        
-        require(bvixToMint > 0, "Mint amount too small");
-        
-        // Check future collateral ratio after mint
-        uint256 vaultBalance = usdc.balanceOf(address(this));
-        uint256 supply = bvix.totalSupply();
-        
-        // Special case: If this is the first mint (supply == 0), allow it
-        // This bootstraps the vault with the initial collateral ratio
-        if (supply == 0) {
-            // First mint - establish initial collateral ratio
-            require(usdc.transferFrom(msg.sender, address(this), amount), "Transfer failed");
-            bvix.mint(msg.sender, bvixToMint);
-            emit Mint(msg.sender, amount, bvixToMint);
-            return;
+        uint256 fee = (collateralAmount * mintFee) / 10000;
+        uint256 netCollateral = collateralAmount - fee;
+
+        // Calculate max mintable debt at min CR
+        uint256 maxDebtValue = (netCollateral * 100) / minCollateralRatio; // 6 decimals
+        uint256 maxDebt = (maxDebtValue * 1e30) / price; // to 18 decimals
+
+        require(maxDebt >= minDebtAmount, "Slippage too high");
+
+        // Update position
+        positions[msg.sender].collateral += netCollateral;
+        positions[msg.sender].debt += maxDebt;
+
+        // Transfer and mint
+        require(usdc.transferFrom(msg.sender, address(this), collateralAmount), "Transfer failed");
+        bvix.mint(msg.sender, maxDebt);
+
+        require(getUserCollateralRatio(msg.sender) >= minCollateralRatio, "CR too low");
+
+        emit Mint(msg.sender, netCollateral, maxDebt);
+        return maxDebt;
         }
         
-        // Calculate what collateral ratio would be after this mint
-        uint256 futureVaultUSDC = vaultBalance + amount;
-        uint256 futureSupply = supply + bvixToMint;
+    /**
+     * @notice Redeem BVIX and get back collateral (ERC-4626 redeem style)
+     * @param debtAmount BVIX to redeem
+     * @param minRefund Minimum USDC to receive
+     * @return refunded USDC refunded
+     */
+    function redeem(uint256 debtAmount, uint256 minRefund) external returns (uint256 refunded) {
+        Position storage pos = positions[msg.sender];
+        require(pos.debt >= debtAmount, "Insufficient debt");
+
+        // Calculate proportional collateral refund
+        uint256 collateralRefund = (debtAmount * pos.collateral) / pos.debt;
+        uint256 fee = (collateralRefund * redeemFee) / 10000;
+        refunded = collateralRefund - fee;
+
+        require(refunded >= minRefund, "Slippage too high");
+
+        // Update position
+        pos.collateral -= collateralRefund;
+        pos.debt -= debtAmount;
+
+        // Burn and transfer
+        bvix.burn(msg.sender, debtAmount);
+        require(usdc.transfer(msg.sender, refunded), "Transfer failed");
         
-        // Convert to proper decimals for calculation
-        uint256 futureVaultUSDC18 = futureVaultUSDC * 1e12;
-        uint256 futureBvixValueUSD = (futureSupply * price) / 1e18;
-        
-        uint256 futureRatio = (futureVaultUSDC18 * 100) / futureBvixValueUSD;
-        
-        require(futureRatio >= minCollateralRatio, "Would violate minimum collateral ratio");
-        
-        require(usdc.transferFrom(msg.sender, address(this), amount), "Transfer failed");
-        bvix.mint(msg.sender, bvixToMint);
-        
-        emit Mint(msg.sender, amount, bvixToMint);
+        emit Redeem(msg.sender, debtAmount, refunded);
+        return refunded;
     }
 
-    /**
-     * @notice Redeem BVIX for USDC
-     * @param bvixAmount Amount of BVIX to redeem (18 decimals)
-     */
-    function redeem(uint256 bvixAmount) external {
-        require(bvixAmount > 0, "Amount must be > 0");
-        
-        uint256 price = oracle.getPrice();
-        uint256 usdc6 = (bvixAmount * price) / 1e30; // Combined division by 1e18 * 1e12
-        uint256 netUSDC = usdc6 - ((usdc6 * redeemFee) / 10_000);
-        
-        bvix.burn(msg.sender, bvixAmount);
-        require(usdc.transfer(msg.sender, netUSDC), "Transfer failed");
-        
-        emit Redeem(msg.sender, bvixAmount, netUSDC);
+    // Additional ERC-4626 like functions
+    function totalAssets() external view returns (uint256) {
+        return usdc.balanceOf(address(this));
     }
 
-    /**
-     * @notice Emergency function to add collateral
-     * @param amount USDC amount to add
-     */
-    function addCollateral(uint256 amount) external {
-        require(amount > 0, "Amount must be > 0");
-        require(
-            usdc.transferFrom(msg.sender, address(this), amount),
-            "USDC transfer failed"
-        );
-        
-        emit CollateralRatioUpdated(getCollateralRatio());
-    }
-
-    /**
-     * @notice Set minimum collateral ratio (owner only)
-     * @param _minRatio New minimum ratio (e.g., 120 for 120%)
-     */
-    function setMinCollateralRatio(uint256 _minRatio) external onlyOwner {
-        require(_minRatio >= 100, "Ratio must be at least 100%");
-        minCollateralRatio = _minRatio;
-        emit CollateralRatioUpdated(_minRatio);
+    function asset() external view returns (address) {
+        return address(usdc);
     }
 }

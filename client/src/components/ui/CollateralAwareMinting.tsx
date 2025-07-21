@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Slider } from "@/components/ui/slider";
-import { Info, AlertTriangle, TrendingUp, Loader2, AlertCircle } from "lucide-react";
+import { Info, AlertTriangle, TrendingUp, Loader2, AlertCircle, ArrowUp } from "lucide-react";
 import { calculateMaxMintable, calculateSuggestedMint, formatCRWithStatus, type CollateralCalculation } from "@/lib/collateral-utils";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -61,6 +61,12 @@ export function CollateralAwareMinting({
     setTokensToReceive(tokensToMint);
   }, [usdcInput, targetCR, vaultStats, tokenPrice]);
 
+  // Force re-render when vaultStats change to update the display
+  useEffect(() => {
+    // This effect ensures the component re-renders when vaultStats updates
+    // The vault stats display will automatically update with fresh data
+  }, [vaultStats]);
+
   const handleSliderChange = (value: number[]) => {
     setTargetCR(value);
   };
@@ -111,31 +117,17 @@ export function CollateralAwareMinting({
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <TrendingUp className="w-5 h-5" />
-          Mint {tokenSymbol} (Collateral-Aware)
+          <ArrowUp className="w-5 h-5 text-green-600" />
+          Mint {tokenSymbol}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Current Vault Status */}
+        {/* Your Target CR */}
         <div className="bg-gray-50 p-3 rounded-lg">
-          <div className="text-sm text-gray-600 mb-1">Vault Health & Your Target</div>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="font-medium">USDC in Vault:</span> ${parseFloat(vaultStats?.usdc || '0').toFixed(2)}
-            </div>
-            <div>
-              <span className="font-medium">Vault Health:</span> 
-              <span className={cn("ml-1", vaultStats?.cr >= 120 ? "text-green-600" : "text-red-600")}>
-                {vaultStats?.cr ? `${vaultStats.cr.toFixed(1)}%` : '0%'}
-              </span>
-            </div>
-          </div>
-          <div className="mt-2 pt-2 border-t border-gray-200">
-            <div className="text-sm">
-              <span className="font-medium text-blue-700">Your Target CR:</span> 
-              <span className="ml-1 text-blue-600 font-bold">{targetCR[0]}%</span>
-              <span className="text-xs text-gray-500 ml-2">(You'll get {(100/targetCR[0]*100).toFixed(0)}% token value)</span>
-            </div>
+          <div className="text-sm">
+            <span className="font-medium text-blue-700">Your Target CR:</span> 
+            <span className="ml-1 text-blue-600 font-bold">{targetCR[0]}%</span>
+            <span className="text-xs text-gray-500 ml-2">(You'll get {(100/targetCR[0]*100).toFixed(0)}% token value)</span>
           </div>
         </div>
 
@@ -161,12 +153,11 @@ export function CollateralAwareMinting({
           </div>
         </div>
 
-        {/* Collateral Ratio Slider - V5 Enforcement Active */}
+        {/* Collateral Ratio Slider */}
         <div className="space-y-4">
           <div className="space-y-2">
             <Label className="text-sm font-medium">
-              Target Collateral Ratio: {targetCR[0]}% 
-              <span className="text-xs text-green-600 ml-2">(✅ V5 Enforcement Active)</span>
+              Target Collateral Ratio: {targetCR[0]}%
             </Label>
             <Slider
               value={targetCR}
@@ -252,21 +243,6 @@ export function CollateralAwareMinting({
             `Mint ${tokenSymbol}`
           )}
         </Button>
-
-        {/* Success Notice */}
-        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-          <div className="text-xs text-green-800 space-y-1">
-            <div className="font-medium">✅ V5 Contract Features:</div>
-            <div>• Proper collateral ratio enforcement</div>
-            <div>• Spend full USDC, receive proportional tokens</div>
-            <div>• 200% CR = half the tokens for your full USDC spend</div>
-            <div>• 150% CR = 67% of tokens for your full USDC spend</div>
-            <div className="border-t border-green-300 pt-2 mt-2">
-              <div className="font-medium text-blue-700">Your Target CR: {targetCR[0]}%</div>
-              <div className="text-green-600">Vault CR: {vaultStats?.cr ? `${vaultStats.cr.toFixed(1)}%` : 'Loading...'}</div>
-            </div>
-          </div>
-        </div>
       </CardContent>
     </Card>
   );

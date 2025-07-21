@@ -110,7 +110,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Error fetching vault stats:', error);
       res.status(500).json({ 
         error: 'Failed to fetch vault statistics',
-        details: error.message 
+        details: error instanceof Error ? error.message : String(error)
       });
     }
   });

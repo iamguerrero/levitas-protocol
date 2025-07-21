@@ -26,50 +26,55 @@ import type {
 export interface MintRedeemV3Interface extends Interface {
   getFunction(
     nameOrSignature:
-      | "addCollateral"
+      | "asset"
       | "bvix"
-      | "getCollateralRatio"
+      | "deposit"
+      | "getUserCollateralRatio"
       | "minCollateralRatio"
-      | "mint"
       | "mintFee"
       | "oracle"
       | "owner"
+      | "positions"
       | "redeem"
       | "redeemFee"
       | "renounceOwnership"
-      | "setMinCollateralRatio"
+      | "totalAssets"
       | "transferOwnership"
       | "usdc"
   ): FunctionFragment;
 
   getEvent(
     nameOrSignatureOrTopic:
-      | "CollateralRatioUpdated"
       | "Mint"
       | "OwnershipTransferred"
+      | "PositionUpdated"
       | "Redeem"
   ): EventFragment;
 
-  encodeFunctionData(
-    functionFragment: "addCollateral",
-    values: [BigNumberish]
-  ): string;
+  encodeFunctionData(functionFragment: "asset", values?: undefined): string;
   encodeFunctionData(functionFragment: "bvix", values?: undefined): string;
   encodeFunctionData(
-    functionFragment: "getCollateralRatio",
-    values?: undefined
+    functionFragment: "deposit",
+    values: [BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getUserCollateralRatio",
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "minCollateralRatio",
     values?: undefined
   ): string;
-  encodeFunctionData(functionFragment: "mint", values: [BigNumberish]): string;
   encodeFunctionData(functionFragment: "mintFee", values?: undefined): string;
   encodeFunctionData(functionFragment: "oracle", values?: undefined): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
+    functionFragment: "positions",
+    values: [AddressLike]
+  ): string;
+  encodeFunctionData(
     functionFragment: "redeem",
-    values: [BigNumberish]
+    values: [BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "redeemFee", values?: undefined): string;
   encodeFunctionData(
@@ -77,8 +82,8 @@ export interface MintRedeemV3Interface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "setMinCollateralRatio",
-    values: [BigNumberish]
+    functionFragment: "totalAssets",
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "transferOwnership",
@@ -86,23 +91,21 @@ export interface MintRedeemV3Interface extends Interface {
   ): string;
   encodeFunctionData(functionFragment: "usdc", values?: undefined): string;
 
-  decodeFunctionResult(
-    functionFragment: "addCollateral",
-    data: BytesLike
-  ): Result;
+  decodeFunctionResult(functionFragment: "asset", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "bvix", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "deposit", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "getCollateralRatio",
+    functionFragment: "getUserCollateralRatio",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
     functionFragment: "minCollateralRatio",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "mint", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "mintFee", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "oracle", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "positions", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "redeem", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "redeemFee", data: BytesLike): Result;
   decodeFunctionResult(
@@ -110,7 +113,7 @@ export interface MintRedeemV3Interface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "setMinCollateralRatio",
+    functionFragment: "totalAssets",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -120,33 +123,17 @@ export interface MintRedeemV3Interface extends Interface {
   decodeFunctionResult(functionFragment: "usdc", data: BytesLike): Result;
 }
 
-export namespace CollateralRatioUpdatedEvent {
-  export type InputTuple = [newRatio: BigNumberish];
-  export type OutputTuple = [newRatio: bigint];
-  export interface OutputObject {
-    newRatio: bigint;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
-}
-
 export namespace MintEvent {
   export type InputTuple = [
     user: AddressLike,
-    usdcAmount: BigNumberish,
-    bvixMinted: BigNumberish
+    collateral: BigNumberish,
+    debt: BigNumberish
   ];
-  export type OutputTuple = [
-    user: string,
-    usdcAmount: bigint,
-    bvixMinted: bigint
-  ];
+  export type OutputTuple = [user: string, collateral: bigint, debt: bigint];
   export interface OutputObject {
     user: string;
-    usdcAmount: bigint;
-    bvixMinted: bigint;
+    collateral: bigint;
+    debt: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -167,21 +154,39 @@ export namespace OwnershipTransferredEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
-export namespace RedeemEvent {
+export namespace PositionUpdatedEvent {
   export type InputTuple = [
     user: AddressLike,
-    bvixAmount: BigNumberish,
-    usdcRedeemed: BigNumberish
+    newCollateral: BigNumberish,
+    newDebt: BigNumberish
   ];
   export type OutputTuple = [
     user: string,
-    bvixAmount: bigint,
-    usdcRedeemed: bigint
+    newCollateral: bigint,
+    newDebt: bigint
   ];
   export interface OutputObject {
     user: string;
-    bvixAmount: bigint;
-    usdcRedeemed: bigint;
+    newCollateral: bigint;
+    newDebt: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace RedeemEvent {
+  export type InputTuple = [
+    user: AddressLike,
+    debt: BigNumberish,
+    refunded: BigNumberish
+  ];
+  export type OutputTuple = [user: string, debt: bigint, refunded: bigint];
+  export interface OutputObject {
+    user: string;
+    debt: bigint;
+    refunded: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -232,19 +237,23 @@ export interface MintRedeemV3 extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
-  addCollateral: TypedContractMethod<
-    [amount: BigNumberish],
-    [void],
-    "nonpayable"
-  >;
+  asset: TypedContractMethod<[], [string], "view">;
 
   bvix: TypedContractMethod<[], [string], "view">;
 
-  getCollateralRatio: TypedContractMethod<[], [bigint], "view">;
+  deposit: TypedContractMethod<
+    [collateralAmount: BigNumberish, minDebtAmount: BigNumberish],
+    [bigint],
+    "nonpayable"
+  >;
+
+  getUserCollateralRatio: TypedContractMethod<
+    [user: AddressLike],
+    [bigint],
+    "view"
+  >;
 
   minCollateralRatio: TypedContractMethod<[], [bigint], "view">;
-
-  mint: TypedContractMethod<[amount: BigNumberish], [void], "nonpayable">;
 
   mintFee: TypedContractMethod<[], [bigint], "view">;
 
@@ -252,17 +261,23 @@ export interface MintRedeemV3 extends BaseContract {
 
   owner: TypedContractMethod<[], [string], "view">;
 
-  redeem: TypedContractMethod<[bvixAmount: BigNumberish], [void], "nonpayable">;
+  positions: TypedContractMethod<
+    [arg0: AddressLike],
+    [[bigint, bigint] & { collateral: bigint; debt: bigint }],
+    "view"
+  >;
+
+  redeem: TypedContractMethod<
+    [debtAmount: BigNumberish, minRefund: BigNumberish],
+    [bigint],
+    "nonpayable"
+  >;
 
   redeemFee: TypedContractMethod<[], [bigint], "view">;
 
   renounceOwnership: TypedContractMethod<[], [void], "nonpayable">;
 
-  setMinCollateralRatio: TypedContractMethod<
-    [_minRatio: BigNumberish],
-    [void],
-    "nonpayable"
-  >;
+  totalAssets: TypedContractMethod<[], [bigint], "view">;
 
   transferOwnership: TypedContractMethod<
     [newOwner: AddressLike],
@@ -277,20 +292,24 @@ export interface MintRedeemV3 extends BaseContract {
   ): T;
 
   getFunction(
-    nameOrSignature: "addCollateral"
-  ): TypedContractMethod<[amount: BigNumberish], [void], "nonpayable">;
+    nameOrSignature: "asset"
+  ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "bvix"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
-    nameOrSignature: "getCollateralRatio"
-  ): TypedContractMethod<[], [bigint], "view">;
+    nameOrSignature: "deposit"
+  ): TypedContractMethod<
+    [collateralAmount: BigNumberish, minDebtAmount: BigNumberish],
+    [bigint],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "getUserCollateralRatio"
+  ): TypedContractMethod<[user: AddressLike], [bigint], "view">;
   getFunction(
     nameOrSignature: "minCollateralRatio"
   ): TypedContractMethod<[], [bigint], "view">;
-  getFunction(
-    nameOrSignature: "mint"
-  ): TypedContractMethod<[amount: BigNumberish], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "mintFee"
   ): TypedContractMethod<[], [bigint], "view">;
@@ -301,8 +320,19 @@ export interface MintRedeemV3 extends BaseContract {
     nameOrSignature: "owner"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
+    nameOrSignature: "positions"
+  ): TypedContractMethod<
+    [arg0: AddressLike],
+    [[bigint, bigint] & { collateral: bigint; debt: bigint }],
+    "view"
+  >;
+  getFunction(
     nameOrSignature: "redeem"
-  ): TypedContractMethod<[bvixAmount: BigNumberish], [void], "nonpayable">;
+  ): TypedContractMethod<
+    [debtAmount: BigNumberish, minRefund: BigNumberish],
+    [bigint],
+    "nonpayable"
+  >;
   getFunction(
     nameOrSignature: "redeemFee"
   ): TypedContractMethod<[], [bigint], "view">;
@@ -310,8 +340,8 @@ export interface MintRedeemV3 extends BaseContract {
     nameOrSignature: "renounceOwnership"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
-    nameOrSignature: "setMinCollateralRatio"
-  ): TypedContractMethod<[_minRatio: BigNumberish], [void], "nonpayable">;
+    nameOrSignature: "totalAssets"
+  ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "transferOwnership"
   ): TypedContractMethod<[newOwner: AddressLike], [void], "nonpayable">;
@@ -319,13 +349,6 @@ export interface MintRedeemV3 extends BaseContract {
     nameOrSignature: "usdc"
   ): TypedContractMethod<[], [string], "view">;
 
-  getEvent(
-    key: "CollateralRatioUpdated"
-  ): TypedContractEvent<
-    CollateralRatioUpdatedEvent.InputTuple,
-    CollateralRatioUpdatedEvent.OutputTuple,
-    CollateralRatioUpdatedEvent.OutputObject
-  >;
   getEvent(
     key: "Mint"
   ): TypedContractEvent<
@@ -341,6 +364,13 @@ export interface MintRedeemV3 extends BaseContract {
     OwnershipTransferredEvent.OutputObject
   >;
   getEvent(
+    key: "PositionUpdated"
+  ): TypedContractEvent<
+    PositionUpdatedEvent.InputTuple,
+    PositionUpdatedEvent.OutputTuple,
+    PositionUpdatedEvent.OutputObject
+  >;
+  getEvent(
     key: "Redeem"
   ): TypedContractEvent<
     RedeemEvent.InputTuple,
@@ -349,17 +379,6 @@ export interface MintRedeemV3 extends BaseContract {
   >;
 
   filters: {
-    "CollateralRatioUpdated(uint256)": TypedContractEvent<
-      CollateralRatioUpdatedEvent.InputTuple,
-      CollateralRatioUpdatedEvent.OutputTuple,
-      CollateralRatioUpdatedEvent.OutputObject
-    >;
-    CollateralRatioUpdated: TypedContractEvent<
-      CollateralRatioUpdatedEvent.InputTuple,
-      CollateralRatioUpdatedEvent.OutputTuple,
-      CollateralRatioUpdatedEvent.OutputObject
-    >;
-
     "Mint(address,uint256,uint256)": TypedContractEvent<
       MintEvent.InputTuple,
       MintEvent.OutputTuple,
@@ -380,6 +399,17 @@ export interface MintRedeemV3 extends BaseContract {
       OwnershipTransferredEvent.InputTuple,
       OwnershipTransferredEvent.OutputTuple,
       OwnershipTransferredEvent.OutputObject
+    >;
+
+    "PositionUpdated(address,uint256,uint256)": TypedContractEvent<
+      PositionUpdatedEvent.InputTuple,
+      PositionUpdatedEvent.OutputTuple,
+      PositionUpdatedEvent.OutputObject
+    >;
+    PositionUpdated: TypedContractEvent<
+      PositionUpdatedEvent.InputTuple,
+      PositionUpdatedEvent.OutputTuple,
+      PositionUpdatedEvent.OutputObject
     >;
 
     "Redeem(address,uint256,uint256)": TypedContractEvent<

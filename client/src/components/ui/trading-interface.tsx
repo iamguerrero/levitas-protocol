@@ -4,14 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Bitcoin, Zap, TrendingUp, Loader2, AlertCircle } from "lucide-react";
+import { Bitcoin, TrendingUp, Loader2, AlertCircle, ArrowUp, ArrowDown } from "lucide-react";
+import { SiEthereum } from "react-icons/si";
 import { VaultHealth } from "@/components/ui/VaultHealth";
 import { NetworkHelpers } from "@/components/ui/NetworkHelpers";
 // VaultNotice removed - V4 contracts work without collateral enforcement
 import { CollateralAwareMinting } from "@/components/ui/CollateralAwareMinting";
 import { useWallet } from "@/hooks/use-wallet";
 import { useToast } from "@/hooks/use-toast";
-import { usePosition } from "@/hooks/use-position";
+
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useVault } from "@/hooks/useVault";
 import {
@@ -34,6 +35,7 @@ import {
   MINT_REDEEM_ADDRESS,
   MOCK_USDC_ADDRESS,
 } from "@/lib/web3";
+import { getUserPosition, getUserCollateralRatio, getUserPositionEVIX, getUserCollateralRatioEVIX } from "@/lib/web3";
 
 export default function TradingInterface() {
   const { address } = useWallet();
@@ -56,6 +58,41 @@ export default function TradingInterface() {
   const [debugInfo, setDebugInfo] = useState<any>(null);
   const [collateralRatio, setCollateralRatio] = useState<number | null>(null);
   const [vaultStats, setVaultStats] = useState<any>(null);
+
+  const { data: userPosition, refetch: refetchUserPosition } = useQuery({
+    queryKey: ['userPosition', address],
+    queryFn: async () => {
+      if (!address) return null;
+      console.log('🔄 Fetching user positions for address:', address);
+      
+      const [bvixPos, evixPos] = await Promise.all([
+        getUserPosition(address),
+        getUserPositionEVIX(address)
+      ]);
+      const [bvixCR, evixCR] = await Promise.all([
+        getUserCollateralRatio(address),
+        getUserCollateralRatioEVIX(address)
+      ]);
+      
+      console.log('📊 User position data:', {
+        bvixPos,
+        evixPos,
+        bvixCR,
+        evixCR
+      });
+      
+      const result = {
+        bvix: bvixPos ? { ...bvixPos, cr: bvixCR } : null,
+        evix: evixPos ? { ...evixPos, cr: evixCR } : null
+      };
+      
+      console.log('📊 Final user position result:', result);
+      return result;
+    },
+    enabled: !!address,
+    refetchInterval: 5000, // Refresh every 5 seconds for real-time updates
+    staleTime: 2000, // Consider data stale after 2 seconds
+  });
 
   function explorerLink(hash: string) {
     return (
@@ -113,6 +150,17 @@ export default function TradingInterface() {
     } else {
       setIsLoading(false);
     }
+  }, [address, contractsDeployed]);
+
+  // Auto-refresh contract data every 10 seconds
+  useEffect(() => {
+    if (!address || !contractsDeployed) return;
+    
+    const interval = setInterval(() => {
+      loadContractData();
+    }, 10000);
+    
+    return () => clearInterval(interval);
   }, [address, contractsDeployed]);
 
   const loadContractData = async () => {
@@ -211,11 +259,14 @@ export default function TradingInterface() {
         ),
       });
 
-      await loadContractData(); // Refresh balances
-      
-      // Invalidate vault cache to trigger real-time update
-      queryClient.invalidateQueries({ queryKey: ['/api/v1/vault-stats'] });
+      // Immediate refresh of all data
+      await loadContractData();
+      refetchUserPosition();
       refetchVault();
+      
+      // Invalidate all related queries
+      queryClient.invalidateQueries({ queryKey: ['userPosition', address] });
+      queryClient.invalidateQueries({ queryKey: ['/api/v1/vault-stats'] });
     } catch (error: any) {
       console.error("Mint error:", error);
       toast({
@@ -281,11 +332,14 @@ export default function TradingInterface() {
       });
 
       setRedeemAmount("");
-      await loadContractData(); // Refresh balances
-      
-      // Invalidate vault cache to trigger real-time update
-      queryClient.invalidateQueries({ queryKey: ['/api/v1/vault-stats'] });
+      // Immediate refresh of all data
+      await loadContractData();
+      refetchUserPosition();
       refetchVault();
+      
+      // Invalidate all related queries
+      queryClient.invalidateQueries({ queryKey: ['userPosition', address] });
+      queryClient.invalidateQueries({ queryKey: ['/api/v1/vault-stats'] });
     } catch (error: any) {
       console.error("Redeem error:", error);
       toast({
@@ -332,11 +386,14 @@ export default function TradingInterface() {
         description: `Successfully minted EVIX tokens for ${amount} USDC`,
       });
       
+      // Immediate refresh of all data
       await loadContractData();
-      
-      // Force vault cache refresh to show combined USDC totals
-      queryClient.invalidateQueries({ queryKey: ['/api/v1/vault-stats'] });
+      refetchUserPosition();
       refetchVault();
+      
+      // Invalidate all related queries
+      queryClient.invalidateQueries({ queryKey: ['userPosition', address] });
+      queryClient.invalidateQueries({ queryKey: ['/api/v1/vault-stats'] });
     } catch (error: any) {
       toast({
         title: "Mint Failed",
@@ -382,11 +439,14 @@ export default function TradingInterface() {
       });
       
       setEvixRedeemAmount("");
+      // Immediate refresh of all data
       await loadContractData();
-      
-      // Force vault cache refresh to show combined USDC totals
-      queryClient.invalidateQueries({ queryKey: ['/api/v1/vault-stats'] });
+      refetchUserPosition();
       refetchVault();
+      
+      // Invalidate all related queries
+      queryClient.invalidateQueries({ queryKey: ['userPosition', address] });
+      queryClient.invalidateQueries({ queryKey: ['/api/v1/vault-stats'] });
     } catch (error: any) {
       toast({
         title: "Redeem Failed",
@@ -489,6 +549,27 @@ export default function TradingInterface() {
     );
   }
 
+  const selectedPosition = selectedToken === 'bvix' ? userPosition?.bvix : userPosition?.evix;
+  let expectedRefund = "0.00";
+  let ratePerToken = "0.00";
+  const redeemNum = parseFloat(selectedToken === 'bvix' ? redeemAmount : evixRedeemAmount) || 0;
+
+  if (selectedPosition && parseFloat(selectedPosition.debt) > 0) {
+    const debtNum = parseFloat(selectedPosition.debt);
+    const collateralNum = parseFloat(selectedPosition.collateral);
+    
+    const refundBeforeFee = (redeemNum * collateralNum) / debtNum;
+    expectedRefund = (refundBeforeFee * 0.997).toFixed(2);
+    
+    const singleBeforeFee = (1 * collateralNum) / debtNum;
+    ratePerToken = (singleBeforeFee * 0.997).toFixed(4);
+  } else if (redeemNum > 0) {
+    // Fallback to price-based if no position (though shouldn't happen)
+    const price = parseFloat(selectedToken === 'bvix' ? contractData.bvixPrice : contractData.evixPrice);
+    expectedRefund = (redeemNum * price * 0.997).toFixed(2);
+    ratePerToken = (price * 0.997).toFixed(4);
+  }
+
   return (
     <div className="space-y-8">
       {/* Price Display - Clickable Cards */}
@@ -536,7 +617,7 @@ export default function TradingInterface() {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-                  <Zap className="text-blue-500" size={20} />
+                  <SiEthereum className="text-blue-500" size={20} />
                 </div>
                 <div>
                   <h3 className="font-bold text-black">EVIX</h3>
@@ -579,7 +660,8 @@ export default function TradingInterface() {
         {/* Redeem Section */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl">
+            <CardTitle className="text-xl flex items-center gap-2">
+              <ArrowDown className="w-5 h-5 text-red-600" />
               Redeem {selectedToken === 'bvix' ? 'BVIX' : 'EVIX'}
             </CardTitle>
           </CardHeader>
@@ -623,20 +705,13 @@ export default function TradingInterface() {
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">You'll receive:</span>
                 <span className="font-medium text-black">
-                  {selectedToken === 'bvix' 
-                    ? (redeemAmount && contractData.bvixPrice
-                        ? (parseFloat(redeemAmount) * parseFloat(contractData.bvixPrice)).toFixed(2)
-                        : "0.00")
-                    : (evixRedeemAmount && contractData.evixPrice
-                        ? (parseFloat(evixRedeemAmount) * parseFloat(contractData.evixPrice)).toFixed(2)
-                        : "0.00")}{" "}
-                  USDC
+                  {expectedRefund} USDC
                 </span>
               </div>
               <div className="flex justify-between text-sm mt-2">
-                <span className="text-gray-600">Exchange rate:</span>
+                <span className="text-gray-600">Rate:</span>
                 <span className="text-gray-600">
-                  1 {selectedToken === 'bvix' ? 'BVIX' : 'EVIX'} = {selectedToken === 'bvix' ? contractData.bvixPrice : contractData.evixPrice || "..."} USDC
+                  1 {selectedToken.toUpperCase()} ≈ {ratePerToken} USDC
                 </span>
               </div>
             </div>
@@ -660,99 +735,215 @@ export default function TradingInterface() {
         </Card>
       </div>
 
-      {/* Vault Migration Notice */}
-
-
-      {/* Network Setup and Vault Health */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        <NetworkHelpers />
-        <VaultHealth />
-      </div>
-
-      {/* Wallet Overview */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl">Wallet Overview</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-4 gap-6">
-            <div className="text-center p-4 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-black">
-                {isLoading
-                  ? "..."
-                  : parseFloat(contractData.usdcBalance).toFixed(2)}
-              </div>
-              <div className="text-sm text-gray-600">USDC Balance</div>
-            </div>
-            <div className="text-center p-4 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-black">
-                {isLoading
-                  ? "..."
-                  : Number(contractData.bvixBalance).toPrecision(6)}
-              </div>
-              <div className="text-sm text-gray-600">BVIX Balance</div>
-            </div>
-            <div className="text-center p-4 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">
-                ${isLoading ? "..." : contractData.totalValue}
-              </div>
-              <div className="text-sm text-gray-600">Total Value</div>
-            </div>
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">
-                {isLoading ? "..." : 
-                 collateralRatio === null ? "N/A" :
-                 collateralRatio === Infinity ? "∞" :
-                 (collateralRatio * 100).toFixed(1) + "%"}
-              </div>
-              <div className="text-sm text-gray-600">Collateral Ratio</div>
-            </div>
+      {/* Vault Dashboard */}
+      <Card className="mt-8 col-span-2 bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 border-0 shadow-xl">
+        <CardHeader className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-lg">
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-2xl font-light">Vault Dashboard</CardTitle>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                loadContractData();
+                refetchUserPosition();
+                refetchVault();
+              }}
+              disabled={isLoading}
+              className="bg-white/20 hover:bg-white/30 text-white border-white/20"
+            >
+              {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Refresh"}
+            </Button>
           </div>
-
-          {/* Debug Section */}
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <div className="flex flex-wrap gap-3">
-              <Button
-                onClick={handleDebug}
-                variant="outline"
-                size="sm"
-                disabled={!address}
-              >
-                Debug Contract Info
-              </Button>
-
-              <div className="text-xs text-gray-500 flex items-center">
-                Contract: {MOCK_USDC_ADDRESS.slice(0, 10)}...
+        </CardHeader>
+        <CardContent className="p-8">
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* BVIX Section */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-orange-200">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+                  <Bitcoin className="text-orange-500" size={24} />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-lg text-gray-900 dark:text-white">BVIX Vault</h4>
+                  <p className="text-sm text-gray-500">Bitcoin Volatility Index</p>
+                </div>
               </div>
-            </div>
-
-            {debugInfo && (
-              <div className="mt-4 p-4 bg-gray-50 rounded-lg text-xs space-y-2">
-                <div>
-                  <strong>Address:</strong> {debugInfo.userAddress}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <span className="text-gray-600">Wallet Balance</span>
+                  <span className="font-mono font-semibold text-gray-900 dark:text-white">{contractData.bvixBalance} BVIX</span>
                 </div>
-                <div>
-                  <strong>USDC Balance:</strong> {debugInfo.usdcBalance}
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <span className="text-gray-600">Current Price</span>
+                  <span className="font-mono font-semibold text-green-600">${contractData.bvixPrice}</span>
                 </div>
-                <div>
-                  <strong>BVIX Balance:</strong> {debugInfo.bvixBalance}
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <span className="text-gray-600">Portfolio Value</span>
+                  <span className="font-mono font-semibold text-blue-600">${(parseFloat(contractData.bvixBalance) * parseFloat(contractData.bvixPrice)).toFixed(2)}</span>
                 </div>
-                <div>
-                  <strong>Oracle Price:</strong> ${debugInfo.oraclePrice}
-                </div>
-                <div>
-                  <strong>USDC Allowance:</strong> {debugInfo.usdcAllowance}
-                </div>
-                {debugInfo.error && (
-                  <div className="text-red-600">
-                    <strong>Error:</strong> {debugInfo.error}
-                  </div>
+                {userPosition?.bvix && parseFloat(userPosition.bvix.collateral) > 0 && (
+                  <>
+                    <div className="pt-2 border-t border-gray-200">
+                      <div className="text-xs text-gray-500 mb-2">Active Position</div>
+                      <div className="flex justify-between">
+                        <span>Collateral (USDC):</span>
+                        <span className="font-mono">{Number(userPosition.bvix.collateral).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Debt (BVIX):</span>
+                        <span className="font-mono">{Number(userPosition.bvix.debt).toFixed(6)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Position CR:</span>
+                        <span className={getRiskColor(userPosition.bvix.cr)}>
+                          {userPosition.bvix.cr.toFixed(2)}% ({getRiskLevel(userPosition.bvix.cr)})
+                        </span>
+                      </div>
+                    </div>
+                  </>
                 )}
               </div>
-            )}
+            </div>
+            {/* EVIX Section */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-blue-200">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                  <SiEthereum className="text-blue-500" size={24} />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-lg text-gray-900 dark:text-white">EVIX Vault</h4>
+                  <p className="text-sm text-gray-500">Ethereum Volatility Index</p>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <span className="text-gray-600">Wallet Balance</span>
+                  <span className="font-mono font-semibold text-gray-900 dark:text-white">{contractData.evixBalance} EVIX</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <span className="text-gray-600">Current Price</span>
+                  <span className="font-mono font-semibold text-green-600">${contractData.evixPrice}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <span className="text-gray-600">Portfolio Value</span>
+                  <span className="font-mono font-semibold text-blue-600">${(parseFloat(contractData.evixBalance) * parseFloat(contractData.evixPrice)).toFixed(2)}</span>
+                </div>
+                {userPosition?.evix && parseFloat(userPosition.evix.collateral) > 0 && (
+                  <>
+                    <div className="pt-2 border-t border-gray-200">
+                      <div className="text-xs text-gray-500 mb-2">Active Position</div>
+                      <div className="flex justify-between">
+                        <span>Collateral (USDC):</span>
+                        <span className="font-mono">{Number(userPosition.evix.collateral).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Debt (EVIX):</span>
+                        <span className="font-mono">{Number(userPosition.evix.debt).toFixed(6)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Position CR:</span>
+                        <span className={getRiskColor(userPosition.evix.cr)}>
+                          {userPosition.evix.cr.toFixed(2)}% ({getRiskLevel(userPosition.evix.cr)})
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="mt-8 pt-6 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl p-6">
+            <h4 className="font-semibold text-lg mb-6 text-gray-900 dark:text-white">Vault Summary</h4>
+            <div className="space-y-4">
+              {(() => {
+                // Calculate combined vault metrics
+                let totalCollateral = 0;
+                let bvixDebt = 0;
+                let evixDebt = 0;
+                let totalDebtValue = 0;
+                
+                if (userPosition?.bvix && parseFloat(userPosition.bvix.collateral) > 0) {
+                  totalCollateral += parseFloat(userPosition.bvix.collateral);
+                  bvixDebt = parseFloat(userPosition.bvix.debt);
+                  totalDebtValue += bvixDebt * parseFloat(contractData.bvixPrice);
+                }
+                
+                if (userPosition?.evix && parseFloat(userPosition.evix.collateral) > 0) {
+                  totalCollateral += parseFloat(userPosition.evix.collateral);
+                  evixDebt = parseFloat(userPosition.evix.debt);
+                  totalDebtValue += evixDebt * parseFloat(contractData.evixPrice);
+                }
+                
+                const vaultCR = totalDebtValue > 0 ? (totalCollateral / totalDebtValue) * 100 : 0;
+                
+                return (
+                  <>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Total Collateral (USDC)</span>
+                        <span className="font-mono font-semibold text-green-600">{totalCollateral.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">BVIX Debt</span>
+                        <span className="font-mono font-semibold text-orange-600">{bvixDebt.toFixed(6)}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">EVIX Debt</span>
+                        <span className="font-mono font-semibold text-blue-600">{evixDebt.toFixed(6)}</span>
+                      </div>
+                    </div>
+                    <div className="pt-4 border-t border-gray-200">
+                      <div className="flex justify-between mb-3">
+                        <span className="font-medium">Vault CR%:</span>
+                        <span className={getRiskColor(vaultCR)}>
+                          {vaultCR.toFixed(1)}% ({getRiskLevel(vaultCR)})
+                        </span>
+                      </div>
+                      {/* Health Bar */}
+                      <div className="space-y-2">
+                        <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                          <div 
+                            className={`h-3 rounded-full transition-all duration-300 ${
+                              vaultCR >= 200 ? 'bg-green-500' :
+                              vaultCR >= 150 ? 'bg-yellow-500' :
+                              vaultCR >= 120 ? 'bg-orange-500' :
+                              'bg-red-500'
+                            }`}
+                            style={{ 
+                              width: `${Math.min(100, Math.max(0, (vaultCR / 250) * 100))}%` 
+                            }}
+                          ></div>
+                        </div>
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>120% (Min)</span>
+                          <span>150% (Safe)</span>
+                          <span>200%+ (Optimal)</span>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
           </div>
         </CardContent>
       </Card>
+
+      <div className="mt-6">
+        <NetworkHelpers />
+      </div>
     </div>
   );
 }
+
+// Add helper functions:
+const getRiskColor = (cr: number) => {
+  if (cr < 120) return 'text-red-600';
+  if (cr < 150) return 'text-yellow-600';
+  return 'text-green-600';
+};
+const getRiskLevel = (cr: number) => {
+  if (cr < 120) return 'High Risk';
+  if (cr < 150) return 'Medium Risk';
+  return 'Low Risk';
+};
