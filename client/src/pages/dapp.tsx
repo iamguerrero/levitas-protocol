@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navigation from "@/components/ui/navigation";
 import WalletConnect from "@/components/ui/wallet-connect";
 import TradingInterface from "@/components/ui/trading-interface";
@@ -6,9 +6,32 @@ import { useWallet } from "@/hooks/use-wallet";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
+import { getNetworkName } from "@/lib/web3";
 
 export default function DAppPage() {
   const { isConnected, address, connectWallet, disconnect } = useWallet();
+  const [networkName, setNetworkName] = useState("Base Sepolia Testnet");
+
+  useEffect(() => {
+    const updateNetworkName = async () => {
+      try {
+        const name = await getNetworkName();
+        setNetworkName(name);
+      } catch (error) {
+        console.error("Failed to get network name:", error);
+      }
+    };
+
+    updateNetworkName();
+    
+    // Listen for network changes
+    if (window.ethereum) {
+      window.ethereum.on('chainChanged', updateNetworkName);
+      return () => {
+        window.ethereum?.removeListener('chainChanged', updateNetworkName);
+      };
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -25,7 +48,7 @@ export default function DAppPage() {
                   Back to Home
                 </Button>
               </Link>
-              <span className="text-sm text-gray-500">Base Sepolia Testnet</span>
+              <span className="text-sm text-gray-500">{networkName}</span>
             </div>
             <WalletConnect />
           </div>

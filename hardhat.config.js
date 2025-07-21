@@ -7,6 +7,10 @@ module.exports = {
     baseSepolia: {
       url: "https://sepolia.base.org",
       accounts: [process.env.PRIVATE_KEY]
+    },
+    sepolia: {
+      url: "https://eth-sepolia.public.blastapi.io",
+      accounts: [process.env.PRIVATE_KEY]
     }
   }
 };
