@@ -791,7 +791,7 @@ export default function TradingInterface() {
                 </div>
                 {userPosition?.bvix && parseFloat(userPosition.bvix.collateral) > 0 && (
                   <div className="pt-4">
-                    <div className="text-xs text-gray-500 mb-2">Active Position</div>
+                    <div className="text-xs text-black font-bold mb-2">Active Position</div>
                     <div className="flex justify-between items-center py-2 border-b border-gray-100">
                       <span className="text-gray-600">Collateral (USDC)</span>
                       <span className="font-mono font-semibold text-gray-900 dark:text-white">{Number(userPosition.bvix.collateral).toFixed(2)}</span>
@@ -836,7 +836,7 @@ export default function TradingInterface() {
                 </div>
                 {userPosition?.evix && parseFloat(userPosition.evix.collateral) > 0 && (
                   <div className="pt-4">
-                    <div className="text-xs text-gray-500 mb-2">Active Position</div>
+                    <div className="text-xs text-black font-bold mb-2">Active Position</div>
                     <div className="flex justify-between items-center py-2 border-b border-gray-100">
                       <span className="text-gray-600">Collateral (USDC)</span>
                       <span className="font-mono font-semibold text-gray-900 dark:text-white">{Number(userPosition.evix.collateral).toFixed(2)}</span>
