@@ -4,7 +4,7 @@ hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["python312Packages.slither-analyzer", "nano", "lsof", "psmisc"]
+packages = ["python312Packages.slither-analyzer", "nano", "lsof", "psmisc", "openssh_hpn"]
 
 [deployment]
 deploymentTarget = "autoscale"
@@ -14,14 +14,13 @@ run = ["npm", "run", "start"]
 [[ports]]
 localPort = 3000
 externalPort = 3000
-exposeLocalhost = true
 
 [[ports]]
 localPort = 5000
 externalPort = 80
 
 [env]
-PORT = "5000"
+PORT = "3000"
 
 [workflows]
 runButton = "Project"
@@ -42,4 +41,4 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "npm run dev"
-waitForPort = 5000
+waitForPort = 3000
