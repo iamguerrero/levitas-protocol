@@ -662,7 +662,7 @@ export default function TradingInterface() {
           <CardHeader>
             <CardTitle className="text-xl flex items-center gap-2">
               <ArrowDown className="w-5 h-5 text-red-600" />
-              Redeem {selectedToken === 'bvix' ? 'BVIX' : 'EVIX'}
+              Redeem USDC
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -779,7 +779,7 @@ export default function TradingInterface() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
                   <span className="text-gray-600">Wallet Balance</span>
-                  <span className="font-mono font-semibold text-gray-900 dark:text-white">{contractData.bvixBalance} BVIX</span>
+                  <span className="font-mono font-semibold text-gray-900 dark:text-white">{parseFloat(contractData.bvixBalance).toFixed(2)} BVIX</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
                   <span className="text-gray-600">Current Price</span>
@@ -826,7 +826,7 @@ export default function TradingInterface() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
                   <span className="text-gray-600">Wallet Balance</span>
-                  <span className="font-mono font-semibold text-gray-900 dark:text-white">{contractData.evixBalance} EVIX</span>
+                  <span className="font-mono font-semibold text-gray-900 dark:text-white">{parseFloat(contractData.evixBalance).toFixed(2)} EVIX</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
                   <span className="text-gray-600">Current Price</span>
@@ -889,15 +889,15 @@ export default function TradingInterface() {
                     <div className="bg-white dark:bg-gray-800 rounded-lg p-4 space-y-3">
                       <div className="flex justify-between items-center">
                         <span className="text-gray-600">Total Collateral (USDC)</span>
-                        <span className="font-mono font-semibold text-green-600">{totalCollateral.toFixed(2)}</span>
+                        <span className="font-mono font-semibold text-green-600">${totalCollateral.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-gray-600">BVIX Debt</span>
-                        <span className="font-mono font-semibold text-orange-600">{bvixDebt.toFixed(6)}</span>
+                        <span className="font-mono font-semibold text-orange-600">{bvixDebt.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-gray-600">EVIX Debt</span>
-                        <span className="font-mono font-semibold text-blue-600">{evixDebt.toFixed(6)}</span>
+                        <span className="font-mono font-semibold text-blue-600">{evixDebt.toFixed(2)}</span>
                       </div>
                     </div>
                     <div className="pt-4 border-t border-gray-200">
