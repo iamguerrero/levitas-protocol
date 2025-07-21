@@ -661,7 +661,7 @@ export default function TradingInterface() {
         <Card>
           <CardHeader>
             <CardTitle className="text-xl flex items-center gap-2">
-              <ArrowDown className="w-5 h-5 text-red-600" />
+              <ArrowDown className="w-5 h-5 text-black" />
               Redeem USDC
             </CardTitle>
           </CardHeader>
@@ -728,7 +728,7 @@ export default function TradingInterface() {
                   Redeeming...
                 </>
               ) : (
-                `Redeem ${selectedToken === 'bvix' ? 'BVIX' : 'EVIX'}`
+                `Redeem USDC`
               )}
             </Button>
           </CardContent>
@@ -790,25 +790,23 @@ export default function TradingInterface() {
                   <span className="font-mono font-semibold text-blue-600">${(parseFloat(contractData.bvixBalance) * parseFloat(contractData.bvixPrice)).toFixed(2)}</span>
                 </div>
                 {userPosition?.bvix && parseFloat(userPosition.bvix.collateral) > 0 && (
-                  <>
-                    <div className="pt-2 border-t border-gray-200">
-                      <div className="text-xs text-gray-500 mb-2">Active Position</div>
-                      <div className="flex justify-between">
-                        <span>Collateral (USDC):</span>
-                        <span className="font-mono">{Number(userPosition.bvix.collateral).toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Debt (BVIX):</span>
-                        <span className="font-mono">{Number(userPosition.bvix.debt).toFixed(6)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Position CR:</span>
-                        <span className={getRiskColor(userPosition.bvix.cr)}>
-                          {userPosition.bvix.cr.toFixed(2)}% ({getRiskLevel(userPosition.bvix.cr)})
-                        </span>
-                      </div>
+                  <div className="pt-2 border-t border-gray-200">
+                    <div className="text-xs text-gray-500 mb-2">Active Position</div>
+                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                      <span className="text-gray-600">Collateral (USDC)</span>
+                      <span className="font-mono font-semibold text-gray-900 dark:text-white">{Number(userPosition.bvix.collateral).toFixed(2)}</span>
                     </div>
-                  </>
+                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                      <span className="text-gray-600">Debt (BVIX)</span>
+                      <span className="font-mono font-semibold text-gray-900 dark:text-white">{Number(userPosition.bvix.debt).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-gray-600">Position CR</span>
+                      <span className={`font-mono font-semibold ${getRiskColor(userPosition.bvix.cr)}`}>
+                        {userPosition.bvix.cr.toFixed(2)}% ({getRiskLevel(userPosition.bvix.cr)})
+                      </span>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
@@ -837,25 +835,23 @@ export default function TradingInterface() {
                   <span className="font-mono font-semibold text-blue-600">${(parseFloat(contractData.evixBalance) * parseFloat(contractData.evixPrice)).toFixed(2)}</span>
                 </div>
                 {userPosition?.evix && parseFloat(userPosition.evix.collateral) > 0 && (
-                  <>
-                    <div className="pt-2 border-t border-gray-200">
-                      <div className="text-xs text-gray-500 mb-2">Active Position</div>
-                      <div className="flex justify-between">
-                        <span>Collateral (USDC):</span>
-                        <span className="font-mono">{Number(userPosition.evix.collateral).toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Debt (EVIX):</span>
-                        <span className="font-mono">{Number(userPosition.evix.debt).toFixed(6)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Position CR:</span>
-                        <span className={getRiskColor(userPosition.evix.cr)}>
-                          {userPosition.evix.cr.toFixed(2)}% ({getRiskLevel(userPosition.evix.cr)})
-                        </span>
-                      </div>
+                  <div className="pt-2 border-t border-gray-200">
+                    <div className="text-xs text-gray-500 mb-2">Active Position</div>
+                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                      <span className="text-gray-600">Collateral (USDC)</span>
+                      <span className="font-mono font-semibold text-gray-900 dark:text-white">{Number(userPosition.evix.collateral).toFixed(2)}</span>
                     </div>
-                  </>
+                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                      <span className="text-gray-600">Debt (EVIX)</span>
+                      <span className="font-mono font-semibold text-gray-900 dark:text-white">{Number(userPosition.evix.debt).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-gray-600">Position CR</span>
+                      <span className={`font-mono font-semibold ${getRiskColor(userPosition.evix.cr)}`}>
+                        {userPosition.evix.cr.toFixed(2)}% ({getRiskLevel(userPosition.evix.cr)})
+                      </span>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
