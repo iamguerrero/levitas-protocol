@@ -20,6 +20,37 @@ declare global {
   }
 }
 
+export const CHAIN_IDS = {
+  baseSepolia: 84532,
+  sepolia: 11155111
+};
+
+export const HEX_CHAIN_IDS = {
+  baseSepolia: '0x14a34',
+  sepolia: '0xaa36a7'
+};
+
+export const ADDRESSES: { [key: string]: { bvix: string; evix: string; oracle: string; evixOracle: string; mockUsdc: string; mintRedeem: string; evixMintRedeem: string; } } = {
+  '84532': {
+    bvix: "0x2E3bef50887aD2A30069c79D19Bb91085351C92a",
+    evix: "0x7066700CAf442501B308fAe34d5919091e1b2380",
+    oracle: "0x85485dD6cFaF5220150c413309C61a8EA24d24FE",
+    evixOracle: "0xCd7441A771a7F84E58d98E598B7Ff23A3688094F",
+    mockUsdc: "0x9CC37B36FDd8CF5c0297BE15b75663Bf2a193297",
+    mintRedeem: "0x65Bec0Ab96ab751Fd0b1D9c907342d9A61FB1117",
+    evixMintRedeem: "0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf"
+  },
+  '11155111': {
+    bvix: "0x5913B8B9703d990fbB96e2a16A49B9376E262850",
+    evix: "0x75298e29fE21a5dcEFBe96988DdA957d421dc55C",
+    oracle: "0x5254533747b373D13303AE8ACC9D464f80B6bfae",
+    evixOracle: "0x685FEc86F539a1C0e9aEEf02894D5D90bfC48098",
+    mockUsdc: "0x83a6596c6B4C6FCC99A24B10ccd1660b1deF61b1",
+    mintRedeem: "0xAec6c459354D31031Ef7f77bE974eeE39BD60382",
+    evixMintRedeem: "0x5cAd54Ad8CcEacB7bF0c34E58c72D6EB6eC884B8"
+  }
+};
+
 export const BASE_SEPOLIA_CHAIN_ID = "0x14a34";
 export const BASE_SEPOLIA_RPC_URL = "https://sepolia.base.org";
 
@@ -40,26 +71,62 @@ export const MOCK_USDC_ADDRESS = "0x9CC37B36FDd8CF5c0297BE15b75663Bf2a193297"; /
 export const EVIX_ORACLE_ADDRESS = "0xCd7441A771a7F84E58d98E598B7Ff23A3688094F";
 
 // Contract factory functions
-export const getBVIXContract = (providerOrSigner: any) =>
-  new ethers.Contract(BVIX_ADDRESS, BVIX_ABI, providerOrSigner);
+export const getBVIXContract = async (providerOrSigner: any) => {
+  const chainId = (await getCurrentChainId()).toString();
+  const addresses = ADDRESSES[chainId];
+  if (!addresses) throw new Error("Unsupported network");
+  return new ethers.Contract(addresses.bvix, BVIX_ABI, providerOrSigner);
+};
 
-export const getEVIXContract = (providerOrSigner: any) =>
-  new ethers.Contract(EVIX_ADDRESS, EVIX_ABI, providerOrSigner);
+export const getEVIXContract = async (providerOrSigner: any) => {
+  const chainId = (await getCurrentChainId()).toString();
+  const addresses = ADDRESSES[chainId];
+  if (!addresses) throw new Error("Unsupported network");
+  return new ethers.Contract(addresses.evix, EVIX_ABI, providerOrSigner);
+};
 
-export const getOracleContract = (providerOrSigner: any) =>
-  new ethers.Contract(ORACLE_ADDRESS, Oracle_ABI, providerOrSigner);
+export const getOracleContract = async (providerOrSigner: any) => {
+  const chainId = (await getCurrentChainId()).toString();
+  const addresses = ADDRESSES[chainId];
+  if (!addresses) throw new Error("Unsupported network");
+  return new ethers.Contract(addresses.oracle, Oracle_ABI, providerOrSigner);
+};
 
-export const getMintRedeemContract = (providerOrSigner: any) =>
-  new ethers.Contract(BVIX_MINT_REDEEM_V6_ADDRESS, MintRedeem_ABI, providerOrSigner);
+export const getMintRedeemContract = async (providerOrSigner: any) => {
+  const chainId = (await getCurrentChainId()).toString();
+  const addresses = ADDRESSES[chainId];
+  if (!addresses) throw new Error("Unsupported network");
+  return new ethers.Contract(addresses.mintRedeem, MintRedeem_ABI, providerOrSigner);
+};
 
-export const getUSDCContract = (providerOrSigner: any) =>
-  new ethers.Contract(MOCK_USDC_ADDRESS, USDC_ABI, providerOrSigner);
+export const getUSDCContract = async (providerOrSigner: any) => {
+  const chainId = (await getCurrentChainId()).toString();
+  const addresses = ADDRESSES[chainId];
+  if (!addresses) throw new Error("Unsupported network");
+  
+  // Check if the address is a placeholder (all zeros)
+  if (addresses.mockUsdc === "0x0000000000000000000000000000000000000000") {
+    throw new Error("Contracts not deployed to this network yet. Please deploy contracts first.");
+  }
+  
 
-export const getEVIXOracleContract = (providerOrSigner: any) =>
-  new ethers.Contract(EVIX_ORACLE_ADDRESS, EVIXOracle_ABI, providerOrSigner);
+  
+  return new ethers.Contract(addresses.mockUsdc, USDC_ABI, providerOrSigner);
+};
 
-export const getEVIXMintRedeemContract = (providerOrSigner: any) =>
-  new ethers.Contract(EVIX_MINT_REDEEM_V6_ADDRESS, EVIXMintRedeem_ABI, providerOrSigner);
+export const getEVIXOracleContract = async (providerOrSigner: any) => {
+  const chainId = (await getCurrentChainId()).toString();
+  const addresses = ADDRESSES[chainId];
+  if (!addresses) throw new Error("Unsupported network");
+  return new ethers.Contract(addresses.evixOracle, EVIXOracle_ABI, providerOrSigner);
+};
+
+export const getEVIXMintRedeemContract = async (providerOrSigner: any) => {
+  const chainId = (await getCurrentChainId()).toString();
+  const addresses = ADDRESSES[chainId];
+  if (!addresses) throw new Error("Unsupported network");
+  return new ethers.Contract(addresses.evixMintRedeem, EVIXMintRedeem_ABI, providerOrSigner);
+};
 
 export const getEVIXMintRedeemContractV6 = (providerOrSigner: any) =>
   new ethers.Contract(EVIX_MINT_REDEEM_V6_ADDRESS, EVIXMintRedeem_ABI, providerOrSigner);
@@ -75,6 +142,30 @@ export function getProvider() {
 export async function getSigner() {
   const provider = getProvider();
   return await provider.getSigner();
+}
+
+export async function getCurrentChainId(): Promise<number> {
+  if (typeof window.ethereum === "undefined") {
+    throw new Error("MetaMask not installed");
+  }
+  const chainId = await window.ethereum.request({
+    method: "eth_chainId",
+  });
+  return parseInt(chainId, 16);
+}
+
+export async function getNetworkName(): Promise<string> {
+  try {
+    const chainId = await getCurrentChainId();
+    if (chainId === CHAIN_IDS.baseSepolia) {
+      return "Base Sepolia Testnet";
+    } else if (chainId === CHAIN_IDS.sepolia) {
+      return "ETH Sepolia testnet";
+    }
+    return "Unknown Network";
+  } catch (error) {
+    return "Unknown Network";
+  }
 }
 
 export async function switchToBaseSepolia() {
@@ -112,11 +203,46 @@ export async function switchToBaseSepolia() {
   }
 }
 
+// Add switchToSepolia
+export async function switchToSepolia() {
+  if (typeof window.ethereum === "undefined") {
+    throw new Error("MetaMask not installed");
+  }
+
+  try {
+    await window.ethereum.request({
+      method: "wallet_switchEthereumChain",
+      params: [{ chainId: HEX_CHAIN_IDS.sepolia }],
+    });
+  } catch (switchError: any) {
+    if (switchError.code === 4902) {
+      await window.ethereum.request({
+        method: "wallet_addEthereumChain",
+        params: [
+          {
+            chainId: HEX_CHAIN_IDS.sepolia,
+            chainName: "Sepolia",
+            rpcUrls: ["https://rpc.sepolia.org"],
+            nativeCurrency: {
+              name: "ETH",
+              symbol: "ETH",
+              decimals: 18,
+            },
+            blockExplorerUrls: ["https://sepolia.etherscan.io/"],
+          },
+        ],
+      });
+    } else {
+      throw switchError;
+    }
+  }
+}
+
 // Helper functions for contract interactions
 export async function getBVIXBalance(address: string): Promise<string> {
   try {
     const provider = getProvider();
-    const bvixContract = getBVIXContract(provider);
+    const bvixContract = await getBVIXContract(provider);
     const balance = await bvixContract.balanceOf(address);
     return ethers.formatEther(balance);
   } catch (error) {
@@ -128,7 +254,7 @@ export async function getBVIXBalance(address: string): Promise<string> {
 export async function getEVIXBalance(address: string): Promise<string> {
   try {
     const provider = getProvider();
-    const evixContract = getEVIXContract(provider);
+    const evixContract = await getEVIXContract(provider);
     const balance = await evixContract.balanceOf(address);
     return ethers.formatEther(balance);
   } catch (error) {
@@ -140,7 +266,7 @@ export async function getEVIXBalance(address: string): Promise<string> {
 export async function getUSDCBalance(address: string): Promise<string> {
   try {
     const provider = getProvider();
-    const usdcContract = getUSDCContract(provider);
+    const usdcContract = await getUSDCContract(provider);
     
     // Force fresh call - no caching
     const balance = await usdcContract.balanceOf(address);
@@ -164,9 +290,16 @@ export async function getUSDCBalance(address: string): Promise<string> {
 export async function getOraclePrice(): Promise<string> {
   try {
     const provider = getProvider();
-    const oracleContract = getOracleContract(provider);
+    const oracleContract = await getOracleContract(provider);
     const price = await oracleContract.getPrice();
-    return ethers.formatEther(price);
+    const chainId = await getCurrentChainId();
+    
+    // ETH Sepolia uses 18 decimals, Base Sepolia uses 8 decimals
+    const decimals = chainId === CHAIN_IDS.sepolia ? 18 : 8;
+    const formattedPrice = ethers.formatUnits(price, decimals);
+    
+    // Parse and format to 2 decimal places
+    return parseFloat(formattedPrice).toFixed(2);
   } catch (error) {
     console.error("Error getting oracle price:", error);
     return "42.15"; // Fallback price
@@ -177,12 +310,16 @@ export async function getOraclePrice(): Promise<string> {
 export async function getEVIXPrice(): Promise<string> {
   try {
     const provider = getProvider();
-    const evixOracle = getEVIXOracleContract(provider);
+    const evixOracle = await getEVIXOracleContract(provider);
     const priceRaw = await evixOracle.getPrice();
-    // The oracle stores price as a large integer (e.g. 379800000000 for $37.98)
-    // Convert to proper decimal format
-    const price = parseFloat(ethers.formatUnits(priceRaw, 8)) / 10000000000;
-    return price.toFixed(2);
+    const chainId = await getCurrentChainId();
+    
+    // ETH Sepolia uses 18 decimals, Base Sepolia uses 8 decimals
+    const decimals = chainId === CHAIN_IDS.sepolia ? 18 : 8;
+    const formattedPrice = ethers.formatUnits(priceRaw, decimals);
+    
+    // Parse and format to 2 decimal places
+    return parseFloat(formattedPrice).toFixed(2);
   } catch (error) {
     console.error("Error getting EVIX price:", error);
     return "37.98"; // Fallback price
@@ -197,8 +334,8 @@ export async function mintBVIX(
   
   const signer = await getSigner();
   const address = await signer.getAddress();
-  const mintRedeemContract = getMintRedeemContract(signer);
-  const usdcContract = getUSDCContract(signer);
+  const mintRedeemContract = await getMintRedeemContract(signer);
+  const usdcContract = await getUSDCContract(signer);
 
   const usdcAmountWei = ethers.parseUnits(usdcAmount, 6); // USDC has 6 decimals
 
@@ -257,8 +394,8 @@ export async function redeemBVIX(
 ): Promise<ethers.ContractTransactionResponse> {
   const signer = await getSigner();
   const address = await signer.getAddress();
-  const mintRedeemContract = getMintRedeemContract(signer);
-  const bvixContract = getBVIXContract(signer);
+  const mintRedeemContract = await getMintRedeemContract(signer);
+  const bvixContract = await getBVIXContract(signer);
 
   const bvixAmountWei = ethers.parseEther(bvixAmount);
 
@@ -283,8 +420,8 @@ export async function mintEVIX(
   
   const signer = await getSigner();
   const address = await signer.getAddress();
-  const evixMintRedeemContract = getEVIXMintRedeemContract(signer);
-  const usdcContract = getUSDCContract(signer);
+  const evixMintRedeemContract = await getEVIXMintRedeemContract(signer);
+  const usdcContract = await getUSDCContract(signer);
 
   const usdcAmountWei = ethers.parseUnits(usdcAmount, 6); // USDC has 6 decimals
 
@@ -331,8 +468,8 @@ export async function redeemEVIX(
 ): Promise<ethers.ContractTransactionResponse> {
   const signer = await getSigner();
   const address = await signer.getAddress();
-  const evixMintRedeemContract = getEVIXMintRedeemContract(signer);
-  const evixContract = getEVIXContract(signer);
+  const evixMintRedeemContract = await getEVIXMintRedeemContract(signer);
+  const evixContract = await getEVIXContract(signer);
 
   const evixAmountWei = ethers.parseEther(evixAmount);
 
@@ -368,7 +505,7 @@ export async function getTestUSDC(
 ): Promise<ethers.ContractTransactionResponse | null> {
   try {
     const signer = await getSigner();
-    const usdcContract = getUSDCContract(signer);
+    const usdcContract = await getUSDCContract(signer);
 
     // Check if the contract has a mint function (for test tokens)
     const amountWei = ethers.parseUnits(amount, 6);
@@ -383,17 +520,19 @@ export async function getTestUSDC(
   }
 }
 
-// Debug function to get contract info
+
+
+// Update getContractDebugInfo
 export async function getContractDebugInfo(): Promise<any> {
   try {
     const provider = getProvider();
     const signer = await getSigner();
     const address = await signer.getAddress();
 
-    const usdcContract = getUSDCContract(provider);
-    const bvixContract = getBVIXContract(provider);
-    const oracleContract = getOracleContract(provider);
-    const mintRedeemContract = getMintRedeemContract(provider);
+    const usdcContract = await getUSDCContract(provider);
+    const bvixContract = await getBVIXContract(provider);
+    const oracleContract = await getOracleContract(provider);
+    const mintRedeemContract = await getMintRedeemContract(provider);
 
     const [usdcBalance, bvixBalance, oraclePrice, usdcAllowance] =
       await Promise.all([
@@ -430,8 +569,8 @@ export const getCollateralRatio = async (): Promise<number> => {
   try {
     const provider = getProvider();
     // 1️⃣ contracts - using contract factory functions instead of direct ABI
-    const usdc = getUSDCContract(provider);
-    const bvix = getBVIXContract(provider);
+    const usdc = await getUSDCContract(provider);
+    const bvix = await getBVIXContract(provider);
 
     // 2️⃣ read chain state in parallel
     const [rawVaultUSDC, rawSupply, price] = await Promise.all([
@@ -458,7 +597,7 @@ export async function getUserPosition(user: string) {
   try {
     // V6 contracts have individual position tracking
     const provider = getProvider();
-    const contract = getMintRedeemContract(provider);
+    const contract = await getMintRedeemContract(provider);
     
     console.log('🔍 Getting BVIX position for user:', user);
     console.log('🔍 Using V6 contract address:', BVIX_MINT_REDEEM_V6_ADDRESS);
@@ -492,7 +631,7 @@ export async function getUserCollateralRatio(user: string): Promise<number> {
   try {
     // V6 contracts have individual CR tracking
     const provider = getProvider();
-    const contract = getMintRedeemContract(provider);
+    const contract = await getMintRedeemContract(provider);
     
     console.log('🔍 Getting BVIX CR for user:', user);
     
@@ -515,7 +654,7 @@ export async function getUserPositionEVIX(user: string) {
   try {
     // V6 contracts have individual position tracking
     const provider = getProvider();
-    const contract = getEVIXMintRedeemContract(provider);
+    const contract = await getEVIXMintRedeemContract(provider);
     
     console.log('🔍 Getting EVIX position for user:', user);
     console.log('🔍 Using EVIX V6 contract address:', EVIX_MINT_REDEEM_V6_ADDRESS);
@@ -549,7 +688,7 @@ export async function getUserCollateralRatioEVIX(user: string): Promise<number> 
   try {
     // V6 contracts have individual CR tracking
     const provider = getProvider();
-    const contract = getEVIXMintRedeemContract(provider);
+    const contract = await getEVIXMintRedeemContract(provider);
     
     console.log('🔍 Getting EVIX CR for user:', user);
     console.log('🔍 Using EVIX V6 contract address:', EVIX_MINT_REDEEM_V6_ADDRESS);

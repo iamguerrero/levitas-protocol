@@ -1,0 +1,11 @@
+[dotenv@17.2.0] injecting env (0) from .env (tip: ⚙️  suppress all logs with { quiet: true })
+[dotenv@17.2.0] injecting env (0) from .env (tip: 🔐 encrypt with dotenvx: https://dotenvx.com)
+Script started
+Main function started
+Script error: Error [ERR_REQUIRE_ESM]: require() of ES Module /home/runner/workspace/node_modules/hardhat/node_modules/micro-eth-signer/typed-data.js from /home/runner/workspace/node_modules/hardhat/internal/core/providers/accounts.js not supported.
+Instead change the require of typed-data.js in /home/runner/workspace/node_modules/hardhat/internal/core/providers/accounts.js to a dynamic import() which is available in all CommonJS modules.
+    at TracingChannel.traceSync (node:diagnostics_channel:315:14)
+    at /home/runner/workspace/node_modules/hardhat/internal/core/providers/accounts.js:45:79
+    at async LocalAccountsProvider.request (/home/runner/workspace/node_modules/hardhat/internal/core/providers/accounts.js:45:31) {
+  code: 'ERR_REQUIRE_ESM'
+}
