@@ -736,12 +736,20 @@ export default function TradingInterface() {
       </div>
 
       {/* Vault Dashboard */}
-      <Card className="mt-8 col-span-2 bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 border-0 shadow-xl">
-        <CardHeader className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-lg">
+      <Card className="mt-8 col-span-2 bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 border shadow-xl">
+        <CardHeader className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
           <div className="flex justify-between items-center">
-            <CardTitle className="text-2xl font-light">Vault Dashboard</CardTitle>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
+                <TrendingUp className="text-white" size={20} />
+              </div>
+              <div>
+                <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">Vault Dashboard</CardTitle>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Real-time portfolio monitoring</p>
+              </div>
+            </div>
             <Button
-              variant="secondary"
+              variant="outline"
               size="sm"
               onClick={() => {
                 loadContractData();
@@ -749,7 +757,7 @@ export default function TradingInterface() {
                 refetchVault();
               }}
               disabled={isLoading}
-              className="bg-white/20 hover:bg-white/30 text-white border-white/20"
+              className="border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700"
             >
               {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Refresh"}
             </Button>
@@ -904,9 +912,8 @@ export default function TradingInterface() {
                         <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                           <div 
                             className={`h-3 rounded-full transition-all duration-300 ${
-                              vaultCR >= 200 ? 'bg-green-500' :
-                              vaultCR >= 150 ? 'bg-yellow-500' :
-                              vaultCR >= 120 ? 'bg-orange-500' :
+                              vaultCR >= 150 ? 'bg-green-500' :
+                              vaultCR >= 120 ? 'bg-yellow-500' :
                               'bg-red-500'
                             }`}
                             style={{ 
