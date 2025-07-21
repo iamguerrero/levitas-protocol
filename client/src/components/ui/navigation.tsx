@@ -52,7 +52,7 @@ export default function Navigation() {
               Whitepaper
             </a>
             <a
-              href="/attached_assets/Levitas Litepaper_1753091498988.pdf"
+              href="/Levitas Litepaper_1753091498988.pdf"
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-600 hover:text-black transition-colors"
@@ -107,7 +107,7 @@ export default function Navigation() {
               Whitepaper
             </a>
             <a
-              href="/attached_assets/Levitas Litepaper_1753091498988.pdf"
+              href="/Levitas Litepaper_1753091498988.pdf"
               target="_blank"
               rel="noopener noreferrer"
               className="block py-2 text-gray-600 hover:text-black"
