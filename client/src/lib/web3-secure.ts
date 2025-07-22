@@ -33,22 +33,28 @@ export const SECURE_ADDRESSES: { [key: string]: {
   bvix: string; 
   evix: string; 
   priceOracle: string; 
+  evixPriceOracle: string; 
   mockUsdc: string; 
   mintRedeemV7: string; 
+  evixMintRedeemV7: string; 
 } } = {
   '84532': {
     bvix: "0xc18Fa9D1345D7B68E798e4370B99554c9d5540A1", // BVIXToken V7
-    evix: "0x0000000000000000000000000000000000000000", // TODO: Deploy EVIX V7
-    priceOracle: "0xa57E229E6998b05FA1BDAdF5c4d7aEdf0e6538a2", // PriceOracle V7
+    evix: "0xb20CE7575bA09d6a3eeF30682Bc108D0C9EEeAd1", // EVIXToken V7
+    priceOracle: "0xa57E229E6998b05FA1BDAdF5c4d7aEdf0e6538a2", // BVIX PriceOracle V7
+    evixPriceOracle: "0x587eD1E7D27DCf9c0f5C1b0861500b0cA06Ddd8b", // EVIX PriceOracle V7
     mockUsdc: "0x4E0e879814d7AbAbEAc7013Dc7c721dC45162294", // MockUSDC V7
-    mintRedeemV7: "0x4C4aDf5A07794BC89Ad4A4d609b39547e03DBbfa" // MintRedeemV7
+    mintRedeemV7: "0x4C4aDf5A07794BC89Ad4A4d609b39547e03DBbfa", // BVIX MintRedeemV7
+    evixMintRedeemV7: "0x1CA8eC26FFF5FABE35796642dE95446a22cbB843" // EVIX MintRedeemV7
   },
   '11155111': {
     bvix: "0x0000000000000000000000000000000000000000", // TODO: Deploy to ETH Sepolia
     evix: "0x0000000000000000000000000000000000000000", // TODO: Deploy to ETH Sepolia
     priceOracle: "0x0000000000000000000000000000000000000000", // TODO: Deploy to ETH Sepolia
+    evixPriceOracle: "0x0000000000000000000000000000000000000000", // TODO: Deploy to ETH Sepolia
     mockUsdc: "0x0000000000000000000000000000000000000000", // TODO: Deploy to ETH Sepolia
-    mintRedeemV7: "0x0000000000000000000000000000000000000000" // TODO: Deploy to ETH Sepolia
+    mintRedeemV7: "0x0000000000000000000000000000000000000000", // TODO: Deploy to ETH Sepolia
+    evixMintRedeemV7: "0x0000000000000000000000000000000000000000" // TODO: Deploy to ETH Sepolia
   }
 };
 
