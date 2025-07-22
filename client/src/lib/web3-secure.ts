@@ -28,7 +28,7 @@ export const HEX_CHAIN_IDS = {
   sepolia: '0xaa36a7'
 };
 
-// Updated addresses for secure contracts (to be updated after testnet deployment)
+// Updated addresses for secure contracts deployed to Base Sepolia
 export const SECURE_ADDRESSES: { [key: string]: { 
   bvix: string; 
   evix: string; 
@@ -37,18 +37,18 @@ export const SECURE_ADDRESSES: { [key: string]: {
   mintRedeemV7: string; 
 } } = {
   '84532': {
-    bvix: "0x0000000000000000000000000000000000000000", // TODO: Update after deployment
-    evix: "0x0000000000000000000000000000000000000000", // TODO: Update after deployment
-    priceOracle: "0x0000000000000000000000000000000000000000", // TODO: Update after deployment
-    mockUsdc: "0x0000000000000000000000000000000000000000", // TODO: Update after deployment
-    mintRedeemV7: "0x0000000000000000000000000000000000000000" // TODO: Update after deployment
+    bvix: "0xc18Fa9D1345D7B68E798e4370B99554c9d5540A1", // BVIXToken V7
+    evix: "0x0000000000000000000000000000000000000000", // TODO: Deploy EVIX V7
+    priceOracle: "0xa57E229E6998b05FA1BDAdF5c4d7aEdf0e6538a2", // PriceOracle V7
+    mockUsdc: "0x4E0e879814d7AbAbEAc7013Dc7c721dC45162294", // MockUSDC V7
+    mintRedeemV7: "0x4C4aDf5A07794BC89Ad4A4d609b39547e03DBbfa" // MintRedeemV7
   },
   '11155111': {
-    bvix: "0x0000000000000000000000000000000000000000", // TODO: Update after deployment
-    evix: "0x0000000000000000000000000000000000000000", // TODO: Update after deployment
-    priceOracle: "0x0000000000000000000000000000000000000000", // TODO: Update after deployment
-    mockUsdc: "0x0000000000000000000000000000000000000000", // TODO: Update after deployment
-    mintRedeemV7: "0x0000000000000000000000000000000000000000" // TODO: Update after deployment
+    bvix: "0x0000000000000000000000000000000000000000", // TODO: Deploy to ETH Sepolia
+    evix: "0x0000000000000000000000000000000000000000", // TODO: Deploy to ETH Sepolia
+    priceOracle: "0x0000000000000000000000000000000000000000", // TODO: Deploy to ETH Sepolia
+    mockUsdc: "0x0000000000000000000000000000000000000000", // TODO: Deploy to ETH Sepolia
+    mintRedeemV7: "0x0000000000000000000000000000000000000000" // TODO: Deploy to ETH Sepolia
   }
 };
 

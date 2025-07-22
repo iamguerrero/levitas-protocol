@@ -17,14 +17,14 @@ async function main() {
     // Deploy MockUSDC
     console.log("\n1. Deploying MockUSDC...");
     const MockUSDC = await ethers.getContractFactory("MockUSDC");
-    const usdc = await MockUSDC.deploy();
+    const usdc = await MockUSDC.deploy(governor);
     await usdc.waitForDeployment();
     console.log("MockUSDC deployed to:", await usdc.getAddress());
 
     // Deploy BVIXToken
     console.log("\n2. Deploying BVIXToken...");
     const BVIXToken = await ethers.getContractFactory("BVIXToken");
-    const bvix = await BVIXToken.deploy();
+    const bvix = await BVIXToken.deploy(governor);
     await bvix.waitForDeployment();
     console.log("BVIXToken deployed to:", await bvix.getAddress());
 
