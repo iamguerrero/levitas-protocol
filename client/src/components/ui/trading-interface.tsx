@@ -646,20 +646,18 @@ export default function TradingInterface() {
     ratePerToken = (price * 0.997).toFixed(4);
   }
 
-  const { bvixPrice: realTimeBvix, evixPrice: realTimeEvix } = useRealTimeOracle();
-
-  // Add effects to update contractData on real-time changes
+  // Real-time price effects use the oracle data from the top of the component
   useEffect(() => {
-    if (realTimeBvix && parseFloat(realTimeBvix) > 0) {
-      setContractData(prev => ({ ...prev, bvixPrice: realTimeBvix }));
+    if (realtimeBvixPrice && parseFloat(realtimeBvixPrice) > 0) {
+      setContractData(prev => ({ ...prev, bvixPrice: realtimeBvixPrice }));
     }
-  }, [realTimeBvix]);
+  }, [realtimeBvixPrice]);
 
   useEffect(() => {
-    if (realTimeEvix && parseFloat(realTimeEvix) > 0) {
-      setContractData(prev => ({ ...prev, evixPrice: realTimeEvix }));
+    if (realtimeEvixPrice && parseFloat(realtimeEvixPrice) > 0) {
+      setContractData(prev => ({ ...prev, evixPrice: realtimeEvixPrice }));
     }
-  }, [realTimeEvix]);
+  }, [realtimeEvixPrice]);
 
   return (
     <div className="space-y-8">
