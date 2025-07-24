@@ -581,42 +581,36 @@ export default function TradingInterface() {
   const handleGetTestUSDC = async () => {
     setIsTransacting(true);
     try {
-      console.log("🚰 Attempting to get test USDC...");
-      const tx = await getTestUSDC("10000"); // Get 10000 test USDC
+      const tx = await getTestUSDC("1000"); // Get 1000 test USDC
       if (tx) {
         toast({
           title: "Getting Test USDC",
           description: "Transaction submitted. Please wait for confirmation.",
         });
-        console.log("🔄 Waiting for transaction confirmation...");
         await tx.wait();
         toast({
           title: "Test USDC Received!",
-          description: "Successfully received test USDC tokens from faucet.",
+          description: "Successfully received 1000 test USDC tokens.",
         });
-        console.log("✅ Test USDC transaction confirmed");
         await loadContractData(); // Refresh balances
       } else {
         toast({
           title: "No Faucet Available",
           description:
-            "This USDC contract doesn't have a faucet or mint function. Check contract deployment.",
+            "This USDC contract doesn't have a mint function. You'll need to get USDC another way.",
           variant: "destructive",
         });
       }
     } catch (error: any) {
-      console.error("❌ Failed to get test USDC:", error);
       toast({
         title: "Failed to Get Test USDC",
         description:
           error.message ||
-          "The USDC contract doesn't support faucet or mint functions.",
+          "The USDC contract doesn't support minting test tokens.",
         variant: "destructive",
       });
     } finally {
       setIsTransacting(false);
-    }
-  setIsTransacting(false);
     }
   };
 
