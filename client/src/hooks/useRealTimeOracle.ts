@@ -77,10 +77,10 @@ export const useRealTimeOracle = () => {
     // Initial price update
     updatePrices();
 
-    // Set up 10-second interval for testing, will change to 60 seconds after verification
-    updateInterval = setInterval(updatePrices, 10000); // 10 seconds for testing
+    // Set up 10-second interval for demonstration, 60 seconds for production
+    updateInterval = setInterval(updatePrices, 10000); // 10 seconds for easy testing
 
-    console.log('🚀 Sprint 2.1 Real-time Oracle System initialized - updating every 10 seconds for testing');
+    console.log('🚀 Sprint 2.1 Real-time Oracle System initialized - updating every 10 seconds for demonstration');
 
     return () => {
       if (updateInterval) {

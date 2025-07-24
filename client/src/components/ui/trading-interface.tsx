@@ -889,13 +889,13 @@ export default function TradingInterface() {
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
                   <span className="text-gray-600">Current Price</span>
                   <div className="flex items-center gap-2">
-                    <span className="font-mono font-semibold text-green-600">${formatPrice(contractData.bvixPrice)}</span>
+                    <span className="font-mono font-semibold text-green-600">${realtimeBvixPrice || formatPrice(contractData.bvixPrice)}</span>
                     <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">LIVE</span>
                   </div>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
                   <span className="text-gray-600">Portfolio Value</span>
-                  <span className="font-mono font-semibold text-blue-600">${(parseFloat(contractData.bvixBalance) * parseFloat(formatPrice(contractData.bvixPrice))).toFixed(2)}</span>
+                  <span className="font-mono font-semibold text-blue-600">${(parseFloat(contractData.bvixBalance) * parseFloat(realtimeBvixPrice || formatPrice(contractData.bvixPrice))).toFixed(2)}</span>
                 </div>
                 {userPosition?.bvix && parseFloat(userPosition.bvix.collateral) > 0 && (
                   <div className="pt-4">
@@ -910,9 +910,19 @@ export default function TradingInterface() {
                     </div>
                     <div className="flex justify-between items-center py-2">
                       <span className="text-gray-600">Position CR</span>
-                      <span className={`font-mono font-semibold ${getRiskColor(userPosition.bvix.cr)}`}>
-                        {userPosition.bvix.cr.toFixed(2)}% ({getRiskLevel(userPosition.bvix.cr)})
-                      </span>
+                      {(() => {
+                        // Calculate real-time CR: (Collateral / (Debt * Current Price)) * 100
+                        const collateral = parseFloat(userPosition.bvix.collateral);
+                        const debt = parseFloat(userPosition.bvix.debt);
+                        const currentPrice = parseFloat(realtimeBvixPrice || formatPrice(contractData.bvixPrice));
+                        const realtimeCR = debt > 0 ? (collateral / (debt * currentPrice)) * 100 : 0;
+                        
+                        return (
+                          <span className={`font-mono font-semibold ${getRiskColor(realtimeCR)}`}>
+                            {realtimeCR.toFixed(2)}% ({getRiskLevel(realtimeCR)})
+                          </span>
+                        );
+                      })()}
                     </div>
                   </div>
                 )}
@@ -937,13 +947,13 @@ export default function TradingInterface() {
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
                   <span className="text-gray-600">Current Price</span>
                   <div className="flex items-center gap-2">
-                    <span className="font-mono font-semibold text-green-600">${formatPrice(contractData.evixPrice)}</span>
+                    <span className="font-mono font-semibold text-green-600">${realtimeEvixPrice || formatPrice(contractData.evixPrice)}</span>
                     <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">LIVE</span>
                   </div>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
                   <span className="text-gray-600">Portfolio Value</span>
-                  <span className="font-mono font-semibold text-blue-600">${(parseFloat(contractData.evixBalance) * parseFloat(formatPrice(contractData.evixPrice))).toFixed(2)}</span>
+                  <span className="font-mono font-semibold text-blue-600">${(parseFloat(contractData.evixBalance) * parseFloat(realtimeEvixPrice || formatPrice(contractData.evixPrice))).toFixed(2)}</span>
                 </div>
                 {userPosition?.evix && parseFloat(userPosition.evix.collateral) > 0 && (
                   <div className="pt-4">
@@ -958,9 +968,19 @@ export default function TradingInterface() {
                     </div>
                     <div className="flex justify-between items-center py-2">
                       <span className="text-gray-600">Position CR</span>
-                      <span className={`font-mono font-semibold ${getRiskColor(userPosition.evix.cr)}`}>
-                        {userPosition.evix.cr.toFixed(2)}% ({getRiskLevel(userPosition.evix.cr)})
-                      </span>
+                      {(() => {
+                        // Calculate real-time CR: (Collateral / (Debt * Current Price)) * 100
+                        const collateral = parseFloat(userPosition.evix.collateral);
+                        const debt = parseFloat(userPosition.evix.debt);
+                        const currentPrice = parseFloat(realtimeEvixPrice || formatPrice(contractData.evixPrice));
+                        const realtimeCR = debt > 0 ? (collateral / (debt * currentPrice)) * 100 : 0;
+                        
+                        return (
+                          <span className={`font-mono font-semibold ${getRiskColor(realtimeCR)}`}>
+                            {realtimeCR.toFixed(2)}% ({getRiskLevel(realtimeCR)})
+                          </span>
+                        );
+                      })()}
                     </div>
                   </div>
                 )}
@@ -977,16 +997,20 @@ export default function TradingInterface() {
                 let evixDebt = 0;
                 let totalDebtValue = 0;
                 
+                // Use real-time prices for accurate calculations
+                const currentBvixPrice = parseFloat(realtimeBvixPrice || formatPrice(contractData.bvixPrice));
+                const currentEvixPrice = parseFloat(realtimeEvixPrice || formatPrice(contractData.evixPrice));
+                
                 if (userPosition?.bvix && parseFloat(userPosition.bvix.collateral) > 0) {
                   totalCollateral += parseFloat(userPosition.bvix.collateral);
                   bvixDebt = parseFloat(userPosition.bvix.debt);
-                  totalDebtValue += bvixDebt * parseFloat(formatPrice(contractData.bvixPrice));
+                  totalDebtValue += bvixDebt * currentBvixPrice;
                 }
                 
                 if (userPosition?.evix && parseFloat(userPosition.evix.collateral) > 0) {
                   totalCollateral += parseFloat(userPosition.evix.collateral);
                   evixDebt = parseFloat(userPosition.evix.debt);
-                  totalDebtValue += evixDebt * parseFloat(formatPrice(contractData.evixPrice));
+                  totalDebtValue += evixDebt * currentEvixPrice;
                 }
                 
                 const vaultCR = totalDebtValue > 0 ? (totalCollateral / totalDebtValue) * 100 : 0;
