@@ -16,7 +16,7 @@ async function main() {
   // Deploy BVIX Token
   console.log("📄 Deploying BVIXToken...");
   const BVIXToken = await hre.ethers.getContractFactory("BVIXToken");
-  const bvixToken = await BVIXToken.deploy();
+  const bvixToken = await BVIXToken.deploy(deployer.address);
   await bvixToken.waitForDeployment();
   const bvixAddress = await bvixToken.getAddress();
   console.log("✅ BVIXToken deployed to:", bvixAddress);
@@ -24,12 +24,12 @@ async function main() {
   // Deploy EVIX Token
   console.log("📄 Deploying EVIXToken...");
   const EVIXToken = await hre.ethers.getContractFactory("EVIXToken");
-  const evixToken = await EVIXToken.deploy();
+  const evixToken = await EVIXToken.deploy(deployer.address);
   await evixToken.waitForDeployment();
   const evixAddress = await evixToken.getAddress();
   console.log("✅ EVIXToken deployed to:", evixAddress);
 
-  // Deploy BVIX Oracle
+  // Deploy BVIX Oracle (MockOracle has no constructor params)
   console.log("📄 Deploying MockOracle for BVIX...");
   const MockOracle = await hre.ethers.getContractFactory("MockOracle");
   const bvixOracle = await MockOracle.deploy();
@@ -37,7 +37,7 @@ async function main() {
   const bvixOracleAddress = await bvixOracle.getAddress();
   console.log("✅ BVIX Oracle deployed to:", bvixOracleAddress);
 
-  // Deploy EVIX Oracle
+  // Deploy EVIX Oracle (no constructor params)
   console.log("📄 Deploying EVIXOracle...");
   const EVIXOracle = await hre.ethers.getContractFactory("EVIXOracle");
   const evixOracle = await EVIXOracle.deploy();

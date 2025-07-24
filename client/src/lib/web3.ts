@@ -160,7 +160,9 @@ export async function getCurrentChainId(): Promise<number> {
 export async function getNetworkName(): Promise<string> {
   try {
     const chainId = await getCurrentChainId();
-    if (chainId === CHAIN_IDS.baseSepolia) {
+    if (chainId === CHAIN_IDS.polygonAmoy) {
+      return "Polygon Amoy Testnet";
+    } else if (chainId === CHAIN_IDS.baseSepolia) {
       return "Base Sepolia Testnet";
     } else if (chainId === CHAIN_IDS.sepolia) {
       return "ETH Sepolia Testnet";
@@ -192,8 +194,8 @@ export async function switchToPolygonAmoy() {
             chainName: "Polygon Amoy Testnet",
             rpcUrls: [POLYGON_AMOY_RPC_URL],
             nativeCurrency: {
-              name: "MATIC",
-              symbol: "MATIC",
+              name: "POL",
+              symbol: "POL",
               decimals: 18,
             },
             blockExplorerUrls: ["https://amoy.polygonscan.com/"],

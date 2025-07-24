@@ -168,8 +168,8 @@ export async function switchToPolygonAmoy() {
             chainName: "Polygon Amoy Testnet",
             rpcUrls: [POLYGON_AMOY_RPC_URL],
             nativeCurrency: {
-              name: "MATIC",
-              symbol: "MATIC",
+              name: "POL",
+              symbol: "POL",
               decimals: 18,
             },
             blockExplorerUrls: ["https://amoy.polygonscan.com/"],
