@@ -399,63 +399,93 @@ export async function mintBVIX(
 ): Promise<ethers.ContractTransactionResponse> {
   console.log("🚀 Starting BVIX mint process for", usdcAmount, "USDC at", targetCR + "% CR");
   
-  const signer = await getSigner();
-  const address = await signer.getAddress();
-  const mintRedeemContract = await getMintRedeemContract(signer);
-  const usdcContract = await getUSDCContract(signer);
+  try {
+    const signer = await getSigner();
+    const address = await signer.getAddress();
+    const mintRedeemContract = await getMintRedeemContract(signer);
+    const usdcContract = await getUSDCContract(signer);
 
-  const usdcAmountWei = ethers.parseUnits(usdcAmount, 6); // USDC has 6 decimals
+    const usdcAmountWei = ethers.parseUnits(usdcAmount, 6); // USDC has 6 decimals
 
-  console.log("🔍 Checking balances and allowances...");
-  const chainId = (await getCurrentChainId()).toString();
-  const addresses = ADDRESSES[chainId];
-  console.log("User address:", address);
-  console.log("USDC contract:", addresses?.mockUsdc);
-  console.log("MintRedeem contract:", addresses?.mintRedeem);
+    console.log("🔍 Checking balances and allowances...");
+    const chainId = (await getCurrentChainId()).toString();
+    const addresses = ADDRESSES[chainId];
+    console.log("User address:", address);
+    console.log("USDC contract:", addresses?.mockUsdc);
+    console.log("MintRedeem contract:", addresses?.mintRedeem);
 
-  // Check USDC balance first
-  const usdcBalance = await usdcContract.balanceOf(address);
-  console.log("USDC balance:", ethers.formatUnits(usdcBalance, 6));
-  console.log("Required amount:", usdcAmount);
-  
-  if (usdcBalance < usdcAmountWei) {
-    throw new Error(
-      `Insufficient USDC balance. You have ${ethers.formatUnits(usdcBalance, 6)} USDC but need ${usdcAmount} USDC.`,
-    );
+    // Check USDC balance first with retry logic for RPC issues
+    let usdcBalance;
+    try {
+      usdcBalance = await usdcContract.balanceOf(address);
+      console.log("USDC balance:", ethers.formatUnits(usdcBalance, 6));
+    } catch (balanceError: any) {
+      if (balanceError.message?.includes('missing trie node') || balanceError.code === 'CALL_EXCEPTION') {
+        throw new Error("Polygon Amoy network is experiencing temporary issues. Please try again in a few minutes. The error is: " + balanceError.shortMessage);
+      }
+      throw balanceError;
+    }
+    
+    console.log("Required amount:", usdcAmount);
+    
+    if (usdcBalance < usdcAmountWei) {
+      throw new Error(
+        `Insufficient USDC balance. You have ${ethers.formatUnits(usdcBalance, 6)} USDC but need ${usdcAmount} USDC.`,
+      );
+    }
+
+    // Check current allowance with retry logic
+    let currentAllowance;
+    try {
+      currentAllowance = await usdcContract.allowance(address, addresses.mintRedeem);
+      console.log("Current allowance:", ethers.formatUnits(currentAllowance, 6));
+    } catch (allowanceError: any) {
+      if (allowanceError.message?.includes('missing trie node') || allowanceError.code === 'CALL_EXCEPTION') {
+        throw new Error("Network issue detected while checking allowance. Please try again in a few minutes.");
+      }
+      throw allowanceError;
+    }
+
+    // Only approve if needed
+    if (currentAllowance < usdcAmountWei) {
+      console.log("🔄 Approving USDC spending...");
+      try {
+        const approveTx = await usdcContract.approve(addresses.mintRedeem, usdcAmountWei);
+        await approveTx.wait();
+        console.log("✅ USDC approval confirmed");
+      } catch (approveError: any) {
+        if (approveError.message?.includes('missing trie node') || approveError.code === 'CALL_EXCEPTION') {
+          throw new Error("Network issue during approval. Please try again in a few minutes.");
+        }
+        throw approveError;
+      }
+    } else {
+      console.log("✅ Sufficient allowance already exists");
+    }
+
+    // Use V7 collateral-aware mint function with error handling
+    console.log(`🎯 Using V7 mintWithCollateralRatio: ${usdcAmount} USDC at ${targetCR}% CR`);
+    console.log(`💰 Expected token value: $${(parseFloat(usdcAmount) / (targetCR / 100)).toFixed(2)}`);
+    
+    try {
+      const mintTx = await mintRedeemContract.mintWithCollateralRatio(usdcAmountWei, targetCR);
+      console.log("📄 Transaction hash:", mintTx.hash);
+      
+      // Wait for transaction confirmation
+      await mintTx.wait();
+      console.log("✅ V7 Mint transaction confirmed with proper CR enforcement!");
+      
+      return mintTx;
+    } catch (mintError: any) {
+      if (mintError.message?.includes('missing trie node') || mintError.code === 'CALL_EXCEPTION') {
+        throw new Error("Polygon Amoy network is experiencing issues. Please wait a few minutes and try again. This is a temporary network problem, not an issue with your transaction.");
+      }
+      throw mintError;
+    }
+  } catch (error: any) {
+    console.error("Mint error details:", error);
+    throw new Error(error.message || "Unknown minting error occurred");
   }
-
-  // Check current allowance
-  const currentAllowance = await usdcContract.allowance(
-    address,
-    addresses.mintRedeem,
-  );
-  console.log("Current allowance:", ethers.formatUnits(currentAllowance, 6));
-
-  // Only approve if needed
-  if (currentAllowance < usdcAmountWei) {
-    console.log("🔄 Approving USDC spending...");
-    const approveTx = await usdcContract.approve(
-      addresses.mintRedeem,
-      usdcAmountWei,
-    );
-    await approveTx.wait();
-    console.log("✅ USDC approval confirmed");
-  } else {
-    console.log("✅ Sufficient allowance already exists");
-  }
-
-  // Use V6 collateral-aware mint function
-  console.log(`🎯 Using V6 mintWithCollateralRatio: ${usdcAmount} USDC at ${targetCR}% CR`);
-  console.log(`💰 Expected token value: $${(parseFloat(usdcAmount) / (targetCR / 100)).toFixed(2)}`);
-  
-  const mintTx = await mintRedeemContract.mintWithCollateralRatio(usdcAmountWei, targetCR);
-  console.log("📄 Transaction hash:", mintTx.hash);
-  
-  // Wait for transaction confirmation
-  await mintTx.wait();
-  console.log("✅ V6 Mint transaction confirmed with proper CR enforcement!");
-  
-  return mintTx;
 }
 
 export async function redeemBVIX(
