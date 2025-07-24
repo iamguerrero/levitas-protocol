@@ -19,7 +19,7 @@ export const NETWORK_CONFIG = {
       symbol: 'MATIC',
       decimals: 18,
     },
-    rpcUrls: ['https://rpc-amoy.polygon.technology/'],
+    rpcUrls: ['https://polygon-amoy.drpc.org', 'https://rpc-amoy.polygon.technology/'],
     blockExplorerUrls: ['https://amoy.polygonscan.com/'],
     iconUrls: ['https://polygon.technology/favicon.ico'],
   },
@@ -40,4 +40,4 @@ export const NETWORK_CONFIG = {
 export const PRIMARY_NETWORK = 'polygonAmoy';
 export const PRIMARY_CHAIN_ID = CHAIN_IDS.polygonAmoy;
 export const PRIMARY_HEX_CHAIN_ID = HEX_CHAIN_IDS.polygonAmoy;
-export const PRIMARY_RPC_URL = NETWORK_CONFIG.polygonAmoy.rpcUrls[0];
+export const PRIMARY_RPC_URL = NETWORK_CONFIG.polygonAmoy.rpcUrls[0]; // Using more stable DRPC endpoint
