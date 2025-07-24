@@ -13,6 +13,10 @@ module.exports = {
     }
   },
   networks: {
+    polygonAmoy: {
+      url: "https://rpc-amoy.polygon.technology/",
+      accounts: [process.env.PRIVATE_KEY]
+    },
     baseSepolia: {
       url: "https://sepolia.base.org",
       accounts: [process.env.PRIVATE_KEY]

@@ -29,7 +29,7 @@ import {
   redeemBVIX,
   mintEVIX,
   redeemEVIX,
-  switchToBaseSepolia,
+  switchToPolygonAmoy,
   getContractDebugInfo,
   getTestUSDC,
   formatPrice,
@@ -111,12 +111,12 @@ export default function TradingInterface() {
   function explorerLink(hash: string) {
     return (
       <a
-        href={`https://sepolia.basescan.org/tx/${hash}`}
+        href={`https://amoy.polygonscan.com/tx/${hash}`}
         target="_blank"
         rel="noopener noreferrer"
         className="text-blue-600 underline"
       >
-        View on Basescan
+        View on Polygonscan
       </a>
     );
   }
@@ -297,8 +297,8 @@ export default function TradingInterface() {
     setMintingBVIX(true);
 
     try {
-      // Ensure user is on Base Sepolia
-      await switchToBaseSepolia();
+      // Ensure user is on Polygon Amoy
+      await switchToPolygonAmoy();
 
       const tx = await mintBVIX(amount, targetCR);
 
@@ -369,8 +369,8 @@ export default function TradingInterface() {
     setRedeemingBVIX(true);
 
     try {
-      // Ensure user is on Base Sepolia
-      await switchToBaseSepolia();
+      // Ensure user is on Polygon Amoy
+      await switchToPolygonAmoy();
 
       const tx = await redeemBVIX(redeemAmount);
 
@@ -431,7 +431,7 @@ export default function TradingInterface() {
     setIsTransacting(true);
     setMintingEVIX(true);
     try {
-      await switchToBaseSepolia();
+      await switchToPolygonAmoy();
       const tx = await mintEVIX(amount, targetCR);
       
       toast({
@@ -483,7 +483,7 @@ export default function TradingInterface() {
     setIsTransacting(true);
     setRedeemingEVIX(true);
     try {
-      await switchToBaseSepolia();
+      await switchToPolygonAmoy();
       const tx = await redeemEVIX(evixRedeemAmount);
       
       toast({
@@ -591,7 +591,7 @@ export default function TradingInterface() {
                   Contracts Not Deployed
                 </h3>
                 <p className="text-yellow-700">
-                  Smart contracts are not yet deployed to Base Sepolia. Please
+                  Smart contracts are not yet deployed to Polygon Amoy. Please
                   update contract addresses in web3.ts after deployment.
                 </p>
                 <div className="mt-4 space-y-2 text-sm">
