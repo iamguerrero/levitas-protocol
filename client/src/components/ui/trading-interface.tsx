@@ -229,6 +229,19 @@ export default function TradingInterface() {
     return () => clearInterval(interval);
   }, [address, contractsDeployed]);
 
+  // Real-time price effects - moved here to ensure they're always called before any early returns
+  useEffect(() => {
+    if (realtimeBvixPrice && parseFloat(realtimeBvixPrice) > 0) {
+      setContractData(prev => ({ ...prev, bvixPrice: realtimeBvixPrice }));
+    }
+  }, [realtimeBvixPrice]);
+
+  useEffect(() => {
+    if (realtimeEvixPrice && parseFloat(realtimeEvixPrice) > 0) {
+      setContractData(prev => ({ ...prev, evixPrice: realtimeEvixPrice }));
+    }
+  }, [realtimeEvixPrice]);
+
   const loadContractData = async () => {
     if (!address) return;
 
@@ -656,18 +669,7 @@ export default function TradingInterface() {
     ratePerToken = (price * 0.997).toFixed(4);
   }
 
-  // Real-time price effects use the oracle data from the top of the component
-  useEffect(() => {
-    if (realtimeBvixPrice && parseFloat(realtimeBvixPrice) > 0) {
-      setContractData(prev => ({ ...prev, bvixPrice: realtimeBvixPrice }));
-    }
-  }, [realtimeBvixPrice]);
 
-  useEffect(() => {
-    if (realtimeEvixPrice && parseFloat(realtimeEvixPrice) > 0) {
-      setContractData(prev => ({ ...prev, evixPrice: realtimeEvixPrice }));
-    }
-  }, [realtimeEvixPrice]);
 
   return (
     <div className="space-y-8">
