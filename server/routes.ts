@@ -13,18 +13,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Vault statistics endpoint
   app.get("/api/v1/vault-stats", async (req, res) => {
     try {
-      // Contract addresses - V5 Final with fresh BVIX and proper ownership
-      const MOCK_USDC_ADDRESS = '0x9CC37B36FDd8CF5c0297BE15b75663Bf2a193297'; // MockUSDC with public faucet
-      const BVIX_ADDRESS = '0xdcCCCC3A977cC0166788265eD4B683D41f3AED09'; // Fresh BVIX with faucet USDC
-      const MINT_REDEEM_ADDRESS = '0x4d0ddFBCBa76f2e72B0Fef2fdDcaE9ddd6922397'; // V5 with faucet USDC
-      // Update oracle addresses to latest deployed
-      // BVIX_ORACLE_ADDRESS remains '0x85485dD6cFaF5220150c413309C61a8EA24d24FE' as it's the BVIX oracle controlled by simulator
-      // Correct EVIX_ORACLE_ADDRESS to '0xCd7441A771a7F84E58d98E598B7Ff23A3688094F'
-      const BVIX_ORACLE_ADDRESS = '0x85485dD6cFaF5220150c413309C61a8EA24d24FE';
-      const EVIX_ORACLE_ADDRESS = '0xCd7441A771a7F84E58d98E598B7Ff23A3688094F';
-      // EVIX contracts - V5 Final addresses
-      const EVIX_MINT_REDEEM_ADDRESS = '0xb187c5Ff48D69BB0b477dAf30Eec779E0D07771D'; // EVIX V5 with faucet USDC
-      const BASE_SEPOLIA_RPC_URL = 'https://sepolia.base.org';
+      // Contract addresses - Polygon Amoy V7 Final deployment
+      const MOCK_USDC_ADDRESS = '0x4Cd0c0ed02363F27fC2A8a3D7dC9aEA88ddCCf5E'; // MockUSDC on Polygon Amoy
+      const BVIX_ADDRESS = '0xb507A6743787E1Ee10365385F46DD5BFEa10Dcd5'; // BVIX Token on Polygon Amoy
+      const MINT_REDEEM_ADDRESS = '0xec319c7F63031952d3a296833575bF28eb6cDC5f'; // BVIX MintRedeemV7 on Polygon Amoy
+      const BVIX_ORACLE_ADDRESS = '0xcA7aC262190a3d126971281c496a521F5dD0f8D0'; // BVIX Oracle on Polygon Amoy
+      const EVIX_ORACLE_ADDRESS = '0x9d12b251f8F6c432b1Ecd6ef722Bf45A8aFdE6A8'; // EVIX Oracle on Polygon Amoy
+      // EVIX contracts - V7 Final addresses on Polygon Amoy
+      const EVIX_MINT_REDEEM_ADDRESS = '0xFe9c81A98F33F15B279DE45ba022302113245D9F'; // EVIX MintRedeemV7 on Polygon Amoy
+      const POLYGON_AMOY_RPC_URL = 'https://rpc-amoy.polygon.technology';
 
       // Minimal ERC20 ABI for balance and supply queries
       const ERC20_ABI = [
@@ -38,7 +35,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ];
 
       // Initialize provider
-      const provider = new ethers.JsonRpcProvider(BASE_SEPOLIA_RPC_URL);
+      const provider = new ethers.JsonRpcProvider(POLYGON_AMOY_RPC_URL);
       
       // Initialize contracts
       const usdcContract = new ethers.Contract(MOCK_USDC_ADDRESS, ERC20_ABI, provider);
@@ -59,7 +56,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const evixUsdcValue = ethers.formatUnits(evixVaultUsdcBalance, 6);
       const totalUsdcValue = (parseFloat(bvixUsdcValue) + parseFloat(evixUsdcValue)).toString();
       const bvixSupply = ethers.formatEther(bvixTotalSupply); // BVIX has 18 decimals
-      const price = ethers.formatUnits(bvixPrice, 8); // Oracle returns 8-decimal format on Base Sepolia
+      const price = ethers.formatUnits(bvixPrice, 6); // Oracle returns 6-decimal format on Polygon Amoy
       
       // Calculate protocol-wide collateral ratio (total USDC vs total token value)
       // This should be the standard practice for protocol health
@@ -68,9 +65,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const priceFloat = parseFloat(price);
       
       // Add EVIX data for complete protocol-wide collateral ratio
-      const evixContract = new ethers.Contract('0x089C132BC246bF2060F40B0608Cb14b2A0cC9127', ERC20_ABI, provider);
+      const evixContract = new ethers.Contract('0x3c56D64B9bB348CC823742A861dB73405090408F', ERC20_ABI, provider);
       
-      console.log('Debug: Using EVIX contract address:', '0x089C132BC246bF2060F40B0608Cb14b2A0cC9127');
+      console.log('Debug: Using EVIX contract address:', '0x3c56D64B9bB348CC823742A861dB73405090408F');
       console.log('Debug: Using EVIX vault address:', EVIX_MINT_REDEEM_ADDRESS);
       
       const [evixTotalSupply, evixPrice] = await Promise.all([
@@ -82,7 +79,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // When fetching evixPrice, handle int256
       // Change: const evixPriceFormatted = ethers.formatUnits(evixPrice, 8);
       // To handle potential negative, but since prices are positive:
-      const evixPriceFormatted = ethers.formatUnits(evixPrice.toString(), 8); // Convert BigInt to string for formatUnits
+      const evixPriceFormatted = ethers.formatUnits(evixPrice.toString(), 6); // Convert BigInt to string for formatUnits - Polygon Amoy uses 6 decimals
       
       const bvixValueInUsd = bvixFloat * priceFloat;
       const evixValueInUsd = parseFloat(evixSupply) * parseFloat(evixPriceFormatted);
