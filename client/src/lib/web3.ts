@@ -269,11 +269,26 @@ export async function getUSDCBalance(address: string): Promise<string> {
     
     const chainId = (await getCurrentChainId()).toString();
     const addresses = ADDRESSES[chainId];
+    
+    // Check contract details
+    let contractInfo = {};
+    try {
+      const name = await usdcContract.name();
+      const symbol = await usdcContract.symbol();
+      const decimals = await usdcContract.decimals();
+      const totalSupply = await usdcContract.totalSupply();
+      contractInfo = { name, symbol, decimals, totalSupply: totalSupply.toString() };
+    } catch (contractError) {
+      console.error("Error getting contract info:", contractError);
+      contractInfo = { error: "Could not read contract details" };
+    }
+    
     console.log("🔍 USDC Balance Debug:", { 
       address, 
       contract: addresses?.mockUsdc || "unknown",
       balance: balance.toString(), 
       formatted: formattedBalance,
+      contractInfo,
       timestamp: new Date().toISOString()
     });
     
@@ -591,16 +606,39 @@ export async function getTestUSDC(
   try {
     const signer = await getSigner();
     const usdcContract = await getUSDCContract(signer);
-
-    // Check if the contract has a mint function (for test tokens)
-    const amountWei = ethers.parseUnits(amount, 6);
     const address = await signer.getAddress();
+    const chainId = (await getCurrentChainId()).toString();
+    const addresses = ADDRESSES[chainId];
 
-    // Try to call mint function if it exists (common in test tokens)
-    const mintTx = await usdcContract.mint(address, amountWei);
-    return mintTx;
+    console.log("🚰 Testing USDC faucet functions...");
+    console.log("🔍 USDC Contract:", addresses?.mockUsdc);
+    console.log("🔍 User Address:", address);
+
+    // Check if the contract has different faucet functions
+    const amountWei = ethers.parseUnits(amount, 6);
+    
+    try {
+      // Try faucet() function first (most common for test tokens)
+      console.log("🔄 Trying faucet() function...");
+      const faucetTx = await usdcContract.faucet();
+      console.log("✅ Faucet function successful!");
+      return faucetTx;
+    } catch (faucetError) {
+      console.log("❌ Faucet function failed:", faucetError.message);
+      
+      try {
+        // Try mint function as fallback
+        console.log("🔄 Trying mint() function...");
+        const mintTx = await usdcContract.mint(address, amountWei);
+        console.log("✅ Mint function successful!");
+        return mintTx;
+      } catch (mintError) {
+        console.log("❌ Mint function failed:", mintError.message);
+        throw new Error("Neither faucet() nor mint() functions are available");
+      }
+    }
   } catch (error) {
-    console.error("No mint function available on USDC contract:", error);
+    console.error("❌ No faucet/mint function available on USDC contract:", error);
     return null;
   }
 }
@@ -657,22 +695,62 @@ export async function getContractDebugInfo(): Promise<any> {
 export const getCollateralRatio = async (): Promise<number> => {
   try {
     const provider = getProvider();
+    const chainId = (await getCurrentChainId()).toString();
+    const addresses = ADDRESSES[chainId];
+    
+    console.log("🔍 Getting collateral ratio with contracts:", {
+      usdc: addresses?.mockUsdc,
+      bvix: addresses?.bvix,
+      mintRedeem: addresses?.mintRedeem
+    });
+    
     // 1️⃣ contracts - using contract factory functions instead of direct ABI
     const usdc = await getUSDCContract(provider);
     const bvix = await getBVIXContract(provider);
-
-    // 2️⃣ read chain state in parallel
     const mintRedeemContract = await getMintRedeemContract(provider);
-    const [rawVaultUSDC, rawSupply, price] = await Promise.all([
-      usdc.balanceOf(await mintRedeemContract.getAddress()), // 6-decimals
-      bvix.totalSupply(),                  // 18-decimals
-      getOraclePrice()                     // plain string like "42.15"
-    ]);
+    
+    const mintRedeemAddress = await mintRedeemContract.getAddress();
+    console.log("🔍 MintRedeem contract address:", mintRedeemAddress);
+
+    // 2️⃣ read chain state in parallel with error handling
+    let rawVaultUSDC, rawSupply, price;
+    
+    try {
+      rawVaultUSDC = await usdc.balanceOf(mintRedeemAddress); // 6-decimals
+      console.log("🔍 Vault USDC balance:", rawVaultUSDC.toString());
+    } catch (error) {
+      console.error("❌ Error getting vault USDC balance:", error);
+      throw error;
+    }
+    
+    try {
+      rawSupply = await bvix.totalSupply(); // 18-decimals
+      console.log("🔍 BVIX total supply:", rawSupply.toString());
+    } catch (error) {
+      console.error("❌ Error getting BVIX supply:", error);
+      throw error;
+    }
+    
+    try {
+      price = await getOraclePrice(); // plain string like "42.15"
+      console.log("🔍 Oracle price:", price);
+    } catch (error) {
+      console.error("❌ Error getting oracle price:", error);
+      throw error;
+    }
 
     // 3️⃣ convert to JS numbers (fine for frontend display)
     const vaultUSDC = Number(ethers.formatUnits(rawVaultUSDC, 6));   // → 1 234.56
     const supply = Number(ethers.formatUnits(rawSupply, 18));        // →  28.73 BVIX
     const liability = supply * Number(price);                        // in USDC
+
+    console.log("🔍 Collateral ratio calculation:", {
+      vaultUSDC,
+      supply,
+      price,
+      liability,
+      ratio: liability === 0 ? "Infinity" : (vaultUSDC / liability)
+    });
 
     if (liability === 0) return Infinity; // nothing minted yet
 
