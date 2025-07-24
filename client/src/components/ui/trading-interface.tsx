@@ -616,7 +616,7 @@ export default function TradingInterface() {
     } finally {
       setIsTransacting(false);
     }
-  };cting(false);
+  setIsTransacting(false);
     }
   };
 
