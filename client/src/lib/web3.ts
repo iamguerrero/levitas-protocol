@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 import BVIX_ABI from "../contracts/BVIXToken.abi.json";
 import EVIX_ABI from "../contracts/EVIXToken.abi.json";
 import Oracle_ABI from "../contracts/MockOracle.abi.json";
-import MintRedeem_ABI from "../contracts/MintRedeemV6.abi.json";
+import MintRedeem_ABI from "../contracts/MintRedeemV7.abi.json";
 import USDC_ABI from "../contracts/MockUSDC.abi.json";
 import EVIXOracle_ABI from "../contracts/EVIXOracle.abi.json";
 import EVIXMintRedeem_ABI from "../contracts/EVIXMintRedeemV6.abi.json";
