@@ -71,7 +71,7 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = ({
         <div className="flex items-center space-x-2">
           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
           <span className="text-xs text-green-600 dark:text-green-400">
-            Updates every 60s
+            Updates every 10s
           </span>
         </div>
       )}

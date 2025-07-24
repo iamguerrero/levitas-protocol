@@ -663,7 +663,7 @@ export default function TradingInterface() {
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   {oracleConnected 
-                    ? `Prices update every 60 seconds • Last update: ${oracleLastUpdate || 'Starting...'}`
+                    ? `Prices update every 10 seconds • Last update: ${oracleLastUpdate || 'Starting...'}`
                     : 'Price simulation offline'
                   }
                 </p>
