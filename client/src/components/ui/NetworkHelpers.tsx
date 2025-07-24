@@ -75,7 +75,7 @@ export function NetworkHelpers() {
       
       // MockUSDC contract with faucet function - Polygon Amoy
       const mockUSDCContract = new ethers.Contract(
-        "0x76c8c8ef73bA010579E47bD1372A55FBA7D55383", // MockUSDC on Polygon Amoy
+        "0x4Cd0c0ed02363F27fC2A8a3D7dC9aEA88ddCCf5E", // MockUSDC on Polygon Amoy
         ["function faucet() external"],
         signer
       );
