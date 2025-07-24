@@ -2,13 +2,14 @@
 
 ## Overview
 
-This project is a decentralized finance (DeFi) application called Levitas Finance that provides tokenized volatility products. It's a React frontend DApp with Ethers.js Web3 integration, featuring volatility index tokens (BVIX, EVIX, VIXC) that allow users to hedge their cryptocurrency holdings on Base Sepolia testnet.
+This project is a decentralized finance (DeFi) application called Levitas Finance that provides tokenized volatility products. It's a React frontend DApp with Ethers.js Web3 integration, featuring volatility index tokens (BVIX, EVIX, VIXC) that allow users to hedge their cryptocurrency holdings on Polygon Amoy testnet.
 
 ## Recent Changes (January 2025)
 
 ✓ **PROJECT CLEANUP COMPLETED** - Removed 95+ testing/deployment .cjs files, old deployment JSONs, log files, and summary documents that accumulated during development
 ✓ **REAL-TIME PRICE SYSTEM FULLY INTEGRATED** - Sprint 2.1 complete with prices updating every 10 seconds, all vault calculations use live prices
 ✓ **LITEPAPER PDF CONNECTED** - Navigation link now properly connected to Levitas Litepaper PDF file in client/public directory
+✓ **POLYGON AMOY MIGRATION STARTED** - Systematic migration from Base Sepolia to Polygon PoS Amoy testnet with updated configs, network helpers, and deployment scripts
 
 ✓ **V5 FINAL CONTRACTS WITH PROPER OWNERSHIP** - Deployed fresh tokens and V5 contracts: Fresh BVIX (0xa60289981b67139fb7a9F3d31dD2D2BaA414A263), Fresh EVIX (0x4dEaB86baa7CBDb7859665a7FE9766f22fB799C1), BVIX MintRedeem (0xa0133C6380bf9618e97Ab9a855aF2035e9498829), EVIX MintRedeem (0x667e594bD7B994c492cd973C805CEdd971a5F163)
 ✓ **TRUE COLLATERAL RATIO ENFORCEMENT** - V5 contracts implement mintWithCollateralRatio(amount, targetCR) where users spend full USDC but receive proportional tokens based on selected CR

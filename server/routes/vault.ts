@@ -3,11 +3,11 @@ import { ethers } from 'ethers';
 
 const router = Router();
 
-// Contract addresses and ABIs - V5 Final with fresh BVIX
-const MOCK_USDC_ADDRESS = '0x79640e0f510a7c6d59737442649d9600C84b035f';
-const BVIX_ADDRESS = '0xa60289981b67139fb7a9F3d31dD2D2BaA414A263'; // Fresh BVIX
-const MINT_REDEEM_ADDRESS = '0xa0133C6380bf9618e97Ab9a855aF2035e9498829'; // V5 Final
-const BASE_SEPOLIA_RPC_URL = 'https://sepolia.base.org';
+// Contract addresses and ABIs - Updated for Polygon Amoy
+const MOCK_USDC_ADDRESS = '0x0000000000000000000000000000000000000000'; // TODO: Deploy to Polygon Amoy
+const BVIX_ADDRESS = '0x0000000000000000000000000000000000000000'; // TODO: Deploy to Polygon Amoy
+const MINT_REDEEM_ADDRESS = '0x0000000000000000000000000000000000000000'; // TODO: Deploy to Polygon Amoy
+const POLYGON_AMOY_RPC_URL = 'https://rpc-amoy.polygon.technology/';
 
 // Minimal ERC20 ABI for balance and supply queries
 const ERC20_ABI = [
@@ -20,12 +20,12 @@ const ORACLE_ABI = [
   'function getPrice() external view returns (uint256)',
 ];
 
-const ORACLE_ADDRESS = '0x85485dD6cFaF5220150c413309C61a8EA24d24FE';
+const ORACLE_ADDRESS = '0x0000000000000000000000000000000000000000'; // TODO: Deploy to Polygon Amoy
 
 router.get('/api/v1/vault-stats', async (req, res) => {
   try {
     // Initialize provider
-    const provider = new ethers.JsonRpcProvider(BASE_SEPOLIA_RPC_URL);
+    const provider = new ethers.JsonRpcProvider(POLYGON_AMOY_RPC_URL);
     
     // Initialize contracts
     const usdcContract = new ethers.Contract(MOCK_USDC_ADDRESS, ERC20_ABI, provider);

@@ -21,17 +21,19 @@ declare global {
   }
 }
 
-export const CHAIN_IDS = {
-  baseSepolia: 84532,
-  sepolia: 11155111
-};
-
-export const HEX_CHAIN_IDS = {
-  baseSepolia: '0x14a34',
-  sepolia: '0xaa36a7'
-};
+import { CHAIN_IDS, HEX_CHAIN_IDS, PRIMARY_CHAIN_ID, PRIMARY_HEX_CHAIN_ID, PRIMARY_RPC_URL } from './chains';
 
 export const ADDRESSES: { [key: string]: { bvix: string; evix: string; oracle: string; evixOracle: string; mockUsdc: string; mintRedeem: string; evixMintRedeem: string; } } = {
+  '80002': {
+    // Polygon Amoy testnet addresses - will be deployed
+    bvix: "0x0000000000000000000000000000000000000000", // TODO: Deploy to Polygon Amoy
+    evix: "0x0000000000000000000000000000000000000000", // TODO: Deploy to Polygon Amoy
+    oracle: "0x0000000000000000000000000000000000000000", // TODO: Deploy to Polygon Amoy
+    evixOracle: "0x0000000000000000000000000000000000000000", // TODO: Deploy to Polygon Amoy
+    mockUsdc: "0x0000000000000000000000000000000000000000", // TODO: Deploy to Polygon Amoy
+    mintRedeem: "0x0000000000000000000000000000000000000000", // TODO: Deploy to Polygon Amoy
+    evixMintRedeem: "0x0000000000000000000000000000000000000000" // TODO: Deploy to Polygon Amoy
+  },
   '84532': {
     bvix: "0x2E3bef50887aD2A30069c79D19Bb91085351C92a",
     evix: "0x7066700CAf442501B308fAe34d5919091e1b2380",
@@ -52,8 +54,8 @@ export const ADDRESSES: { [key: string]: { bvix: string; evix: string; oracle: s
   }
 };
 
-export const BASE_SEPOLIA_CHAIN_ID = "0x14a34";
-export const BASE_SEPOLIA_RPC_URL = "https://sepolia.base.org";
+export const POLYGON_AMOY_CHAIN_ID = PRIMARY_HEX_CHAIN_ID;
+export const POLYGON_AMOY_RPC_URL = PRIMARY_RPC_URL;
 
 // Contract addresses - V6 with position tracking and surplus refunding
 export const BVIX_ADDRESS = "0x2E3bef50887aD2A30069c79D19Bb91085351C92a"; // Fresh BVIX token
@@ -169,7 +171,7 @@ export async function getNetworkName(): Promise<string> {
   }
 }
 
-export async function switchToBaseSepolia() {
+export async function switchToPolygonAmoy() {
   if (typeof window.ethereum === "undefined") {
     throw new Error("MetaMask not installed");
   }
@@ -177,7 +179,7 @@ export async function switchToBaseSepolia() {
   try {
     await window.ethereum.request({
       method: "wallet_switchEthereumChain",
-      params: [{ chainId: BASE_SEPOLIA_CHAIN_ID }],
+      params: [{ chainId: POLYGON_AMOY_CHAIN_ID }],
     });
   } catch (switchError: any) {
     // If the chain hasn't been added to MetaMask, add it
@@ -186,15 +188,15 @@ export async function switchToBaseSepolia() {
         method: "wallet_addEthereumChain",
         params: [
           {
-            chainId: BASE_SEPOLIA_CHAIN_ID,
-            chainName: "Base Sepolia",
-            rpcUrls: [BASE_SEPOLIA_RPC_URL],
+            chainId: POLYGON_AMOY_CHAIN_ID,
+            chainName: "Polygon Amoy Testnet",
+            rpcUrls: [POLYGON_AMOY_RPC_URL],
             nativeCurrency: {
-              name: "ETH",
-              symbol: "ETH",
+              name: "MATIC",
+              symbol: "MATIC",
               decimals: 18,
             },
-            blockExplorerUrls: ["https://sepolia.basescan.org/"],
+            blockExplorerUrls: ["https://amoy.polygonscan.com/"],
           },
         ],
       });
