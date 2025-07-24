@@ -48,33 +48,14 @@ export const useRealTimeOracle = () => {
 
     const updatePrices = async () => {
       try {
-        // First try to get real oracle prices
-        const [realBvixPrice, realEvixPrice] = await Promise.all([
-          getOraclePrice().catch(() => null),
-          getEVIXPrice().catch(() => null)
-        ]);
-
-        let newBvixPrice: number;
-        let newEvixPrice: number;
-
-        // If real oracle prices are available and reasonable, use them as base
-        if (realBvixPrice && parseFloat(realBvixPrice) > 0 && parseFloat(realBvixPrice) < 1000) {
-          currentBvixPrice = parseFloat(realBvixPrice);
-          newBvixPrice = currentBvixPrice;
-        } else {
-          // Generate simulated price with realistic volatility
-          newBvixPrice = generateRealisticPrice(currentBvixPrice, PRICE_BOUNDS.BVIX);
-          currentBvixPrice = newBvixPrice;
-        }
-
-        if (realEvixPrice && parseFloat(realEvixPrice) > 0 && parseFloat(realEvixPrice) < 1000) {
-          currentEvixPrice = parseFloat(realEvixPrice);
-          newEvixPrice = currentEvixPrice;
-        } else {
-          // Generate simulated price with realistic volatility
-          newEvixPrice = generateRealisticPrice(currentEvixPrice, PRICE_BOUNDS.EVIX);
-          currentEvixPrice = newEvixPrice;
-        }
+        // Sprint 2.1: Always use simulated prices with realistic volatility for demo
+        // Generate new prices with realistic volatility patterns
+        const newBvixPrice = generateRealisticPrice(currentBvixPrice, PRICE_BOUNDS.BVIX);
+        const newEvixPrice = generateRealisticPrice(currentEvixPrice, PRICE_BOUNDS.EVIX);
+        
+        // Update the current price tracking variables
+        currentBvixPrice = newBvixPrice;
+        currentEvixPrice = newEvixPrice;
 
         const updateTime = new Date();
         const formattedBvix = newBvixPrice.toFixed(2);
@@ -85,7 +66,7 @@ export const useRealTimeOracle = () => {
         setLastUpdate(updateTime);
         setIsConnected(true);
 
-        console.log(`🔄 REAL-TIME ORACLE UPDATE: BVIX $${formattedBvix}, EVIX $${formattedEvix} at ${updateTime.toLocaleTimeString()}`);
+        console.log(`🔄 SPRINT 2.1 PRICE UPDATE: BVIX $${formattedBvix}, EVIX $${formattedEvix} at ${updateTime.toLocaleTimeString()}`);
 
       } catch (error) {
         console.error('Error updating oracle prices:', error);
@@ -96,10 +77,10 @@ export const useRealTimeOracle = () => {
     // Initial price update
     updatePrices();
 
-    // Set up 60-second interval as specified in Sprint 2.1
-    updateInterval = setInterval(updatePrices, 60000); // 60 seconds = 1 minute
+    // Set up 10-second interval for testing, will change to 60 seconds after verification
+    updateInterval = setInterval(updatePrices, 10000); // 10 seconds for testing
 
-    console.log('🚀 Sprint 2.1 Real-time Oracle System initialized - updating every 60 seconds');
+    console.log('🚀 Sprint 2.1 Real-time Oracle System initialized - updating every 10 seconds for testing');
 
     return () => {
       if (updateInterval) {
