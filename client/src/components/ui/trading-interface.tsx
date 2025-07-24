@@ -12,6 +12,7 @@ import { NetworkHelpers } from "@/components/ui/NetworkHelpers";
 import { CollateralAwareMinting } from "@/components/ui/CollateralAwareMinting";
 import { useWallet } from "@/hooks/use-wallet";
 import { useToast } from "@/hooks/use-toast";
+import { useRealTimeOracle } from '@/hooks/useRealTimeOracle';
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useVault } from "@/hooks/useVault";
@@ -52,13 +53,23 @@ export default function TradingInterface() {
   const [mintingEVIX, setMintingEVIX] = useState(false);
   const [redeemingEVIX, setRedeemingEVIX] = useState(false);
   
+  // Real-time oracle data
+  const { bvixPrice: realtimeBvixPrice, evixPrice: realtimeEvixPrice, isConnected: oracleConnected } = useRealTimeOracle();
+  
   // Import vault refresh functions
   const { refetch: refetchVault } = useVault();
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(true);
   const [debugInfo, setDebugInfo] = useState<any>(null);
   const [collateralRatio, setCollateralRatio] = useState<number | null>(null);
-  const [vaultStats, setVaultStats] = useState<any>(null);
+  const [vaultStats, setVaultStats] = useState<{
+    price?: string;
+    evixPrice?: string;
+    usdc?: string;
+    bvix?: string;
+    evix?: string;
+    cr?: number;
+  } | null>(null);
 
   const { data: userPosition, refetch: refetchUserPosition } = useQuery({
     queryKey: ['userPosition', address],
@@ -108,10 +119,10 @@ export default function TradingInterface() {
     );
   }
 
-  // Real contract data
+  // Change initial state to avoid hardcoded defaults
   const [contractData, setContractData] = useState({
-    bvixPrice: "42.15",
-    evixPrice: "37.98",
+    bvixPrice: "",
+    evixPrice: "",
     usdcBalance: "0.00",
     bvixBalance: "0.00",
     evixBalance: "0.00",
@@ -123,7 +134,14 @@ export default function TradingInterface() {
   const contractsDeployed = String(BVIX_ADDRESS) !== "0xBVIXAddressHere";
 
   // Load vault stats
-  const { data: vaultData } = useQuery({
+  const { data: vaultData } = useQuery<{
+    price?: string;
+    evixPrice?: string;
+    usdc?: string;
+    bvix?: string;
+    evix?: string;
+    cr?: number;
+  }>({
     queryKey: ['/api/v1/vault-stats'],
     refetchInterval: 15000,
     enabled: true,
@@ -132,21 +150,44 @@ export default function TradingInterface() {
   useEffect(() => {
     if (vaultData) {
       setVaultStats(vaultData);
+      
+      // Prioritize real-time oracle prices over API data
+      setContractData(prev => ({
+        ...prev,
+        bvixPrice: realtimeBvixPrice || vaultData.price || prev.bvixPrice,
+        evixPrice: realtimeEvixPrice || vaultData.evixPrice || prev.evixPrice,
+      }));
     }
-  }, [vaultData]);
+  }, [vaultData, realtimeBvixPrice, realtimeEvixPrice]);
 
-  // Load contract data with forced refresh
+  // Update prices when real-time oracle data changes
+  useEffect(() => {
+    if (realtimeBvixPrice || realtimeEvixPrice) {
+      console.log("🔄 Real-time price update:", { 
+        bvix: realtimeBvixPrice, 
+        evix: realtimeEvixPrice, 
+        oracleConnected 
+      });
+      setContractData(prev => ({
+        ...prev,
+        bvixPrice: realtimeBvixPrice || prev.bvixPrice,
+        evixPrice: realtimeEvixPrice || prev.evixPrice,
+      }));
+    }
+  }, [realtimeBvixPrice, realtimeEvixPrice, oracleConnected]);
+
+  // In the useEffect for address change
   useEffect(() => {
     if (address && contractsDeployed) {
-      // Clear any cached data
-      setContractData({
-        bvixPrice: "42.15",
-        evixPrice: "37.98", 
+      // Preserve existing prices, only reset balances
+      setIsLoading(true);
+      setContractData(prev => ({
+        ...prev,
         usdcBalance: "0.00",
         bvixBalance: "0.00",
         evixBalance: "0.00",
         totalValue: "0.00",
-      });
+      }));
       loadContractData();
     } else {
       setIsLoading(false);
@@ -208,10 +249,21 @@ export default function TradingInterface() {
       });
     } catch (error) {
       console.error("Error loading contract data:", error);
+      
+      // Fallback to API prices if web3 calls fail
+      if (vaultData) {
+        console.log("🔄 Falling back to API prices");
+        setContractData(prev => ({
+          ...prev,
+          bvixPrice: vaultData.price || prev.bvixPrice,
+          evixPrice: vaultData.evixPrice || prev.evixPrice,
+        }));
+      }
+      
       toast({
         title: "Contract Error",
         description:
-          "Failed to load contract data. Please check your network connection.",
+          "Failed to load contract data. Using API prices as fallback.",
         variant: "destructive",
       });
     } finally {
@@ -580,6 +632,21 @@ export default function TradingInterface() {
     ratePerToken = (price * 0.997).toFixed(4);
   }
 
+  const { bvixPrice: realTimeBvix, evixPrice: realTimeEvix } = useRealTimeOracle();
+
+  // Add effects to update contractData on real-time changes
+  useEffect(() => {
+    if (realTimeBvix && parseFloat(realTimeBvix) > 0) {
+      setContractData(prev => ({ ...prev, bvixPrice: realTimeBvix }));
+    }
+  }, [realTimeBvix]);
+
+  useEffect(() => {
+    if (realTimeEvix && parseFloat(realTimeEvix) > 0) {
+      setContractData(prev => ({ ...prev, evixPrice: realTimeEvix }));
+    }
+  }, [realTimeEvix]);
+
   return (
     <div className="space-y-8">
       {/* Price Display - Clickable Cards */}
@@ -793,7 +860,10 @@ export default function TradingInterface() {
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
                   <span className="text-gray-600">Current Price</span>
-                  <span className="font-mono font-semibold text-green-600">${formatPrice(contractData.bvixPrice)}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-semibold text-green-600">${formatPrice(contractData.bvixPrice)}</span>
+                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">LIVE</span>
+                  </div>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
                   <span className="text-gray-600">Portfolio Value</span>
@@ -838,7 +908,10 @@ export default function TradingInterface() {
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
                   <span className="text-gray-600">Current Price</span>
-                  <span className="font-mono font-semibold text-green-600">${formatPrice(contractData.evixPrice)}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-semibold text-green-600">${formatPrice(contractData.evixPrice)}</span>
+                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">LIVE</span>
+                  </div>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
                   <span className="text-gray-600">Portfolio Value</span>

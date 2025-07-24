@@ -1,3 +1,4 @@
+// Updated: 2025-07-23T19:48:41.811Z - New EVIX Oracle: 0xBd6E9809B9608eCAc3610cA65327735CC3c08104
 import { ethers } from "ethers";
 import BVIX_ABI from "../contracts/BVIXToken.abi.json";
 import EVIX_ABI from "../contracts/EVIXToken.abi.json";
@@ -35,7 +36,7 @@ export const ADDRESSES: { [key: string]: { bvix: string; evix: string; oracle: s
     bvix: "0x2E3bef50887aD2A30069c79D19Bb91085351C92a",
     evix: "0x7066700CAf442501B308fAe34d5919091e1b2380",
     oracle: "0x85485dD6cFaF5220150c413309C61a8EA24d24FE",
-    evixOracle: "0xCd7441A771a7F84E58d98E598B7Ff23A3688094F",
+    evixOracle: "0xBd6E9809B9608eCAc3610cA65327735CC3c08104",
     mockUsdc: "0x9CC37B36FDd8CF5c0297BE15b75663Bf2a193297",
     mintRedeem: "0x65Bec0Ab96ab751Fd0b1D9c907342d9A61FB1117",
     evixMintRedeem: "0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf"
@@ -44,7 +45,7 @@ export const ADDRESSES: { [key: string]: { bvix: string; evix: string; oracle: s
     bvix: "0x5913B8B9703d990fbB96e2a16A49B9376E262850",
     evix: "0x75298e29fE21a5dcEFBe96988DdA957d421dc55C",
     oracle: "0x5254533747b373D13303AE8ACC9D464f80B6bfae",
-    evixOracle: "0x685FEc86F539a1C0e9aEEf02894D5D90bfC48098",
+    evixOracle: "0xBd6E9809B9608eCAc3610cA65327735CC3c08104",
     mockUsdc: "0x83a6596c6B4C6FCC99A24B10ccd1660b1deF61b1",
     mintRedeem: "0xAec6c459354D31031Ef7f77bE974eeE39BD60382",
     evixMintRedeem: "0x5cAd54Ad8CcEacB7bF0c34E58c72D6EB6eC884B8"

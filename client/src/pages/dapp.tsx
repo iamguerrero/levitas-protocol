@@ -7,10 +7,12 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
 import { getNetworkName } from "@/lib/web3";
+import { useRealTimeOracle } from "@/hooks/useRealTimeOracle";
 
 export default function DAppPage() {
   const { isConnected, address, connectWallet, disconnect } = useWallet();
   const [networkName, setNetworkName] = useState("Base Sepolia Testnet");
+  const { isConnected: oracleConnected } = useRealTimeOracle();
 
   useEffect(() => {
     const updateNetworkName = async () => {
@@ -49,6 +51,13 @@ export default function DAppPage() {
                 </Button>
               </Link>
               <span className="text-sm text-gray-500">{networkName}</span>
+              {/* Oracle connection status */}
+              <div className="flex items-center space-x-2 text-sm">
+                <div className={`w-2 h-2 rounded-full ${oracleConnected ? 'bg-green-500' : 'bg-orange-500'}`}></div>
+                <span className="text-gray-600">
+                  {oracleConnected ? 'Real-time Prices' : 'Price Updates Pending'}
+                </span>
+              </div>
             </div>
             <WalletConnect />
           </div>

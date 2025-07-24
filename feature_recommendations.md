@@ -74,7 +74,126 @@ This roadmap evolves the project into a top DeFi protocol and top 100 crypto pro
 - ✅ Branch `feat/security-pass` ready for PR
 - ✅ **Status:** 6/6 sprints completed, Phase 1 100% COMPLETE
 
-## Phase 2: Security Audit & Compliance (2-3 months)
+## Phase 2: Oracle and Liquidation Sprint (1-2 weeks)
+**Goals:** Implement dynamic oracle simulation and comprehensive liquidation features with real-time CR updates.
+
+### Sprint 2.1: Oracle Simulation System (Days 1-5)
+**Objective:** Create a dynamic oracle system that simulates realistic BVIX/EVIX price movements for enhanced testing and demonstration.
+
+#### **Technical Implementation:**
+- **Real-time Price Engine**: Develop automated oracle system that updates BVIX and EVIX prices every minute
+  - Create `OracleSimulator.sol` contract with configurable price volatility parameters
+  - Implement random walk with mean reversion based on historical volatility data
+  - Price bounds: BVIX (15-150), EVIX (20-180) with realistic drift patterns
+  - Add circuit breakers for maximum 1% price movement per minute
+
+- **Automated CR Calculation System**:
+  - Real-time individual BVIX Position CR% calculation: `(collateral_value / debt_value) * 100`
+  - Real-time individual EVIX Position CR% calculation: `(collateral_value / debt_value) * 100`
+  - Combined Vault CR% calculation: `(total_collateral / total_debt) * 100`
+  - Implement efficient batch CR updates triggered by oracle price changes
+
+- **Frontend Integration**:
+  - WebSocket connection for real-time price feeds
+  - Live CR% indicators with color-coded status (green: >150%, yellow: 120-150%, red: <120%)
+  - Historical price charts using Chart.js with 24-hour price history
+  - Position health dashboard showing all CRs updating in real-time
+
+#### **Deliverables:**
+- `contracts/OracleSimulator.sol` with time-based price updates
+- `scripts/start-oracle-simulation.js` for automated price feeding
+- Updated `client/src/components/PriceDisplay.tsx` with real-time updates
+- `client/src/hooks/useRealTimeOracle.ts` for WebSocket integration
+- Comprehensive unit tests for oracle price validation
+
+### Sprint 2.2: Advanced Liquidation Features (Days 6-10)
+**Objective:** Implement comprehensive liquidation system with user-friendly interface and permissionless liquidation capabilities.
+
+#### **Smart Contract Features:**
+- **Dynamic Liquidation Price Calculation**: 
+  - Real-time `P_liq = collateral / (1.2 × debt)` calculation
+  - Automatic recalculation on collateral, debt, or oracle price changes
+  - Emit `LiquidationPriceUpdated(vaultId, newPrice)` events
+
+- **Permissionless Liquidation System**:
+  - Enhanced `liquidate(uint256 vaultId)` function with proper validation
+  - 5% liquidation bonus distributed to liquidator from seized collateral
+  - Gas-optimized liquidation process with batch liquidation support
+  - Liquidation protection during oracle price delays (grace period)
+
+- **Access Control Integration**:
+  - Initially restricted to `LIQUIDATOR` role for testing
+  - Transition to permissionless once system stability is proven
+  - Emergency liquidation pause functionality
+
+#### **Frontend Liquidation Interface:**
+- **Position Management**:
+  - Prominent **LIQUIDATE** button on positions with CR < 120%
+  - Liquidation price `P_liq` displayed on all vault cards
+  - Real-time liquidation opportunity scanner
+  - Estimated liquidation bonus calculation before execution
+
+- **Liquidation Dashboard**:
+  - Global liquidation opportunities list with sorting by bonus amount
+  - One-click liquidation execution with transaction confirmation
+  - Post-liquidation transaction receipt showing bonus received
+  - Liquidation history with P&L tracking for liquidators
+
+- **Vault Sharing System**:
+  - "Copy vault link" / share button for position transparency
+  - Deep-link system: `https://app.levitas.xyz/vault/{vaultId}`
+  - Public vault viewer reading directly from `vaults(vaultId)` view
+  - Social sharing integration for trading groups and auditors
+
+#### **Web3 Integration Overhaul:**
+- **Oracle Integration**:
+  - Remove all hard-coded oracle price calls
+  - Implement `PriceOracle.latestPrice()` integration across all components
+  - Add oracle staleness detection and warning system
+  - Fallback price mechanisms during oracle downtime
+
+- **Enhanced Web3 Hooks**:
+  - `useLiquidationPrice()` hook for real-time liquidation price tracking
+  - `useLiquidationOpportunities()` hook for scanning liquidatable positions
+  - `useVaultHealth()` hook combining CR, liquidation price, and health status
+  - `useOracleStatus()` hook for oracle connectivity and delay monitoring
+
+#### **Security & Performance:**
+- **MEV Protection**: 
+  - Liquidation delay mechanism to prevent sandwich attacks
+  - Fair liquidation queue during high volatility periods
+  - Slippage protection for liquidators
+
+- **Gas Optimization**:
+  - Batch liquidation support for multiple positions
+  - Efficient CR calculation caching
+  - Optimized event emission for real-time updates
+
+#### **Deliverables:**
+- Enhanced `contracts/MintRedeemV8.sol` with advanced liquidation features
+- `client/src/components/LiquidationDashboard.tsx` for liquidation management
+- `client/src/components/VaultSharing.tsx` for position sharing
+- `client/src/hooks/useLiquidationFeatures.ts` for liquidation functionality
+- `scripts/liquidation-bot.js` for automated liquidation testing
+- Comprehensive liquidation testing suite with edge cases
+
+### **Phase 2 Success Criteria:**
+- Oracle simulator running with stable 1-minute price updates
+- All CR calculations updating automatically with price changes
+- Liquidation system functional with proper bonus distribution
+- Vault sharing system with working deep-links
+- Zero hard-coded oracle calls in frontend
+- Gas-optimized liquidation transactions
+- Comprehensive test coverage for all liquidation scenarios
+
+### **Risk Mitigation:**
+- Gradual rollout with role-based liquidation before going permissionless
+- Comprehensive testing on testnet before mainnet deployment
+- Circuit breakers for extreme price movements
+- Emergency pause functionality for liquidation system
+- Extensive monitoring and alerting for oracle price feeds
+
+## Phase 3: Security Audit & Compliance (2-3 months)
 **Goals:** Fortify protocol against exploits and ensure regulatory readiness.
 
 ### Immediate Next Steps (Next 2-4 weeks):
@@ -83,7 +202,7 @@ This roadmap evolves the project into a top DeFi protocol and top 100 crypto pro
 - 🧪 **Community Testing**: Gather feedback from community testing
 - 📋 **Audit Preparation**: Prepare documentation for security audit
 
-### Phase 2 Deliverables:
+### Phase 3 Deliverables:
 - Full security audit by top firm (e.g., PeckShield, Trail of Bits)
 - Implement timelocks and multisig for admin functions
 - Add emergency pause mechanisms (✅ Basic pause implemented)
@@ -91,7 +210,7 @@ This roadmap evolves the project into a top DeFi protocol and top 100 crypto pro
 - Bug bounty program on Immunefi
 - Regulatory compliance framework
 
-## Phase 3: User Experience Enhancements (3-4 months)
+## Phase 4: User Experience Enhancements (3-4 months)
 **Goals:** Make the platform intuitive and accessible to drive adoption.
 
 - Mobile-responsive UI with dark mode
@@ -100,7 +219,7 @@ This roadmap evolves the project into a top DeFi protocol and top 100 crypto pro
 - Gasless transactions via meta-transactions
 - Multi-language support and fiat on-ramps
 
-## Phase 4: Advanced DeFi Features (4-6 months)
+## Phase 5: Advanced DeFi Features (4-6 months)
 **Goals:** Expand product suite to increase TVL and utility.
 
 - Lending/Borrowing: Allow borrowing against volatility tokens
@@ -109,7 +228,7 @@ This roadmap evolves the project into a top DeFi protocol and top 100 crypto pro
 - Cross-chain bridging to Ethereum, Arbitrum
 - Yield farming with LP tokens
 
-## Phase 5: Ecosystem and Scaling (6-9 months)
+## Phase 6: Ecosystem and Scaling (6-9 months)
 **Goals:** Integrate with broader DeFi ecosystem and scale users.
 
 - Partnerships with DEXs (Uniswap, Sushi) for liquidity
@@ -118,7 +237,7 @@ This roadmap evolves the project into a top DeFi protocol and top 100 crypto pro
 - Mobile app development
 - Community grants program
 
-## Phase 6: Governance and Sustainability (9+ months)
+## Phase 7: Governance and Sustainability (9+ months)
 **Goals:** Decentralize control and ensure long-term growth.
 
 - Launch governance token (LEV) with DAO voting
