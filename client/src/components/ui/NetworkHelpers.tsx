@@ -26,8 +26,8 @@ export function NetworkHelpers() {
             chainId: '0x13882', // 80002 in hex
             chainName: 'Polygon Amoy Testnet',
             nativeCurrency: {
-              name: 'MATIC',
-              symbol: 'MATIC',
+              name: 'POL',
+              symbol: 'POL',
               decimals: 18,
             },
             rpcUrls: ['https://rpc-amoy.polygon.technology/'],
@@ -55,7 +55,7 @@ export function NetworkHelpers() {
     window.open('https://faucet.polygon.technology/', '_blank');
     toast({
       title: "Faucet Opened", 
-      description: "Use your wallet address to get free testnet MATIC.",
+      description: "Use your wallet address to get free testnet POL.",
     });
   };
 
