@@ -6,8 +6,11 @@ This project is a decentralized finance (DeFi) application called Levitas Financ
 
 ## Recent Changes (January 2025)
 
-✅ **POLYGON AMOY MIGRATION 100% COMPLETE** - Full migration from Base Sepolia to Polygon PoS Amoy testnet completed successfully with all contracts deployed and functional
+✅ **POLYGON AMOY MIGRATION 100% COMPLETE** - Full migration from Base Sepolia to Polygon PoS Amoy testnet completed successfully with all contracts deployed and functional  
+✅ **CRITICAL ORACLE DECIMAL BUG FIXED** - Fixed oracle price display showing $0.42 instead of $42.15 by correcting decimal handling from 8 to 6 decimals for Polygon Amoy network
 ✓ **ALL CONTRACTS DEPLOYED ON POLYGON AMOY** - MockUSDC (0x4Cd0c0ed02363F27fC2A8a3D7dC9aEA88ddCCf5E), BVIX (0xb507A6743787E1Ee10365385F46DD5BFEa10Dcd5), EVIX (0x3c56D64B9bB348CC823742A861dB73405090408F), Oracles and MintRedeemV7 contracts all live
+✓ **MINT PREVIEW CALCULATIONS FIXED** - BVIX price now displays correctly as $42.15, EVIX as $37.98, fixing mint amount calculations
+✓ **BACKEND API UPDATED** - Vault stats API migrated to use Polygon Amoy contracts with correct 6-decimal oracle formatting
 ✓ **COMPLETE MATIC→POL REBRANDING** - All UI references updated from "MATIC" to "POL" throughout application for Polygon's rebranding
 ✓ **NETWORK DETECTION FIXED** - App now properly displays "Polygon Amoy Testnet" instead of "unknown network"
 ✓ **FUNCTIONAL FAUCET INTEGRATION** - Test USDC faucet button connected to deployed MockUSDC contract with working faucet() function
