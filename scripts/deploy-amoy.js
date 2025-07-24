@@ -29,18 +29,21 @@ async function main() {
   const evixAddress = await evixToken.getAddress();
   console.log("✅ EVIXToken deployed to:", evixAddress);
 
-  // Deploy BVIX Oracle (MockOracle has no constructor params)
+  // Deploy BVIX Oracle with initial price $42.15
   console.log("📄 Deploying MockOracle for BVIX...");
   const MockOracle = await hre.ethers.getContractFactory("MockOracle");
-  const bvixOracle = await MockOracle.deploy();
+  const bvixOracle = await MockOracle.deploy(hre.ethers.parseUnits("42.15", 6)); // $42.15 with 6 decimals
   await bvixOracle.waitForDeployment();
   const bvixOracleAddress = await bvixOracle.getAddress();
   console.log("✅ BVIX Oracle deployed to:", bvixOracleAddress);
 
-  // Deploy EVIX Oracle (no constructor params)
+  // Deploy EVIX Oracle with initial price $37.98
   console.log("📄 Deploying EVIXOracle...");
   const EVIXOracle = await hre.ethers.getContractFactory("EVIXOracle");
-  const evixOracle = await EVIXOracle.deploy();
+  const evixOracle = await EVIXOracle.deploy(
+    hre.ethers.parseUnits("37.98", 6), // $37.98 with 6 decimals
+    deployer.address
+  );
   await evixOracle.waitForDeployment();
   const evixOracleAddress = await evixOracle.getAddress();
   console.log("✅ EVIX Oracle deployed to:", evixOracleAddress);
@@ -49,20 +52,23 @@ async function main() {
   console.log("📄 Deploying MintRedeemV7 for BVIX...");
   const MintRedeemV7 = await hre.ethers.getContractFactory("MintRedeemV7");
   const bvixMintRedeem = await MintRedeemV7.deploy(
-    bvixAddress,
     mockUSDCAddress,
-    bvixOracleAddress
+    bvixAddress,
+    bvixOracleAddress,
+    deployer.address
   );
   await bvixMintRedeem.waitForDeployment();
   const bvixMintRedeemAddress = await bvixMintRedeem.getAddress();
   console.log("✅ BVIX MintRedeemV7 deployed to:", bvixMintRedeemAddress);
 
-  // Deploy MintRedeemV7 for EVIX
-  console.log("📄 Deploying MintRedeemV7 for EVIX...");
-  const evixMintRedeem = await MintRedeemV7.deploy(
-    evixAddress,
+  // Deploy EVIXMintRedeemV7 for EVIX
+  console.log("📄 Deploying EVIXMintRedeemV7 for EVIX...");
+  const EVIXMintRedeemV7 = await hre.ethers.getContractFactory("EVIXMintRedeemV7");
+  const evixMintRedeem = await EVIXMintRedeemV7.deploy(
     mockUSDCAddress,
-    evixOracleAddress
+    evixAddress,
+    evixOracleAddress,
+    deployer.address
   );
   await evixMintRedeem.waitForDeployment();
   const evixMintRedeemAddress = await evixMintRedeem.getAddress();
