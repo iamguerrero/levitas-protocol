@@ -1,0 +1,18 @@
+{
+  "network": "baseSepolia",
+  "deployer": "0x18633ea30ad5C91E13D2E5714fE5e3d97043679B",
+  "governor": "0x18633ea30ad5C91E13D2E5714fE5e3d97043679B",
+  "deploymentTime": "2025-07-22T12:56:36.288Z",
+  "contracts": {
+    "evix": "0xb20CE7575bA09d6a3eeF30682Bc108D0C9EEeAd1",
+    "evixPriceOracle": "0x587eD1E7D27DCf9c0f5C1b0861500b0cA06Ddd8b",
+    "evixMintRedeem": "0x1CA8eC26FFF5FABE35796642dE95446a22cbB843",
+    "sharedUsdc": "0x4E0e879814d7AbAbEAc7013Dc7c721dC45162294"
+  },
+  "configuration": {
+    "initialPrice": "80.0",
+    "updateDelay": 120,
+    "liquidationThreshold": 120,
+    "liquidationBonus": 5
+  }
+}

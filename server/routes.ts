@@ -17,7 +17,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const MOCK_USDC_ADDRESS = '0x9CC37B36FDd8CF5c0297BE15b75663Bf2a193297'; // MockUSDC with public faucet
       const BVIX_ADDRESS = '0xdcCCCC3A977cC0166788265eD4B683D41f3AED09'; // Fresh BVIX with faucet USDC
       const MINT_REDEEM_ADDRESS = '0x4d0ddFBCBa76f2e72B0Fef2fdDcaE9ddd6922397'; // V5 with faucet USDC
-      const ORACLE_ADDRESS = '0x85485dD6cFaF5220150c413309C61a8EA24d24FE';
+      // Update oracle addresses to latest deployed
+      // BVIX_ORACLE_ADDRESS remains '0x85485dD6cFaF5220150c413309C61a8EA24d24FE' as it's the BVIX oracle controlled by simulator
+      // Correct EVIX_ORACLE_ADDRESS to '0xCd7441A771a7F84E58d98E598B7Ff23A3688094F'
+      const BVIX_ORACLE_ADDRESS = '0x85485dD6cFaF5220150c413309C61a8EA24d24FE';
+      const EVIX_ORACLE_ADDRESS = '0xCd7441A771a7F84E58d98E598B7Ff23A3688094F';
       // EVIX contracts - V5 Final addresses
       const EVIX_MINT_REDEEM_ADDRESS = '0xb187c5Ff48D69BB0b477dAf30Eec779E0D07771D'; // EVIX V5 with faucet USDC
       const BASE_SEPOLIA_RPC_URL = 'https://sepolia.base.org';
@@ -28,7 +32,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'function totalSupply() external view returns (uint256)',
       ];
 
-      // Oracle ABI for price queries
+      // Oracle ABI for price queries - BVIX uses uint256, EVIX uses int256, but we can cast
       const ORACLE_ABI = [
         'function getPrice() external view returns (uint256)',
       ];
@@ -39,14 +43,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Initialize contracts
       const usdcContract = new ethers.Contract(MOCK_USDC_ADDRESS, ERC20_ABI, provider);
       const bvixContract = new ethers.Contract(BVIX_ADDRESS, ERC20_ABI, provider);
-      const oracleContract = new ethers.Contract(ORACLE_ADDRESS, ORACLE_ABI, provider);
+      const bvixOracleContract = new ethers.Contract(BVIX_ORACLE_ADDRESS, ORACLE_ABI, provider);
+      const evixOracleContract = new ethers.Contract(EVIX_ORACLE_ADDRESS, ORACLE_ABI, provider);
       
       // Fetch data in parallel from both vaults
       const [bvixVaultUsdcBalance, evixVaultUsdcBalance, bvixTotalSupply, bvixPrice] = await Promise.all([
         usdcContract.balanceOf(MINT_REDEEM_ADDRESS),
         usdcContract.balanceOf(EVIX_MINT_REDEEM_ADDRESS),
         bvixContract.totalSupply(),
-        oracleContract.getPrice()
+        bvixOracleContract.getPrice()
       ]);
       
       // Format values
@@ -64,7 +69,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Add EVIX data for complete protocol-wide collateral ratio
       const evixContract = new ethers.Contract('0x089C132BC246bF2060F40B0608Cb14b2A0cC9127', ERC20_ABI, provider);
-      const evixOracleContract = new ethers.Contract('0xCd7441A771a7F84E58d98E598B7Ff23A3688094F', ['function getPrice() external view returns (uint256)'], provider);
       
       console.log('Debug: Using EVIX contract address:', '0x089C132BC246bF2060F40B0608Cb14b2A0cC9127');
       console.log('Debug: Using EVIX vault address:', EVIX_MINT_REDEEM_ADDRESS);
@@ -75,7 +79,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ]);
       
       const evixSupply = ethers.formatEther(evixTotalSupply);
-      const evixPriceFormatted = ethers.formatEther(evixPrice); // EVIX oracle also returns 18-decimal format
+      // When fetching evixPrice, handle int256
+      // Change: const evixPriceFormatted = ethers.formatUnits(evixPrice, 8);
+      // To handle potential negative, but since prices are positive:
+      const evixPriceFormatted = ethers.formatUnits(evixPrice.toString(), 8); // Convert BigInt to string for formatUnits
       
       const bvixValueInUsd = bvixFloat * priceFloat;
       const evixValueInUsd = parseFloat(evixSupply) * parseFloat(evixPriceFormatted);

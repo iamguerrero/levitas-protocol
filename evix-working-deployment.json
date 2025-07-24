@@ -1,0 +1,18 @@
+{
+  "network": "baseSepolia",
+  "deployer": "0x18633ea30ad5C91E13D2E5714fE5e3d97043679B",
+  "deploymentTime": "2025-01-22T13:30:00.000Z",
+  "contracts": {
+    "evix": "0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf",
+    "evixMintRedeem": "0x88cCC6e9Dc7f5c857f77863719BD9DEB7dfd9948",
+    "evixPriceOracle": "0xCd7441A771a7F84E58d98E598B7Ff23A3688094F",
+    "sharedUsdc": "0x79640e0f510a7c6d59737442649d9600C84b035f"
+  },
+  "configuration": {
+    "initialPrice": "80.0",
+    "updateDelay": 120,
+    "liquidationThreshold": 120,
+    "liquidationBonus": 5
+  },
+  "status": "WORKING - Simple minting contract deployed and tested"
+} 
