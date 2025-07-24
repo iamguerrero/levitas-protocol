@@ -299,8 +299,8 @@ export async function getOraclePrice(): Promise<string> {
     const price = await oracleContract.getPrice();
     const chainId = await getCurrentChainId();
     
-    // ETH Sepolia uses 18 decimals, Base Sepolia uses 8 decimals
-    const decimals = chainId === CHAIN_IDS.sepolia ? 18 : 8;
+    // ETH Sepolia uses 18 decimals, Base Sepolia uses 8 decimals, Polygon Amoy uses 6 decimals
+    const decimals = chainId === CHAIN_IDS.sepolia ? 18 : (chainId === CHAIN_IDS.polygonAmoy ? 6 : 8);
     const formattedPrice = ethers.formatUnits(price, decimals);
     
     console.log("🔍 BVIX Price Debug:", {
@@ -354,8 +354,8 @@ export async function getEVIXPrice(): Promise<string> {
     const priceRaw = await evixOracle.getPrice();
     const chainId = await getCurrentChainId();
     
-    // ETH Sepolia uses 18 decimals, Base Sepolia uses 8 decimals
-    const decimals = chainId === CHAIN_IDS.sepolia ? 18 : 8;
+    // ETH Sepolia uses 18 decimals, Base Sepolia uses 8 decimals, Polygon Amoy uses 6 decimals
+    const decimals = chainId === CHAIN_IDS.sepolia ? 18 : (chainId === CHAIN_IDS.polygonAmoy ? 6 : 8);
     const formattedPrice = ethers.formatUnits(priceRaw, decimals);
     
     console.log("🔍 EVIX Price Debug:", {
