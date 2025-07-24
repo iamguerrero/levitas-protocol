@@ -33,11 +33,8 @@ import {
   getContractDebugInfo,
   getTestUSDC,
   formatPrice,
-  BVIX_ADDRESS,
-  EVIX_ADDRESS,
-  ORACLE_ADDRESS,
-  MINT_REDEEM_ADDRESS,
-  MOCK_USDC_ADDRESS,
+  ADDRESSES,
+  getCurrentChainId,
 } from "@/lib/web3";
 import { getUserPosition, getUserCollateralRatio, getUserPositionEVIX, getUserCollateralRatioEVIX } from "@/lib/web3";
 
@@ -131,9 +128,24 @@ export default function TradingInterface() {
     totalValue: "0.00",
   });
 
+  const [currentAddresses, setCurrentAddresses] = useState<any>(null);
+  
+  // Get current network addresses
+  useEffect(() => {
+    const getAddresses = async () => {
+      try {
+        const chainId = (await getCurrentChainId()).toString();
+        const addresses = ADDRESSES[chainId];
+        setCurrentAddresses(addresses);
+      } catch (error) {
+        console.error("Error getting addresses:", error);
+      }
+    };
+    getAddresses();
+  }, []);
+  
   // Check if contracts are deployed
-  // ✅ treat both sides as plain strings
-  const contractsDeployed = String(BVIX_ADDRESS) !== "0xBVIXAddressHere";
+  const contractsDeployed = currentAddresses?.bvix && currentAddresses.bvix !== "0x0000000000000000000000000000000000000000";
 
   // Load vault stats
   const { data: vaultData } = useQuery<{
@@ -596,13 +608,13 @@ export default function TradingInterface() {
                 </p>
                 <div className="mt-4 space-y-2 text-sm">
                   <p>
-                    <strong>BVIX Token:</strong> {BVIX_ADDRESS}
+                    <strong>BVIX Token:</strong> {currentAddresses?.bvix || "Not deployed"}
                   </p>
                   <p>
-                    <strong>Oracle:</strong> {ORACLE_ADDRESS}
+                    <strong>Oracle:</strong> {currentAddresses?.oracle || "Not deployed"}
                   </p>
                   <p>
-                    <strong>MintRedeem:</strong> {MINT_REDEEM_ADDRESS}
+                    <strong>MintRedeem:</strong> {currentAddresses?.mintRedeem || "Not deployed"}
                   </p>
                 </div>
               </div>

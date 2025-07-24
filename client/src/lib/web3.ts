@@ -57,21 +57,7 @@ export const ADDRESSES: { [key: string]: { bvix: string; evix: string; oracle: s
 export const POLYGON_AMOY_CHAIN_ID = PRIMARY_HEX_CHAIN_ID;
 export const POLYGON_AMOY_RPC_URL = PRIMARY_RPC_URL;
 
-// Contract addresses - V6 with position tracking and surplus refunding
-export const BVIX_ADDRESS = "0x2E3bef50887aD2A30069c79D19Bb91085351C92a"; // Fresh BVIX token
-
-// V6 contract addresses deployed to Base Sepolia
-export const BVIX_MINT_REDEEM_V6_ADDRESS = '0x65Bec0Ab96ab751Fd0b1D9c907342d9A61FB1117'; // BVIX V6
-export const EVIX_MINT_REDEEM_V6_ADDRESS = '0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf'; // EVIX V6
-
-// Legacy V5 addresses (for backward compatibility)
-export const MINT_REDEEM_ADDRESS = '0x4d0ddFBCBa76f2e72B0Fef2fdDcaE9ddd6922397'; // V5 with faucet USDC
-export const EVIX_MINT_REDEEM_ADDRESS = "0xb187c5Ff48D69BB0b477dAf30Eec779E0D07771D"; // EVIX V5 with faucet USDC
-
-export const EVIX_ADDRESS = "0x7066700CAf442501B308fAe34d5919091e1b2380"; // Fresh EVIX token
-export const ORACLE_ADDRESS = "0x85485dD6cFaF5220150c413309C61a8EA24d24FE";
-export const MOCK_USDC_ADDRESS = "0x9CC37B36FDd8CF5c0297BE15b75663Bf2a193297"; // MockUSDC with public faucet
-export const EVIX_ORACLE_ADDRESS = "0xCd7441A771a7F84E58d98E598B7Ff23A3688094F";
+// Legacy constants removed - all contracts now use dynamic ADDRESSES configuration based on current network
 
 // Contract factory functions
 export const getBVIXContract = async (providerOrSigner: any) => {
@@ -131,8 +117,12 @@ export const getEVIXMintRedeemContract = async (providerOrSigner: any) => {
   return new ethers.Contract(addresses.evixMintRedeem, EVIXMintRedeem_ABI, providerOrSigner);
 };
 
-export const getEVIXMintRedeemContractV6 = (providerOrSigner: any) =>
-  new ethers.Contract(EVIX_MINT_REDEEM_V6_ADDRESS, EVIXMintRedeem_ABI, providerOrSigner);
+export const getEVIXMintRedeemContractV6 = async (providerOrSigner: any) => {
+  const chainId = (await getCurrentChainId()).toString();
+  const addresses = ADDRESSES[chainId];
+  if (!addresses) throw new Error("Unsupported network");
+  return new ethers.Contract(addresses.evixMintRedeem, EVIXMintRedeem_ABI, providerOrSigner);
+};
 
 // Provider functions
 export function getProvider() {
@@ -277,9 +267,11 @@ export async function getUSDCBalance(address: string): Promise<string> {
     const balance = await usdcContract.balanceOf(address);
     const formattedBalance = ethers.formatUnits(balance, 6); // USDC has 6 decimals
     
+    const chainId = (await getCurrentChainId()).toString();
+    const addresses = ADDRESSES[chainId];
     console.log("🔍 USDC Balance Debug:", { 
       address, 
-      contract: MOCK_USDC_ADDRESS,
+      contract: addresses?.mockUsdc || "unknown",
       balance: balance.toString(), 
       formatted: formattedBalance,
       timestamp: new Date().toISOString()
@@ -415,9 +407,11 @@ export async function mintBVIX(
   const usdcAmountWei = ethers.parseUnits(usdcAmount, 6); // USDC has 6 decimals
 
   console.log("🔍 Checking balances and allowances...");
+  const chainId = (await getCurrentChainId()).toString();
+  const addresses = ADDRESSES[chainId];
   console.log("User address:", address);
-  console.log("USDC contract:", MOCK_USDC_ADDRESS);
-      console.log("MintRedeem V6 contract:", BVIX_MINT_REDEEM_V6_ADDRESS);
+  console.log("USDC contract:", addresses?.mockUsdc);
+  console.log("MintRedeem contract:", addresses?.mintRedeem);
 
   // Check USDC balance first
   const usdcBalance = await usdcContract.balanceOf(address);
@@ -433,7 +427,7 @@ export async function mintBVIX(
   // Check current allowance
   const currentAllowance = await usdcContract.allowance(
     address,
-    BVIX_MINT_REDEEM_V6_ADDRESS,
+    addresses.mintRedeem,
   );
   console.log("Current allowance:", ethers.formatUnits(currentAllowance, 6));
 
@@ -441,7 +435,7 @@ export async function mintBVIX(
   if (currentAllowance < usdcAmountWei) {
     console.log("🔄 Approving USDC spending...");
     const approveTx = await usdcContract.approve(
-      BVIX_MINT_REDEEM_V6_ADDRESS,
+      addresses.mintRedeem,
       usdcAmountWei,
     );
     await approveTx.wait();
@@ -508,17 +502,20 @@ export async function mintEVIX(
     );
   }
 
+  const chainId = (await getCurrentChainId()).toString();
+  const addresses = ADDRESSES[chainId];
+  
   // Check current allowance
   const currentAllowance = await usdcContract.allowance(
     address,
-    EVIX_MINT_REDEEM_V6_ADDRESS,
+    addresses.evixMintRedeem,
   );
 
   // Only approve if needed
   if (currentAllowance < usdcAmountWei) {
     console.log("🔄 Approving USDC spending for EVIX...");
     const approveTx = await usdcContract.approve(
-      EVIX_MINT_REDEEM_V6_ADDRESS,
+      addresses.evixMintRedeem,
       usdcAmountWei,
     );
     await approveTx.wait();
@@ -627,7 +624,7 @@ export async function getContractDebugInfo(): Promise<any> {
         usdcContract.balanceOf(address),
         bvixContract.balanceOf(address),
         oracleContract.getPrice(),
-        usdcContract.allowance(address, MINT_REDEEM_ADDRESS),
+        usdcContract.allowance(address, (await getMintRedeemContract(provider)).getAddress()),
       ]);
 
     return {
@@ -636,12 +633,16 @@ export async function getContractDebugInfo(): Promise<any> {
       bvixBalance: ethers.formatEther(bvixBalance),
       oraclePrice: ethers.formatEther(oraclePrice),
       usdcAllowance: ethers.formatUnits(usdcAllowance, 6),
-      contractAddresses: {
-        usdc: MOCK_USDC_ADDRESS,
-        bvix: BVIX_ADDRESS,
-        oracle: ORACLE_ADDRESS,
-        mintRedeem: MINT_REDEEM_ADDRESS,
-      },
+      contractAddresses: await (async () => {
+        const chainId = (await getCurrentChainId()).toString();
+        const addresses = ADDRESSES[chainId];
+        return {
+          usdc: addresses?.mockUsdc || "unknown",
+          bvix: addresses?.bvix || "unknown", 
+          oracle: addresses?.oracle || "unknown",
+          mintRedeem: addresses?.mintRedeem || "unknown",
+        };
+      })(),
     };
   } catch (error) {
     console.error("Error getting debug info:", error);
@@ -661,8 +662,9 @@ export const getCollateralRatio = async (): Promise<number> => {
     const bvix = await getBVIXContract(provider);
 
     // 2️⃣ read chain state in parallel
+    const mintRedeemContract = await getMintRedeemContract(provider);
     const [rawVaultUSDC, rawSupply, price] = await Promise.all([
-      usdc.balanceOf(MINT_REDEEM_ADDRESS), // 6-decimals
+      usdc.balanceOf(await mintRedeemContract.getAddress()), // 6-decimals
       bvix.totalSupply(),                  // 18-decimals
       getOraclePrice()                     // plain string like "42.15"
     ]);
@@ -688,7 +690,9 @@ export async function getUserPosition(user: string) {
     const contract = await getMintRedeemContract(provider);
     
     console.log('🔍 Getting BVIX position for user:', user);
-    console.log('🔍 Using V6 contract address:', BVIX_MINT_REDEEM_V6_ADDRESS);
+    const chainId = (await getCurrentChainId()).toString();
+    const addresses = ADDRESSES[chainId];
+    console.log('🔍 Using V6 contract address:', addresses?.mintRedeem);
     
     // Get user's position from V6 contract using positions(address) function
     const position = await contract.positions(user);
@@ -745,7 +749,9 @@ export async function getUserPositionEVIX(user: string) {
     const contract = await getEVIXMintRedeemContract(provider);
     
     console.log('🔍 Getting EVIX position for user:', user);
-    console.log('🔍 Using EVIX V6 contract address:', EVIX_MINT_REDEEM_V6_ADDRESS);
+    const chainId = (await getCurrentChainId()).toString();
+    const addresses = ADDRESSES[chainId];
+    console.log('🔍 Using EVIX V6 contract address:', addresses?.evixMintRedeem);
     
     // Get user's position from V6 contract using positions(address) function
     const position = await contract.positions(user);
@@ -779,7 +785,9 @@ export async function getUserCollateralRatioEVIX(user: string): Promise<number> 
     const contract = await getEVIXMintRedeemContract(provider);
     
     console.log('🔍 Getting EVIX CR for user:', user);
-    console.log('🔍 Using EVIX V6 contract address:', EVIX_MINT_REDEEM_V6_ADDRESS);
+    const chainId = (await getCurrentChainId()).toString();
+    const addresses = ADDRESSES[chainId];
+    console.log('🔍 Using EVIX V6 contract address:', addresses?.evixMintRedeem);
     
     // Get user's individual collateral ratio from V6 contract
     const ratio = await contract.getUserCollateralRatio(user);
