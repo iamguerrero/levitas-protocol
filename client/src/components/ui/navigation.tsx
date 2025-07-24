@@ -52,7 +52,7 @@ export default function Navigation() {
               Whitepaper
             </a>
             <a
-              href="/Levitas Litepaper_1753091498988.pdf"
+              href="/levitas-litepaper.pdf"
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-600 hover:text-black transition-colors"
