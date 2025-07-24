@@ -128,7 +128,15 @@ export default function TradingInterface() {
     totalValue: "0.00",
   });
 
-  const [currentAddresses, setCurrentAddresses] = useState<any>(null);
+  const [currentAddresses, setCurrentAddresses] = useState<any>({
+    bvix: "0x0000000000000000000000000000000000000000",
+    evix: "0x0000000000000000000000000000000000000000",
+    oracle: "0x0000000000000000000000000000000000000000",
+    evixOracle: "0x0000000000000000000000000000000000000000",
+    mockUsdc: "0x0000000000000000000000000000000000000000",
+    mintRedeem: "0x0000000000000000000000000000000000000000",
+    evixMintRedeem: "0x0000000000000000000000000000000000000000"
+  });
   
   // Get current network addresses
   useEffect(() => {
@@ -136,7 +144,9 @@ export default function TradingInterface() {
       try {
         const chainId = (await getCurrentChainId()).toString();
         const addresses = ADDRESSES[chainId];
-        setCurrentAddresses(addresses);
+        if (addresses) {
+          setCurrentAddresses(addresses);
+        }
       } catch (error) {
         console.error("Error getting addresses:", error);
       }
@@ -144,8 +154,8 @@ export default function TradingInterface() {
     getAddresses();
   }, []);
   
-  // Check if contracts are deployed
-  const contractsDeployed = currentAddresses?.bvix && currentAddresses.bvix !== "0x0000000000000000000000000000000000000000";
+  // Check if contracts are deployed - now always returns a boolean
+  const contractsDeployed = Boolean(currentAddresses?.bvix && currentAddresses.bvix !== "0x0000000000000000000000000000000000000000");
 
   // Load vault stats
   const { data: vaultData } = useQuery<{
@@ -190,7 +200,7 @@ export default function TradingInterface() {
     }
   }, [realtimeBvixPrice, realtimeEvixPrice, oracleConnected]);
 
-  // In the useEffect for address change
+  // In the useEffect for address change - always called, logic inside handles conditions
   useEffect(() => {
     if (address && contractsDeployed) {
       // Preserve existing prices, only reset balances
@@ -208,7 +218,7 @@ export default function TradingInterface() {
     }
   }, [address, contractsDeployed]);
 
-  // Auto-refresh contract data every 10 seconds
+  // Auto-refresh contract data every 10 seconds - always called, logic inside handles conditions
   useEffect(() => {
     if (!address || !contractsDeployed) return;
     
