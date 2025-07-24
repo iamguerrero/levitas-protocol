@@ -3,11 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Bitcoin, TrendingUp, Loader2, AlertCircle, ArrowUp, ArrowDown } from "lucide-react";
+import { Bitcoin, TrendingUp, Loader2, AlertCircle, ArrowUp, ArrowDown, Clock, Wifi } from "lucide-react";
 import { SiEthereum } from "react-icons/si";
 import { VaultHealth } from "@/components/ui/VaultHealth";
 import { NetworkHelpers } from "@/components/ui/NetworkHelpers";
+import { PriceDisplay } from "@/components/ui/PriceDisplay";
 // VaultNotice removed - V4 contracts work without collateral enforcement
 import { CollateralAwareMinting } from "@/components/ui/CollateralAwareMinting";
 import { useWallet } from "@/hooks/use-wallet";
@@ -54,7 +56,7 @@ export default function TradingInterface() {
   const [redeemingEVIX, setRedeemingEVIX] = useState(false);
   
   // Real-time oracle data
-  const { bvixPrice: realtimeBvixPrice, evixPrice: realtimeEvixPrice, isConnected: oracleConnected } = useRealTimeOracle();
+  const { bvixPrice: realtimeBvixPrice, evixPrice: realtimeEvixPrice, isConnected: oracleConnected, lastUpdate: oracleLastUpdate } = useRealTimeOracle();
   
   // Import vault refresh functions
   const { refetch: refetchVault } = useVault();
@@ -160,10 +162,10 @@ export default function TradingInterface() {
     }
   }, [vaultData, realtimeBvixPrice, realtimeEvixPrice]);
 
-  // Update prices when real-time oracle data changes
+  // Update prices when real-time oracle data changes (Sprint 2.1)
   useEffect(() => {
     if (realtimeBvixPrice || realtimeEvixPrice) {
-      console.log("🔄 Real-time price update:", { 
+      console.log("🔄 Sprint 2.1 Real-time price update:", { 
         bvix: realtimeBvixPrice, 
         evix: realtimeEvixPrice, 
         oracleConnected 
@@ -649,6 +651,32 @@ export default function TradingInterface() {
 
   return (
     <div className="space-y-8">
+      {/* Sprint 2.1: Real-time Oracle Status Header */}
+      <Card className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-950 dark:to-cyan-950 border-blue-200 dark:border-blue-800">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className={`w-3 h-3 rounded-full ${oracleConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
+              <div>
+                <h3 className="font-semibold text-gray-900 dark:text-white">
+                  Oracle Status: {oracleConnected ? 'Connected' : 'Offline'}
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {oracleConnected 
+                    ? `Prices update every 60 seconds • Last update: ${oracleLastUpdate || 'Starting...'}`
+                    : 'Price simulation offline'
+                  }
+                </p>
+              </div>
+            </div>
+            <Badge variant={oracleConnected ? 'secondary' : 'destructive'} className="text-xs">
+              <Wifi className="w-3 h-3 mr-1" />
+              Sprint 2.1 Active
+            </Badge>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Price Display - Clickable Cards */}
       <div className="grid md:grid-cols-2 gap-6">
         <Card 
@@ -669,14 +697,14 @@ export default function TradingInterface() {
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-2xl font-bold text-black">
-                  ${isLoading ? "..." : formatPrice(contractData.bvixPrice)}
-                </div>
-                <div className="text-sm text-green-600">Live Price</div>
+                <PriceDisplay
+                  tokenName=""
+                  currentPrice={realtimeBvixPrice || contractData.bvixPrice || "0"}
+                  isConnected={oracleConnected}
+                  lastUpdate={oracleLastUpdate || new Date().toLocaleTimeString()}
+                  className="text-right"
+                />
               </div>
-            </div>
-            <div className="text-xs text-gray-600">
-              Last updated: {new Date().toLocaleTimeString()}
             </div>
             {selectedToken === 'bvix' && (
               <div className="mt-2 text-xs text-orange-600 font-medium">
@@ -704,14 +732,14 @@ export default function TradingInterface() {
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-2xl font-bold text-black">
-                  ${isLoading ? "..." : formatPrice(contractData.evixPrice)}
-                </div>
-                <div className="text-sm text-green-600">Live Price</div>
+                <PriceDisplay
+                  tokenName=""
+                  currentPrice={realtimeEvixPrice || contractData.evixPrice || "0"}
+                  isConnected={oracleConnected}
+                  lastUpdate={oracleLastUpdate || new Date().toLocaleTimeString()}
+                  className="text-right"
+                />
               </div>
-            </div>
-            <div className="text-xs text-gray-600">
-              Last updated: {new Date().toLocaleTimeString()}
             </div>
             {selectedToken === 'evix' && (
               <div className="mt-2 text-xs text-blue-600 font-medium">
