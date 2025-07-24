@@ -25,14 +25,14 @@ import { CHAIN_IDS, HEX_CHAIN_IDS, PRIMARY_CHAIN_ID, PRIMARY_HEX_CHAIN_ID, PRIMA
 
 export const ADDRESSES: { [key: string]: { bvix: string; evix: string; oracle: string; evixOracle: string; mockUsdc: string; mintRedeem: string; evixMintRedeem: string; } } = {
   '80002': {
-    // Polygon Amoy testnet addresses - DEPLOYED!
-    bvix: "0xdB78c7D165724428eC8F11713B17F067F9b51Dc3", // BVIX Token deployed
-    evix: "0xa6aDACB60F301D75cEb90ae51b07b5d6C8592366", // EVIX Token deployed
-    oracle: "0xE282c4ED583d0bd9cCd29c3d4130599ffe85E06B", // BVIX Oracle deployed
-    evixOracle: "0xDF0F4DaA003F05A985AB38434A4db7Ee7aC02859", // EVIX Oracle deployed
-    mockUsdc: "0x76c8c8ef73bA010579E47bD1372A55FBA7D55383", // MockUSDC with faucet
-    mintRedeem: "0xbcD98B5FF574D34dffd9DB455728af662d4Be727", // BVIX MintRedeemV7 deployed
-    evixMintRedeem: "0x0000000000000000000000000000000000000000" // EVIX MintRedeem pending gas
+    // Polygon Amoy testnet addresses - 100% DEPLOYED! 🎉
+    bvix: "0xb507A6743787E1Ee10365385F46DD5BFEa10Dcd5", // BVIX Token deployed
+    evix: "0x3c56D64B9bB348CC823742A861dB73405090408F", // EVIX Token deployed
+    oracle: "0xcA7aC262190a3d126971281c496a521F5dD0f8D0", // BVIX Oracle deployed
+    evixOracle: "0x9d12b251f8F6c432b1Ecd6ef722Bf45A8aFdE6A8", // EVIX Oracle deployed
+    mockUsdc: "0x4Cd0c0ed02363F27fC2A8a3D7dC9aEA88ddCCf5E", // MockUSDC with faucet
+    mintRedeem: "0xec319c7F63031952d3a296833575bF28eb6cDC5f", // BVIX MintRedeemV7 deployed
+    evixMintRedeem: "0xFe9c81A98F33F15B279DE45ba022302113245D9F" // EVIX MintRedeemV7 deployed
   },
   '84532': {
     bvix: "0x2E3bef50887aD2A30069c79D19Bb91085351C92a",

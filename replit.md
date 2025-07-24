@@ -6,10 +6,14 @@ This project is a decentralized finance (DeFi) application called Levitas Financ
 
 ## Recent Changes (January 2025)
 
+✅ **POLYGON AMOY MIGRATION 100% COMPLETE** - Full migration from Base Sepolia to Polygon PoS Amoy testnet completed successfully with all contracts deployed and functional
+✓ **ALL CONTRACTS DEPLOYED ON POLYGON AMOY** - MockUSDC (0x4Cd0c0ed02363F27fC2A8a3D7dC9aEA88ddCCf5E), BVIX (0xb507A6743787E1Ee10365385F46DD5BFEa10Dcd5), EVIX (0x3c56D64B9bB348CC823742A861dB73405090408F), Oracles and MintRedeemV7 contracts all live
+✓ **COMPLETE MATIC→POL REBRANDING** - All UI references updated from "MATIC" to "POL" throughout application for Polygon's rebranding
+✓ **NETWORK DETECTION FIXED** - App now properly displays "Polygon Amoy Testnet" instead of "unknown network"
+✓ **FUNCTIONAL FAUCET INTEGRATION** - Test USDC faucet button connected to deployed MockUSDC contract with working faucet() function
 ✓ **PROJECT CLEANUP COMPLETED** - Removed 95+ testing/deployment .cjs files, old deployment JSONs, log files, and summary documents that accumulated during development
 ✓ **REAL-TIME PRICE SYSTEM FULLY INTEGRATED** - Sprint 2.1 complete with prices updating every 10 seconds, all vault calculations use live prices
 ✓ **LITEPAPER PDF CONNECTED** - Navigation link now properly connected to Levitas Litepaper PDF file in client/public directory
-✓ **POLYGON AMOY MIGRATION STARTED** - Systematic migration from Base Sepolia to Polygon PoS Amoy testnet with updated configs, network helpers, and deployment scripts
 
 ✓ **V5 FINAL CONTRACTS WITH PROPER OWNERSHIP** - Deployed fresh tokens and V5 contracts: Fresh BVIX (0xa60289981b67139fb7a9F3d31dD2D2BaA414A263), Fresh EVIX (0x4dEaB86baa7CBDb7859665a7FE9766f22fB799C1), BVIX MintRedeem (0xa0133C6380bf9618e97Ab9a855aF2035e9498829), EVIX MintRedeem (0x667e594bD7B994c492cd973C805CEdd971a5F163)
 ✓ **TRUE COLLATERAL RATIO ENFORCEMENT** - V5 contracts implement mintWithCollateralRatio(amount, targetCR) where users spend full USDC but receive proportional tokens based on selected CR
