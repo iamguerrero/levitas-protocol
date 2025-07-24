@@ -73,9 +73,9 @@ export function NetworkHelpers() {
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
       
-      // MockUSDC contract with faucet function - TODO: Update with Polygon Amoy address
+      // MockUSDC contract with faucet function - Polygon Amoy
       const mockUSDCContract = new ethers.Contract(
-        "0x0000000000000000000000000000000000000000", // TODO: Deploy to Polygon Amoy
+        "0x76c8c8ef73bA010579E47bD1372A55FBA7D55383", // MockUSDC on Polygon Amoy
         ["function faucet() external"],
         signer
       );
@@ -126,7 +126,7 @@ export function NetworkHelpers() {
               className="w-full justify-start"
             >
               <Coins className="w-4 h-4 mr-2" />
-              Get Testnet MATIC
+              Get Testnet POL
               <ExternalLink className="w-3 h-3 ml-auto" />
             </Button>
             <Button
@@ -141,7 +141,7 @@ export function NetworkHelpers() {
           </div>
           <div className="text-xs text-gray-600 space-y-1">
             <p>• Add the Polygon Amoy testnet to MetaMask</p>
-            <p>• Get free testnet MATIC for transaction fees</p>
+            <p>• Get free testnet POL for transaction fees</p>
             <p>• Get test USDC tokens for trading</p>
           </div>
         </CardContent>
