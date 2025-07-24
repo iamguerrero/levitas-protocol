@@ -19,7 +19,7 @@ export const NETWORK_CONFIG = {
       symbol: 'MATIC',
       decimals: 18,
     },
-    rpcUrls: ['https://polygon-amoy.drpc.org', 'https://rpc-amoy.polygon.technology/'],
+    rpcUrls: ['https://rpc-amoy.polygon.technology'],
     blockExplorerUrls: ['https://amoy.polygonscan.com/'],
     iconUrls: ['https://polygon.technology/favicon.ico'],
   },
