@@ -22,7 +22,7 @@ export default function AppDashboard() {
     // Check URL parameters for tab selection
     const params = new URLSearchParams(window.location.search);
     const tab = params.get("tab");
-    if (tab && ["trading", "liquidation", "positions", "history"].includes(tab)) {
+    if (tab && ["trading", "liquidation", "history"].includes(tab)) {
       setDefaultTab(tab);
     }
   }, [location]);
@@ -30,10 +30,9 @@ export default function AppDashboard() {
   return (
     <div className="container mx-auto py-8">
       <Tabs defaultValue={defaultTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="trading">Mint/Redeem</TabsTrigger>
           <TabsTrigger value="liquidation">Liquidation Center</TabsTrigger>
-          <TabsTrigger value="positions">My Positions</TabsTrigger>
           <TabsTrigger value="history">History</TabsTrigger>
         </TabsList>
         
@@ -45,69 +44,7 @@ export default function AppDashboard() {
           <LiquidationOpportunities />
         </TabsContent>
         
-        <TabsContent value="positions" className="space-y-4">
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold">My Positions</h2>
-            {positions?.bvix.cr > 0 || positions?.evix.cr > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {positions?.bvix.cr > 0 && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center justify-between">
-                        <span>BVIX Position</span>
-                        <Badge className={positions.bvix.cr < 120 ? "bg-red-500" : positions.bvix.cr < 150 ? "bg-yellow-500" : "bg-green-500"}>
-                          {positions.bvix.cr}% CR
-                        </Badge>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Collateral</span>
-                          <span className="font-medium">{positions.bvix.collateral} USDC</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Debt</span>
-                          <span className="font-medium">{positions.bvix.debt} BVIX</span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-                {positions?.evix.cr > 0 && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center justify-between">
-                        <span>EVIX Position</span>
-                        <Badge className={positions.evix.cr < 120 ? "bg-red-500" : positions.evix.cr < 150 ? "bg-yellow-500" : "bg-green-500"}>
-                          {positions.evix.cr}% CR
-                        </Badge>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Collateral</span>
-                          <span className="font-medium">{positions.evix.collateral} USDC</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Debt</span>
-                          <span className="font-medium">{positions.evix.debt} EVIX</span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            ) : (
-              <Card>
-                <CardContent className="py-12 text-center text-gray-500">
-                  You don't have any open positions yet.
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </TabsContent>
+
         
         <TabsContent value="history" className="space-y-4">
           <div className="space-y-4">
