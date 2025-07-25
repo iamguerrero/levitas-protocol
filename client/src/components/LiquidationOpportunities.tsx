@@ -182,7 +182,7 @@ export default function LiquidationOpportunities() {
                   </div>
                   <div>
                     <p className="text-gray-500">Debt</p>
-                    <p className="font-medium">{vault.debt} {vault.tokenType}</p>
+                    <p className="font-medium">{parseFloat(vault.debt).toFixed(2)} {vault.tokenType}</p>
                   </div>
                   <div>
                     <p className="text-gray-500">Max Bonus</p>
