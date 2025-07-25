@@ -25,7 +25,7 @@ export default function DAppPage() {
     };
 
     updateNetworkName();
-    
+
     // Listen for network changes
     if (window.ethereum) {
       window.ethereum.on('chainChanged', updateNetworkName);
@@ -38,7 +38,7 @@ export default function DAppPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
-      
+
       {/* DApp Header */}
       <div className="bg-white border-b border-gray-200 sticky top-16 z-40">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
