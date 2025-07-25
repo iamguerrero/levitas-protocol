@@ -182,7 +182,11 @@ export async function switchToPolygonAmoy() {
           {
             chainId: POLYGON_AMOY_CHAIN_ID,
             chainName: "Polygon Amoy Testnet",
-            rpcUrls: [POLYGON_AMOY_RPC_URL],
+            rpcUrls: [
+              'https://polygon-amoy-bor-rpc.publicnode.com',
+              'https://rpc.ankr.com/polygon_amoy',
+              'https://rpc-amoy.polygon.technology'
+            ],
             nativeCurrency: {
               name: "POL",
               symbol: "POL",
@@ -478,7 +482,8 @@ export async function mintBVIX(
       return mintTx;
     } catch (mintError: any) {
       if (mintError.message?.includes('missing trie node') || mintError.code === 'CALL_EXCEPTION') {
-        throw new Error("Polygon Amoy network is experiencing issues. Please wait a few minutes and try again. This is a temporary network problem, not an issue with your transaction.");
+        // Enhanced error message with specific guidance
+        throw new Error("Polygon Amoy network is experiencing temporary issues. The error is: missing revert data");
       }
       throw mintError;
     }
