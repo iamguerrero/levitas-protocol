@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import { Link, useLocation } from "wouter";
-import levitasLogoPath from "@assets/levitas small_1752663859911.jpg";
+const levitasLogoPath = "/assets/levitas-new-logo.png";
 
 export default function Navigation() {
   const [location] = useLocation();
@@ -18,7 +18,7 @@ export default function Navigation() {
               <img 
                 src={levitasLogoPath} 
                 alt="Levitas Finance Logo"
-                className="w-8 h-8 object-cover rounded-lg"
+                className="w-8 h-8"
               />
               <div>
                 <span className="text-xl font-bold text-black">

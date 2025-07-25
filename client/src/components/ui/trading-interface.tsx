@@ -56,13 +56,13 @@ export default function TradingInterface() {
   const [redeemingBVIX, setRedeemingBVIX] = useState(false);
   const [mintingEVIX, setMintingEVIX] = useState(false);
   const [redeemingEVIX, setRedeemingEVIX] = useState(false);
-  
+
   // Real-time oracle data
   const { bvixPrice: realtimeBvixPrice, evixPrice: realtimeEvixPrice, isConnected: oracleConnected, lastUpdate: oracleLastUpdate } = useRealTimeOracle();
-  
+
   // Price history tracking (Sprint 2.1)
   const { history, addPricePoint } = usePriceHistory();
-  
+
   // Import vault refresh functions
   const { refetch: refetchVault } = useVault();
   const queryClient = useQueryClient();
@@ -83,7 +83,7 @@ export default function TradingInterface() {
     queryFn: async () => {
       if (!address) return null;
       console.log('🔄 Fetching user positions for address:', address);
-      
+
       const [bvixPos, evixPos] = await Promise.all([
         getUserPosition(address),
         getUserPositionEVIX(address)
@@ -92,19 +92,19 @@ export default function TradingInterface() {
         getUserCollateralRatio(address),
         getUserCollateralRatioEVIX(address)
       ]);
-      
+
       console.log('📊 User position data:', {
         bvixPos,
         evixPos,
         bvixCR,
         evixCR
       });
-      
+
       const result = {
         bvix: bvixPos ? { ...bvixPos, cr: bvixCR } : null,
         evix: evixPos ? { ...evixPos, cr: evixCR } : null
       };
-      
+
       console.log('📊 Final user position result:', result);
       return result;
     },
@@ -157,7 +157,7 @@ export default function TradingInterface() {
   useEffect(() => {
     if (vaultData) {
       setVaultStats(vaultData);
-      
+
       // Prioritize real-time oracle prices over API data
       setContractData(prev => ({
         ...prev,
@@ -180,7 +180,7 @@ export default function TradingInterface() {
         bvixPrice: realtimeBvixPrice || prev.bvixPrice,
         evixPrice: realtimeEvixPrice || prev.evixPrice,
       }));
-      
+
       // Track price history for charts
       if (realtimeBvixPrice && parseFloat(realtimeBvixPrice) > 0) {
         addPricePoint('bvix', parseFloat(realtimeBvixPrice));
@@ -212,11 +212,11 @@ export default function TradingInterface() {
   // Auto-refresh contract data every 10 seconds
   useEffect(() => {
     if (!address || !contractsDeployed) return;
-    
+
     const interval = setInterval(() => {
       loadContractData();
     }, 10000);
-    
+
     return () => clearInterval(interval);
   }, [address, contractsDeployed]);
 
@@ -234,9 +234,9 @@ export default function TradingInterface() {
         getEVIXPrice(),
         getCollateralRatio(),
       ]);
-      
+
       console.log("📊 Contract data loaded:", { bvixBalance, evixBalance, usdcBalance, oraclePrice, evixPrice, ratio });
-      
+
       setCollateralRatio(ratio);
 
       const totalValue = (
@@ -264,7 +264,7 @@ export default function TradingInterface() {
       });
     } catch (error) {
       console.error("Error loading contract data:", error);
-      
+
       // Fallback to API prices if web3 calls fail
       if (vaultData) {
         console.log("🔄 Falling back to API prices");
@@ -274,7 +274,7 @@ export default function TradingInterface() {
           evixPrice: vaultData.evixPrice || prev.evixPrice,
         }));
       }
-      
+
       toast({
         title: "Contract Error",
         description:
@@ -340,7 +340,7 @@ export default function TradingInterface() {
       await loadContractData();
       refetchUserPosition();
       refetchVault();
-      
+
       // Invalidate all related queries
       queryClient.invalidateQueries({ queryKey: ['userPosition', address] });
       queryClient.invalidateQueries({ queryKey: ['/api/v1/vault-stats'] });
@@ -413,7 +413,7 @@ export default function TradingInterface() {
       await loadContractData();
       refetchUserPosition();
       refetchVault();
-      
+
       // Invalidate all related queries
       queryClient.invalidateQueries({ queryKey: ['userPosition', address] });
       queryClient.invalidateQueries({ queryKey: ['/api/v1/vault-stats'] });
@@ -446,7 +446,7 @@ export default function TradingInterface() {
     try {
       await switchToBaseSepolia();
       const tx = await mintEVIX(amount, targetCR);
-      
+
       toast({
         title: "Transaction Submitted",
         description: (
@@ -457,17 +457,17 @@ export default function TradingInterface() {
       });
 
       await tx.wait();
-      
+
       toast({
         title: "EVIX Minted!",
         description: `Successfully minted EVIX tokens for ${amount} USDC`,
       });
-      
+
       // Immediate refresh of all data
       await loadContractData();
       refetchUserPosition();
       refetchVault();
-      
+
       // Invalidate all related queries
       queryClient.invalidateQueries({ queryKey: ['userPosition', address] });
       queryClient.invalidateQueries({ queryKey: ['/api/v1/vault-stats'] });
@@ -498,7 +498,7 @@ export default function TradingInterface() {
     try {
       await switchToBaseSepolia();
       const tx = await redeemEVIX(evixRedeemAmount);
-      
+
       toast({
         title: "Transaction Submitted",
         description: (
@@ -509,18 +509,18 @@ export default function TradingInterface() {
       });
 
       await tx.wait();
-      
+
       toast({
         title: "EVIX Redeemed!",
         description: `Successfully redeemed ${evixRedeemAmount} EVIX tokens`,
       });
-      
+
       setEvixRedeemAmount("");
       // Immediate refresh of all data
       await loadContractData();
       refetchUserPosition();
       refetchVault();
-      
+
       // Invalidate all related queries
       queryClient.invalidateQueries({ queryKey: ['userPosition', address] });
       queryClient.invalidateQueries({ queryKey: ['/api/v1/vault-stats'] });
@@ -634,10 +634,10 @@ export default function TradingInterface() {
   if (selectedPosition && parseFloat(selectedPosition.debt) > 0) {
     const debtNum = parseFloat(selectedPosition.debt);
     const collateralNum = parseFloat(selectedPosition.collateral);
-    
+
     const refundBeforeFee = (redeemNum * collateralNum) / debtNum;
     expectedRefund = (refundBeforeFee * 0.997).toFixed(2);
-    
+
     const singleBeforeFee = (1 * collateralNum) / debtNum;
     ratePerToken = (singleBeforeFee * 0.997).toFixed(4);
   } else if (redeemNum > 0) {
@@ -710,13 +710,9 @@ export default function TradingInterface() {
                 </div>
               </div>
               <div className="text-right">
-                <PriceDisplay
-                  tokenName=""
-                  currentPrice={realtimeBvixPrice || contractData.bvixPrice || "0"}
-                  isConnected={oracleConnected}
-                  lastUpdate={oracleLastUpdate || new Date().toLocaleTimeString()}
-                  className="text-right"
-                />
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                  ${parseFloat(realtimeBvixPrice || contractData.bvixPrice || "0").toFixed(2)}
+                </div>
               </div>
             </div>
             {selectedToken === 'bvix' && (
@@ -745,13 +741,9 @@ export default function TradingInterface() {
                 </div>
               </div>
               <div className="text-right">
-                <PriceDisplay
-                  tokenName=""
-                  currentPrice={realtimeEvixPrice || contractData.evixPrice || "0"}
-                  isConnected={oracleConnected}
-                  lastUpdate={oracleLastUpdate || new Date().toLocaleTimeString()}
-                  className="text-right"
-                />
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                  ${parseFloat(realtimeEvixPrice || contractData.evixPrice || "0").toFixed(2)}
+                </div>
               </div>
             </div>
             {selectedToken === 'evix' && (
@@ -866,19 +858,6 @@ export default function TradingInterface() {
                 <p className="text-sm text-gray-500 dark:text-gray-400">Real-time portfolio monitoring</p>
               </div>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                loadContractData();
-                refetchUserPosition();
-                refetchVault();
-              }}
-              disabled={isLoading}
-              className="border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700"
-            >
-              {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Refresh"}
-            </Button>
           </div>
         </CardHeader>
         <CardContent className="p-8">
@@ -903,7 +882,6 @@ export default function TradingInterface() {
                   <span className="text-gray-600">Current Price</span>
                   <div className="flex items-center gap-2">
                     <span className="font-mono font-semibold text-green-600">${realtimeBvixPrice || formatPrice(contractData.bvixPrice)}</span>
-                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">LIVE</span>
                   </div>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
@@ -929,7 +907,7 @@ export default function TradingInterface() {
                         const debt = parseFloat(userPosition.bvix.debt);
                         const currentPrice = parseFloat(realtimeBvixPrice || formatPrice(contractData.bvixPrice));
                         const realtimeCR = debt > 0 ? (collateral / (debt * currentPrice)) * 100 : 0;
-                        
+
                         return (
                           <span className={`font-mono font-semibold ${getRiskColor(realtimeCR)}`}>
                             {realtimeCR.toFixed(2)}% ({getRiskLevel(realtimeCR)})
@@ -961,7 +939,6 @@ export default function TradingInterface() {
                   <span className="text-gray-600">Current Price</span>
                   <div className="flex items-center gap-2">
                     <span className="font-mono font-semibold text-green-600">${realtimeEvixPrice || formatPrice(contractData.evixPrice)}</span>
-                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">LIVE</span>
                   </div>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
@@ -987,7 +964,7 @@ export default function TradingInterface() {
                         const debt = parseFloat(userPosition.evix.debt);
                         const currentPrice = parseFloat(realtimeEvixPrice || formatPrice(contractData.evixPrice));
                         const realtimeCR = debt > 0 ? (collateral / (debt * currentPrice)) * 100 : 0;
-                        
+
                         return (
                           <span className={`font-mono font-semibold ${getRiskColor(realtimeCR)}`}>
                             {realtimeCR.toFixed(2)}% ({getRiskLevel(realtimeCR)})
@@ -1009,25 +986,25 @@ export default function TradingInterface() {
                 let bvixDebt = 0;
                 let evixDebt = 0;
                 let totalDebtValue = 0;
-                
+
                 // Use real-time prices for accurate calculations
                 const currentBvixPrice = parseFloat(realtimeBvixPrice || formatPrice(contractData.bvixPrice));
                 const currentEvixPrice = parseFloat(realtimeEvixPrice || formatPrice(contractData.evixPrice));
-                
+
                 if (userPosition?.bvix && parseFloat(userPosition.bvix.collateral) > 0) {
                   totalCollateral += parseFloat(userPosition.bvix.collateral);
                   bvixDebt = parseFloat(userPosition.bvix.debt);
                   totalDebtValue += bvixDebt * currentBvixPrice;
                 }
-                
+
                 if (userPosition?.evix && parseFloat(userPosition.evix.collateral) > 0) {
                   totalCollateral += parseFloat(userPosition.evix.collateral);
                   evixDebt = parseFloat(userPosition.evix.debt);
                   totalDebtValue += evixDebt * currentEvixPrice;
                 }
-                
+
                 const vaultCR = totalDebtValue > 0 ? (totalCollateral / totalDebtValue) * 100 : 0;
-                
+
                 return (
                   <>
                     <div className="bg-white dark:bg-gray-800 rounded-lg p-4 space-y-3">

@@ -2,7 +2,7 @@ import { Github, MessageCircle } from "lucide-react";
 import { SiX, SiDiscord } from "react-icons/si";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import levitasLogoPath from "@assets/levitas small_1752663859911.jpg";
+const levitasLogoPath = "/assets/levitas-new-logo.png";
 
 export default function Footer() {
   return (
@@ -15,7 +15,7 @@ export default function Footer() {
               <img 
                 src={levitasLogoPath} 
                 alt="Levitas Finance Logo"
-                className="w-8 h-8 object-cover rounded-lg"
+                className="w-8 h-8"
               />
               <div>
                 <span className="text-lg font-bold text-black">Levitas Finance</span>
