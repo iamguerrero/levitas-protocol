@@ -682,9 +682,9 @@ export default function TradingInterface() {
                 </p>
               </div>
             </div>
-            <Badge variant={oracleConnected ? 'secondary' : 'destructive'} className="text-xs">
-              <Wifi className="w-3 h-3 mr-1" />
-              Sprint 2.1 Active
+            <Badge variant="outline" className="text-xs border-blue-200 text-blue-700 bg-blue-50">
+              <div className="w-2 h-2 rounded-full bg-blue-500 mr-2"></div>
+              Base Sepolia Testnet
             </Badge>
           </div>
         </CardContent>

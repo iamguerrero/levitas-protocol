@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import { Link, useLocation } from "wouter";
-const levitasLogoPath = "/assets/levitas-new-logo.png";
+import WalletConnect from "@/components/ui/wallet-connect";
+const levitasLogoPath = "/levi large.jpg";
 
 export default function Navigation() {
   const [location] = useLocation();
@@ -18,7 +19,7 @@ export default function Navigation() {
               <img 
                 src={levitasLogoPath} 
                 alt="Levitas Finance Logo"
-                className="w-8 h-8"
+                className="w-10 h-8 object-cover rounded-md"
               />
               <div>
                 <span className="text-xl font-bold text-black">
@@ -67,11 +68,22 @@ export default function Navigation() {
             >
               Liquidity
             </a>
-            <Link href="/app">
-              <Button className="bg-blue-600 text-white hover:bg-blue-700">
-                Launch App
-              </Button>
-            </Link>
+            {location === "/app" || location === "/liquidation" ? (
+              <>
+                <Link href="/liquidation">
+                  <span className="text-gray-600 hover:text-black transition-colors cursor-pointer">
+                    Liquidation
+                  </span>
+                </Link>
+                <WalletConnect />
+              </>
+            ) : (
+              <Link href="/app">
+                <Button className="bg-blue-600 text-white hover:bg-blue-700">
+                  Launch App
+                </Button>
+              </Link>
+            )}
           </div>
 
           <button
@@ -128,11 +140,22 @@ export default function Navigation() {
             >
               Governance
             </a>
-            <Link href="/app">
-              <Button className="w-full mt-2 bg-blue-600 text-white hover:bg-blue-700">
-                Launch App
-              </Button>
-            </Link>
+            {location === "/app" || location === "/liquidation" ? (
+              <div className="mt-2">
+                <Link href="/liquidation">
+                  <span className="block py-2 text-gray-600 hover:text-black cursor-pointer">
+                    Liquidation
+                  </span>
+                </Link>
+                <WalletConnect />
+              </div>
+            ) : (
+              <Link href="/app">
+                <Button className="w-full mt-2 bg-blue-600 text-white hover:bg-blue-700">
+                  Launch App
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       )}

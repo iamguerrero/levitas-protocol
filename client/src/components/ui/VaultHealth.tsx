@@ -1,10 +1,13 @@
 import { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertTriangle, TrendingUp, Shield } from 'lucide-react';
+import { AlertTriangle, TrendingUp, Shield, Info } from 'lucide-react';
 import { useVault } from '@/hooks/useVault';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { formatPrice } from '@/lib/web3';
+import { VaultLiquidationInfo } from '@/components/VaultLiquidationInfo';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
 export function VaultHealth() {
   const { data, status, isLoading, isError } = useVault();

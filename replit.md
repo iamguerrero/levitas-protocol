@@ -6,6 +6,12 @@ This project is a decentralized finance (DeFi) application called Levitas Financ
 
 ## Recent Changes (January 2025)
 
+✓ **SPRINT 2.2: ADVANCED LIQUIDATION FEATURES** - Implemented comprehensive liquidation system with 5% liquidator bonuses, real-time collateral ratio monitoring, and permissionless liquidation support
+✓ **V8 SMART CONTRACTS CREATED** - Built MintRedeemV8.sol and EVIXMintRedeemV8.sol with advanced liquidation mechanics including grace periods and partial liquidations
+✓ **LIQUIDATION DASHBOARD** - Complete liquidation center at /liquidation with opportunities tracking, vault health monitoring, and liquidation execution interface
+✓ **LIQUIDATION HOOKS** - Created useLiquidationFeatures.ts with real-time position monitoring, liquidation price calculations, and automated liquidation detection
+✓ **VAULT LIQUIDATION INFO** - Integrated liquidation warnings and prices into vault displays with visual risk indicators
+✓ **MAKER-STYLE MECHANICS** - 120% liquidation threshold with 5% bonus incentive for liquidators following industry best practices
 ✓ **PROJECT CLEANUP COMPLETED** - Removed 95+ testing/deployment .cjs files, old deployment JSONs, log files, and summary documents that accumulated during development
 ✓ **REAL-TIME PRICE SYSTEM FULLY INTEGRATED** - Sprint 2.1 complete with prices updating every 10 seconds, all vault calculations use live prices
 ✓ **LITEPAPER PDF CONNECTED** - Navigation link now properly connected to Levitas Litepaper PDF file in client/public directory
