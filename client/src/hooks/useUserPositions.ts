@@ -74,7 +74,7 @@ export function useUserPositions() {
       // Check if EVIX vault has been liquidated
       const liquidatedVaults = JSON.parse(localStorage.getItem('liquidatedVaults') || '[]');
       const isEVIXLiquidated = liquidatedVaults.some((lv: any) => 
-        lv.vaultId === 1 && lv.tokenType === 'EVIX'
+        lv.vaultId === 101 && lv.tokenType === 'EVIX'
       );
 
       const [bvixPosition, evixPosition, bvixPrice, evixPrice] = await Promise.all([
