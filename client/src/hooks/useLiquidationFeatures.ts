@@ -44,12 +44,15 @@ export function useLiquidatableVaults() {
       const debtValue = debt * evixPrice; // Value of debt in USDC
       const bonusAmount = debtValue * 0.05; // 5% bonus on debt value
       
+      // Generate a unique vault ID based on timestamp
+      const vaultId = Date.now() % 1000;
+      
       const mockVaults: LiquidatableVault[] = [
         {
-          vaultId: 1,
+          vaultId: vaultId,
           owner: '0x18633ea30ad5c91e13d2e5714fe5e3d97043679b',
           collateral: '9970',
-          debt: debt.toFixed(2),
+          debt: '218.75548533438651922', // Full precision debt
           currentCR: 119,
           liquidationPrice: '38.14', // Liquidation threshold price
           maxBonus: bonusAmount.toFixed(2), // 5% bonus on debt value
@@ -185,8 +188,11 @@ export function useLiquidation() {
       const currentEVIXBalance = parseFloat(mockBalances.evix || '218.75548533438651922');
       const currentUSDCBalance = parseFloat(mockBalances.usdc || '999988994.009');
       
-      // Reduce EVIX balance by debt amount
-      mockBalances.evix = (currentEVIXBalance - parseFloat(vault.debt)).toString();
+      // Reduce EVIX balance by debt amount (using full precision)
+      const debtAmount = vault.tokenType === 'EVIX' ? 218.75548533438651922 : parseFloat(vault.debt);
+      const newEVIXBalance = Math.max(0, currentEVIXBalance - debtAmount); // Never go negative
+      
+      mockBalances.evix = newEVIXBalance.toString();
       // Increase USDC balance by collateral seized
       mockBalances.usdc = (currentUSDCBalance + parseFloat(mockResult.collateralSeized)).toString();
       
