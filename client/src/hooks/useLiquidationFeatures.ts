@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { ethers } from 'ethers';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
@@ -7,6 +7,7 @@ import { getProvider, getSigner } from '@/lib/web3';
 import { MINT_REDEEM_V8_ADDRESS, EVIX_MINT_REDEEM_V8_ADDRESS } from '@/lib/constants';
 import MintRedeemV8ABI from '@/contracts/MintRedeemV8.abi.json';
 import EVIXMintRedeemV8ABI from '@/contracts/EVIXMintRedeemV8.abi.json';
+import { useUserPositions } from '@/hooks/useUserPositions';
 
 export interface LiquidatableVault {
   vaultId: number;
