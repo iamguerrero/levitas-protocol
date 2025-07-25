@@ -199,15 +199,6 @@ export function LiquidationDashboard() {
   
   return (
     <div className="container mx-auto py-8 space-y-6">
-      <div className="mb-6">
-        <Link href="/trading">
-          <Button variant="outline" size="sm" className="mb-4">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Trading
-          </Button>
-        </Link>
-      </div>
-      
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Liquidation Center</h1>
@@ -277,7 +268,7 @@ export function LiquidationDashboard() {
       {/* Main Content */}
       <Tabs defaultValue="opportunities" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="opportunities">Liquidation Opportunities</TabsTrigger>
+          <TabsTrigger value="opportunities">Liquidation Center</TabsTrigger>
           <TabsTrigger value="my-positions">My Positions</TabsTrigger>
           <TabsTrigger value="history">History</TabsTrigger>
         </TabsList>
@@ -500,3 +491,5 @@ export function LiquidationDashboard() {
     </div>
   );
 }
+
+export default LiquidationDashboard;

@@ -69,19 +69,7 @@ export default function Navigation() {
               Liquidity
             </a>
             {location === "/app" || location === "/trading" || location === "/liquidation" ? (
-              <>
-                <Link href="/app">
-                  <span className={`${location === "/app" || location === "/trading" ? "text-black font-medium" : "text-gray-600"} hover:text-black transition-colors cursor-pointer`}>
-                    Trading
-                  </span>
-                </Link>
-                <Link href="/liquidation">
-                  <span className={`${location === "/liquidation" ? "text-black font-medium" : "text-gray-600"} hover:text-black transition-colors cursor-pointer`}>
-                    Liquidation
-                  </span>
-                </Link>
-                <WalletConnect />
-              </>
+              <WalletConnect />
             ) : (
               <Link href="/app">
                 <Button className="bg-blue-600 text-white hover:bg-blue-700">
@@ -147,16 +135,6 @@ export default function Navigation() {
             </a>
             {location === "/app" || location === "/trading" || location === "/liquidation" ? (
               <div className="mt-2">
-                <Link href="/app">
-                  <span className={`block py-2 ${location === "/app" || location === "/trading" ? "text-black font-medium" : "text-gray-600"} hover:text-black cursor-pointer`}>
-                    Trading
-                  </span>
-                </Link>
-                <Link href="/liquidation">
-                  <span className={`block py-2 ${location === "/liquidation" ? "text-black font-medium" : "text-gray-600"} hover:text-black cursor-pointer`}>
-                    Liquidation
-                  </span>
-                </Link>
                 <WalletConnect />
               </div>
             ) : (
