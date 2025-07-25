@@ -20,6 +20,7 @@ import { PriceChart } from '@/components/ui/PriceChart';
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useVault } from "@/hooks/useVault";
+import { useUserPositions } from "@/hooks/useUserPositions";
 import {
   getBVIXBalance,
   getEVIXBalance,
@@ -78,40 +79,8 @@ export default function TradingInterface() {
     cr?: number;
   } | null>(null);
 
-  const { data: userPosition, refetch: refetchUserPosition } = useQuery({
-    queryKey: ['userPosition', address],
-    queryFn: async () => {
-      if (!address) return null;
-      console.log('🔄 Fetching user positions for address:', address);
-
-      const [bvixPos, evixPos] = await Promise.all([
-        getUserPosition(address),
-        getUserPositionEVIX(address)
-      ]);
-      const [bvixCR, evixCR] = await Promise.all([
-        getUserCollateralRatio(address),
-        getUserCollateralRatioEVIX(address)
-      ]);
-
-      console.log('📊 User position data:', {
-        bvixPos,
-        evixPos,
-        bvixCR,
-        evixCR
-      });
-
-      const result = {
-        bvix: bvixPos ? { ...bvixPos, cr: bvixCR } : null,
-        evix: evixPos ? { ...evixPos, cr: evixCR } : null
-      };
-
-      console.log('📊 Final user position result:', result);
-      return result;
-    },
-    enabled: !!address,
-    refetchInterval: 5000, // Refresh every 5 seconds for real-time updates
-    staleTime: 2000, // Consider data stale after 2 seconds
-  });
+  // Use liquidation-aware user positions hook instead of raw blockchain data
+  const { data: userPosition, isLoading: userPositionLoading } = useUserPositions();
 
   function explorerLink(hash: string) {
     return (

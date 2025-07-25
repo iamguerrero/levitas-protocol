@@ -139,10 +139,13 @@ export function useUserPositions() {
         console.log('🔍 CR calculation failed:', error);
       }
 
-      return {
+      const result = {
         bvix: {...bvixPosition, cr: bvixCR},
         evix: {...evixPosition, cr: evixCR}
       };
+      
+      console.log('🔍 Final positions result:', result);
+      return result;
     },
     enabled: isConnected && !!address,
     refetchInterval: 10000, // Refresh every 10 seconds
