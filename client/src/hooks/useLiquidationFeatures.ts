@@ -134,13 +134,13 @@ export function useLiquidation() {
       repayAmount?: string; // Optional for partial liquidation
     }) => {
       // Mock implementation for testing
-      // Check if user has sufficient USDC balance (not BVIX)
+      // Check if user has sufficient token balance to repay debt
       const provider = getProvider();
       const accounts = await provider.send('eth_requestAccounts', []);
       if (accounts.length === 0) throw new Error('No wallet connected');
       
-      // Simulate wallet balance check for USDC (liquidators need USDC, not tokens)
-      const requiredUsdc = parseFloat(vault.debt) * parseFloat(vault.liquidationPrice);
+      // Liquidators need BVIX/EVIX tokens to repay the debt, not USDC
+      const requiredTokens = parseFloat(vault.debt);
       
       // Simulate a successful liquidation
       await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay

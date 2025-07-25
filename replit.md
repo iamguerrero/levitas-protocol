@@ -14,7 +14,7 @@ This project is a decentralized finance (DeFi) application called Levitas Financ
 ✓ **MAKER-STYLE MECHANICS** - 120% liquidation threshold with 5% bonus incentive for liquidators following industry best practices
 ✓ **PERMISSIONLESS LIQUIDATION** - Anyone can liquidate positions below 120% CR, no authorization required
 ✓ **LIQUIDATION HISTORY** - Local storage-based history tracking with detailed transaction records and bonus calculations
-✓ **PROPER PAYMENT FLOW** - Liquidators use USDC to repay debt and receive collateral + 5% bonus, not token payments
+✓ **PROPER PAYMENT FLOW** - Liquidators use BVIX/EVIX tokens to repay debt and receive USDC collateral + 5% bonus
 ✓ **PROJECT CLEANUP COMPLETED** - Removed 95+ testing/deployment .cjs files, old deployment JSONs, log files, and summary documents that accumulated during development
 ✓ **REAL-TIME PRICE SYSTEM FULLY INTEGRATED** - Sprint 2.1 complete with prices updating every 10 seconds, all vault calculations use live prices
 ✓ **LITEPAPER PDF CONNECTED** - Navigation link now properly connected to Levitas Litepaper PDF file in client/public directory
