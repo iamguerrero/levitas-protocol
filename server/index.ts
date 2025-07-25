@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import path from 'path'; // Import the path module
 
 const app = express();
 app.use(express.json());
@@ -55,6 +56,15 @@ app.use((req, res, next) => {
   } else {
     serveStatic(app);
   }
+
+  // SPA fallback - handles direct URL access
+  app.use(express.static(path.join(__dirname, '../client/dist')));
+
+  // Serve React app for all other routes (SPA fallback)
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+  });
+
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
   // Other ports are firewalled. Default to 3000 if not specified.

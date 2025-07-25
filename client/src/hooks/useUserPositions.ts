@@ -28,7 +28,7 @@ async function getUserPosition(
     const provider = getProvider();
     const contract = new Contract(vaultAddress, abi, provider);
     
-    const position = await contract.getUserPosition(userAddress);
+    const position = await contract.positions(userAddress);
     const collateral = position.collateral.toString();
     const debt = position.debt.toString();
     
