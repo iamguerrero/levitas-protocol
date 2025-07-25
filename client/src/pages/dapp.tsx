@@ -1,11 +1,8 @@
 import { useState, useEffect } from "react";
 import Navigation from "@/components/ui/navigation";
-import WalletConnect from "@/components/ui/wallet-connect";
-import TradingInterface from "@/components/ui/trading-interface";
+import AppDashboard from "@/components/AppDashboard";
 import { useWallet } from "@/hooks/use-wallet";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
-import { Link } from "wouter";
 import { getNetworkName } from "@/lib/web3";
 import { useRealTimeOracle } from "@/hooks/useRealTimeOracle";
 
@@ -45,7 +42,7 @@ export default function DAppPage() {
       <div className="pt-24 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           {isConnected ? (
-            <TradingInterface />
+            <AppDashboard />
           ) : (
             <div className="text-center py-20">
               <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
