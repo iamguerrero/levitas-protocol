@@ -21,7 +21,8 @@ import {
   useLiquidatableVaults, 
   useLiquidation, 
   usePermissionlessLiquidation,
-  useVaultHealth 
+  useVaultHealth,
+  useLiquidationHistory 
 } from '@/hooks/useLiquidationFeatures';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -138,6 +139,9 @@ function LiquidationModal({ vault, isOpen, onClose }: LiquidationModalProps) {
               <p className="font-semibold">Estimated Payout</p>
               <p className="text-lg">${estimatedPayout} USDC</p>
               <p className="text-sm text-gray-500">Includes 5% liquidation bonus</p>
+              <p className="text-xs text-gray-500 mt-2">
+                Note: You need {isPartial ? repayAmount || '0' : vault.debt} {vault.tokenType} worth of USDC to execute this liquidation
+              </p>
             </AlertDescription>
           </Alert>
         </div>
@@ -163,6 +167,7 @@ export function LiquidationDashboard() {
   const { data: vaults, isLoading: vaultsLoading } = useLiquidatableVaults();
   const { data: permissionless } = usePermissionlessLiquidation();
   const { health, isLoading: healthLoading } = useVaultHealth(address);
+  const { data: history } = useLiquidationHistory();
   const [selectedVault, setSelectedVault] = useState<any>(null);
   
   useEffect(() => {
@@ -278,9 +283,7 @@ export function LiquidationDashboard() {
               <Alert>
                 <Info className="h-4 w-4" />
                 <AlertDescription>
-                  {permissionless?.anyPermissionless 
-                    ? "Anyone can liquidate these positions. Act quickly to claim bonuses!"
-                    : "Only authorized liquidators can execute liquidations currently."}
+                  Anyone can liquidate these positions when CR falls below 120%. Act quickly to claim 5% bonuses!
                 </AlertDescription>
               </Alert>
               
@@ -417,15 +420,61 @@ export function LiquidationDashboard() {
         </TabsContent>
         
         <TabsContent value="history" className="space-y-4">
-          <Card>
-            <CardContent className="py-12 text-center">
-              <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="font-semibold text-lg mb-2">Liquidation History</h3>
-              <p className="text-gray-500">
-                Your liquidation history will appear here
-              </p>
-            </CardContent>
-          </Card>
+          {history && history.length > 0 ? (
+            <div className="space-y-4">
+              {history.map((item: any, index: number) => (
+                <Card key={index}>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <Badge variant="secondary">Success</Badge>
+                        <Badge>{item.vault.tokenType}</Badge>
+                        <span className="text-sm text-gray-500">
+                          {new Date(item.timestamp).toLocaleString()}
+                        </span>
+                      </div>
+                      <Badge variant="secondary" className="bg-green-100 text-green-700">
+                        +${item.bonus} Bonus
+                      </Badge>
+                    </div>
+                    
+                    <div className="grid grid-cols-4 gap-4 text-sm">
+                      <div>
+                        <p className="text-gray-500">Debt Repaid</p>
+                        <p className="font-medium">{item.debtRepaid} {item.vault.tokenType}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">Collateral Seized</p>
+                        <p className="font-medium">${item.collateralSeized}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">Previous CR</p>
+                        <p className="font-medium">{item.vault.currentCR}%</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">Transaction</p>
+                        <p className="font-medium text-blue-600">
+                          <a href={`https://sepolia.basescan.org/tx/${item.txHash}`} target="_blank" rel="noopener noreferrer">
+                            {item.txHash.slice(0, 8)}...
+                          </a>
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="font-semibold text-lg mb-2">No Liquidation History</h3>
+                <p className="text-gray-500">
+                  Your liquidation history will appear here
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
       

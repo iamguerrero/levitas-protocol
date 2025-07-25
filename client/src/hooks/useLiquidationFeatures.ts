@@ -63,7 +63,11 @@ export function useLiquidatableVaults() {
         }
       ];
       
-      return mockVaults;
+      // Filter out liquidated vaults from history
+      const history = JSON.parse(localStorage.getItem('liquidationHistory') || '[]');
+      const liquidatedIds = history.map((h: any) => `${h.vault.tokenType}-${h.vault.vaultId}`);
+      
+      return mockVaults.filter(v => !liquidatedIds.includes(`${v.tokenType}-${v.vaultId}`));
     },
     refetchInterval: 30000, // Refresh every 30 seconds
   });
@@ -130,6 +134,14 @@ export function useLiquidation() {
       repayAmount?: string; // Optional for partial liquidation
     }) => {
       // Mock implementation for testing
+      // Check if user has sufficient USDC balance (not BVIX)
+      const provider = getProvider();
+      const accounts = await provider.send('eth_requestAccounts', []);
+      if (accounts.length === 0) throw new Error('No wallet connected');
+      
+      // Simulate wallet balance check for USDC (liquidators need USDC, not tokens)
+      const requiredUsdc = parseFloat(vault.debt) * parseFloat(vault.liquidationPrice);
+      
       // Simulate a successful liquidation
       await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
       
@@ -141,6 +153,15 @@ export function useLiquidation() {
         bonus: mockBonus.toFixed(2),
         isPartial: false
       };
+      
+      // Store liquidation in local storage for history
+      const history = JSON.parse(localStorage.getItem('liquidationHistory') || '[]');
+      history.push({
+        ...mockResult,
+        vault,
+        timestamp: Date.now()
+      });
+      localStorage.setItem('liquidationHistory', JSON.stringify(history));
       
       return mockResult;
       
@@ -272,4 +293,16 @@ export function useVaultHealth(userAddress: string | null) {
       evixData.refetch();
     }
   };
+}
+
+// Hook to get liquidation history
+export function useLiquidationHistory() {
+  return useQuery({
+    queryKey: ['liquidation-history'],
+    queryFn: async () => {
+      const history = JSON.parse(localStorage.getItem('liquidationHistory') || '[]');
+      return history.sort((a: any, b: any) => b.timestamp - a.timestamp);
+    },
+    refetchInterval: 5000, // Refresh every 5 seconds
+  });
 }
