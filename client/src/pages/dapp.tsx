@@ -54,9 +54,6 @@ export default function DAppPage() {
               {/* Oracle connection status */}
               <div className="flex items-center space-x-2 text-sm">
                 <div className={`w-2 h-2 rounded-full ${oracleConnected ? 'bg-green-500' : 'bg-orange-500'}`}></div>
-                <span className="text-gray-600">
-                  {oracleConnected ? 'Real-time Prices' : 'Price Updates Pending'}
-                </span>
               </div>
             </div>
             <WalletConnect />
