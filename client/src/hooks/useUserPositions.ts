@@ -83,17 +83,21 @@ export function useUserPositions() {
         const bvixPositionData = await getUserPosition(BVIX_VAULT_ADDRESS, address, mintRedeemV6ABI);
         const evixPositionData = await getUserPosition(EVIX_VAULT_ADDRESS, address, evixMintRedeemV6ABI);
 
-        // For BVIX: CR = (collateral * price) / debt * 100
+        // For BVIX: CR = (collateral) / (debt * price) * 100
         if (Number(bvixPositionData.debt) > 0) {
           const bvixPrice = await bvixContract.getPrice();
-          bvixCR = Math.floor((Number(bvixPositionData.collateral) * Number(bvixPrice)) / (Number(bvixPositionData.debt) / 1e12) * 100);
+          const bvixPriceFormatted = Number(bvixPrice) / 1e8; // Oracle returns 8-decimal format
+          const debtValueInUSDC = Number(bvixPositionData.debt) * bvixPriceFormatted;
+          bvixCR = Math.floor((Number(bvixPositionData.collateral) / debtValueInUSDC) * 100);
         }
 
 
-        // For EVIX: CR = (collateral * price) / debt * 100
+        // For EVIX: CR = (collateral) / (debt * price) * 100
         if (Number(evixPositionData.debt) > 0) {
           const evixPrice = await evixContract.getPrice();
-          evixCR = Math.floor((Number(evixPositionData.collateral) * Number(evixPrice)) / (Number(evixPositionData.debt) / 1e12) * 100);
+          const evixPriceFormatted = Number(evixPrice) / 1e8; // Oracle returns 8-decimal format
+          const debtValueInUSDC = Number(evixPositionData.debt) * evixPriceFormatted;
+          evixCR = Math.floor((Number(evixPositionData.collateral) / debtValueInUSDC) * 100);
         }
 
 
