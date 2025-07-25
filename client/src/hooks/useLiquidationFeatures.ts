@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { ethers } from 'ethers';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
@@ -7,6 +7,7 @@ import { getProvider, getSigner } from '@/lib/web3';
 import { MINT_REDEEM_V8_ADDRESS, EVIX_MINT_REDEEM_V8_ADDRESS } from '@/lib/constants';
 import MintRedeemV8ABI from '@/contracts/MintRedeemV8.abi.json';
 import EVIXMintRedeemV8ABI from '@/contracts/EVIXMintRedeemV8.abi.json';
+import { useUserPositions } from '@/hooks/useUserPositions';
 
 export interface LiquidatableVault {
   vaultId: number;
@@ -62,11 +63,11 @@ export function useLiquidatableVaults() {
           contractAddress: MINT_REDEEM_V8_ADDRESS
         }
       ];
-      
+
       // Filter out liquidated vaults from history
       const history = JSON.parse(localStorage.getItem('liquidationHistory') || '[]');
       const liquidatedIds = history.map((h: any) => `${h.vault.tokenType}-${h.vault.vaultId}`);
-      
+
       return mockVaults.filter(v => !liquidatedIds.includes(`${v.tokenType}-${v.vaultId}`));
     },
     refetchInterval: 30000, // Refresh every 30 seconds
@@ -81,7 +82,7 @@ export function useLiquidationPrice(userAddress: string | null, tokenType: 'BVIX
     queryKey: ['liquidation-price', userAddress, tokenType],
     queryFn: async () => {
       if (!userAddress) return null;
-      
+
       // Return mock data for now since V8 contracts are not deployed
       return {
         collateral: '1500.00',
@@ -91,21 +92,21 @@ export function useLiquidationPrice(userAddress: string | null, tokenType: 'BVIX
         isAtRisk: false,
         canBeLiquidated: false
       };
-      
+
       /* Original implementation for when V8 is deployed:
       const provider = getProvider();
       const contractAddress = tokenType === 'BVIX' ? MINT_REDEEM_V8_ADDRESS : EVIX_MINT_REDEEM_V8_ADDRESS;
       const abi = tokenType === 'BVIX' ? MintRedeemV8ABI : EVIXMintRedeemV8ABI;
       const contract = new ethers.Contract(contractAddress, abi, provider);
-      
+
       const [position, liquidationPrice, userCR] = await Promise.all([
         contract.positions(userAddress),
         contract.getLiquidationPrice(userAddress),
         contract.getUserCollateralRatio(userAddress)
       ]);
-      
+
       if (position.debt.toString() === '0') return null;
-      
+
       return {
         collateral: ethers.formatUnits(position.collateral, 6),
         debt: ethers.formatEther(position.debt),
@@ -124,7 +125,7 @@ export function useLiquidationPrice(userAddress: string | null, tokenType: 'BVIX
 // Hook to perform liquidation
 export function useLiquidation() {
   const { toast } = useToast();
-  
+
   return useMutation({
     mutationFn: async ({ 
       vault, 
@@ -138,13 +139,13 @@ export function useLiquidation() {
       const provider = getProvider();
       const accounts = await provider.send('eth_requestAccounts', []);
       if (accounts.length === 0) throw new Error('No wallet connected');
-      
+
       // Liquidators need BVIX/EVIX tokens to repay the debt, not USDC
       const requiredTokens = parseFloat(vault.debt);
-      
+
       // Simulate a successful liquidation
       await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
-      
+
       const mockBonus = parseFloat(vault.collateral) * 0.05; // 5% bonus
       const mockResult: LiquidationResult = {
         txHash: '0x' + Math.random().toString(16).substr(2, 64),
@@ -153,7 +154,7 @@ export function useLiquidation() {
         bonus: mockBonus.toFixed(2),
         isPartial: false
       };
-      
+
       // Store liquidation in local storage for history
       const history = JSON.parse(localStorage.getItem('liquidationHistory') || '[]');
       history.push({
@@ -162,21 +163,21 @@ export function useLiquidation() {
         timestamp: Date.now()
       });
       localStorage.setItem('liquidationHistory', JSON.stringify(history));
-      
+
       return mockResult;
-      
+
       /* Original implementation for when V8 is deployed:
       const signer = await getSigner();
       const abi = vault.tokenType === 'BVIX' ? MintRedeemV8ABI : EVIXMintRedeemV8ABI;
       const contract = new ethers.Contract(vault.contractAddress, abi, signer);
-      
+
       // Convert repay amount to wei if provided, otherwise use 0 for full liquidation
       const repayAmountWei = repayAmount ? ethers.parseEther(repayAmount) : 0;
-      
+
       // Perform liquidation
       const tx = await contract.liquidate(vault.owner, repayAmountWei);
       const receipt = await tx.wait();
-      
+
       // Parse liquidation event from receipt
       const liquidationEvent = receipt.logs
         .map((log: any) => {
@@ -187,11 +188,11 @@ export function useLiquidation() {
           }
         })
         .find((event: any) => event?.name === 'Liquidation');
-      
+
       if (!liquidationEvent) {
         throw new Error('Liquidation event not found');
       }
-      
+
       return {
         txHash: receipt.hash,
         debtRepaid: ethers.formatEther(liquidationEvent.args.debtRepaid),
@@ -206,7 +207,7 @@ export function useLiquidation() {
         title: "Liquidation Successful",
         description: `You received ${data.collateralSeized} USDC (including ${data.bonus} USDC bonus)`,
       });
-      
+
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ['liquidatable-vaults'] });
       queryClient.invalidateQueries({ queryKey: ['user-position'] });
@@ -231,12 +232,12 @@ export function usePermissionlessLiquidation() {
       const provider = getProvider();
       const bvixContract = new ethers.Contract(MINT_REDEEM_V8_ADDRESS, MintRedeemV8ABI, provider);
       const evixContract = new ethers.Contract(EVIX_MINT_REDEEM_V8_ADDRESS, EVIXMintRedeemV8ABI, provider);
-      
+
       const [bvixPermissionless, evixPermissionless] = await Promise.all([
         bvixContract.permissionlessLiquidation(),
         evixContract.permissionlessLiquidation()
       ]);
-      
+
       return {
         bvix: bvixPermissionless,
         evix: evixPermissionless,
@@ -247,52 +248,76 @@ export function usePermissionlessLiquidation() {
 }
 
 // Hook for vault health monitoring
-export function useVaultHealth(userAddress: string | null) {
-  const bvixData = useLiquidationPrice(userAddress, 'BVIX');
-  const evixData = useLiquidationPrice(userAddress, 'EVIX');
-  
-  const overallHealth = useCallback(() => {
-    const positions = [];
-    
-    if (bvixData.data) {
-      positions.push({
+export function useVaultHealth(address: string | null) {
+  const { positions } = useUserPositions();
+
+  const health = useMemo(() => {
+    if (!positions) {
+      return {
+        avgHealthScore: 0,
+        isHealthy: true,
+        isAtRisk: false,
+        positions: []
+      };
+    }
+
+    // Use the same calculation as Vault Summary - combined vault CR
+    let totalCollateral = 0;
+    let totalDebtValue = 0;
+
+    const positionsList = [];
+
+    // Add BVIX position if it exists
+    if (parseFloat(positions.bvix.collateral) > 0) {
+      const bvixDebt = parseFloat(positions.bvix.debt);
+      const bvixCollateral = parseFloat(positions.bvix.collateral);
+      totalCollateral += bvixCollateral;
+
+      // Use a reasonable price estimate for debt value calculation
+      // This should ideally come from the same source as trading interface
+      const bvixPrice = 42; // Use approximate current price
+      totalDebtValue += bvixDebt * bvixPrice;
+
+      positionsList.push({
         token: 'BVIX',
-        ...bvixData.data,
-        healthScore: Math.max(0, Math.min(100, ((bvixData.data.currentCR - 100) / 100) * 100))
+        currentCR: positions.bvix.cr,
+        healthScore: Math.min(100, (positions.bvix.cr / 150) * 100),
+        isAtRisk: positions.bvix.cr < 130,
+        liquidationPrice: bvixPrice * 1.2
       });
     }
-    
-    if (evixData.data) {
-      positions.push({
+
+    // Add EVIX position if it exists  
+    if (parseFloat(positions.evix.collateral) > 0) {
+      const evixDebt = parseFloat(positions.evix.debt);
+      const evixCollateral = parseFloat(positions.evix.collateral);
+      totalCollateral += evixCollateral;
+
+      const evixPrice = 38; // Use approximate current price
+      totalDebtValue += evixDebt * evixPrice;
+
+      positionsList.push({
         token: 'EVIX',
-        ...evixData.data,
-        healthScore: Math.max(0, Math.min(100, ((evixData.data.currentCR - 100) / 100) * 100))
+        currentCR: positions.evix.cr,
+        healthScore: Math.min(100, (positions.evix.cr / 150) * 100),
+        isAtRisk: positions.evix.cr < 130,
+        liquidationPrice: evixPrice * 1.2
       });
     }
-    
-    const minCR = Math.min(...positions.map(p => p.currentCR).filter(cr => cr > 0));
-    const avgHealthScore = positions.length > 0 
-      ? positions.reduce((sum, p) => sum + p.healthScore, 0) / positions.length 
-      : 100;
-    
+
+    // Calculate combined vault CR (same as Vault Summary)
+    const vaultCR = totalDebtValue > 0 ? (totalCollateral / totalDebtValue) * 100 : 0;
+    const avgHealthScore = Math.min(100, (vaultCR / 150) * 100);
+
     return {
-      positions,
-      minCR,
       avgHealthScore,
-      isHealthy: minCR >= 150,
-      isAtRisk: minCR < 125 && minCR >= 120,
-      canBeLiquidated: minCR < 120
+      isHealthy: avgHealthScore >= 75,
+      isAtRisk: avgHealthScore < 65,
+      positions: positionsList
     };
-  }, [bvixData.data, evixData.data]);
-  
-  return {
-    health: overallHealth(),
-    isLoading: bvixData.isLoading || evixData.isLoading,
-    refetch: () => {
-      bvixData.refetch();
-      evixData.refetch();
-    }
-  };
+  }, [positions]);
+
+  return { health, isLoading: !positions };
 }
 
 // Hook to get liquidation history
