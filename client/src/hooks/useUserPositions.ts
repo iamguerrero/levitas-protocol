@@ -86,36 +86,46 @@ export function useUserPositions() {
       const bvixContract = new Contract(BVIX_VAULT_ADDRESS, mintRedeemV6ABI, provider);
       const evixContract = new Contract(EVIX_VAULT_ADDRESS, evixMintRedeemV6ABI, provider);
 
-      // Check if EVIX vault has been liquidated
+      // Check for liquidated vaults - check both BVIX and EVIX separately
       const liquidatedVaults = JSON.parse(localStorage.getItem('liquidatedVaults') || '[]');
       console.log('📦 Liquidated vaults in localStorage:', liquidatedVaults);
       
-      // For testing - force liquidation state for EVIX vault 101
-      const forceLiquidated = true; // This simulates the EVIX position being liquidated
-      const isEVIXLiquidated = forceLiquidated || liquidatedVaults.some((lv: any) => 
+      // Check if specific vaults are liquidated
+      const isBVIXLiquidated = liquidatedVaults.some((lv: any) => 
+        lv.tokenType === 'BVIX'
+      );
+      const isEVIXLiquidated = liquidatedVaults.some((lv: any) => 
         lv.vaultId === 101 && lv.tokenType === 'EVIX'
       );
-      console.log('❓ Is EVIX liquidated?', isEVIXLiquidated, '(force liquidated:', forceLiquidated, ')');
+      console.log('❓ Liquidation status:', { isBVIXLiquidated, isEVIXLiquidated });
 
-      const [bvixPosition, rawEvixPosition, bvixPrice, evixPrice] = await Promise.all([
+      const [rawBvixPosition, rawEvixPosition, bvixPrice, evixPrice] = await Promise.all([
         getUserPosition(BVIX_VAULT_ADDRESS, address, mintRedeemV6ABI),
         getUserPosition(EVIX_VAULT_ADDRESS, address, evixMintRedeemV6ABI),
         bvixContract.getPrice().catch(() => 0n),
         evixContract.getPrice().catch(() => 0n)
       ]);
 
-      // Override EVIX position if it has been liquidated
+      // Override positions only if their specific vault was liquidated
+      const bvixPosition = isBVIXLiquidated ? { collateral: "0", debt: "0", cr: 0 } : rawBvixPosition;
       const evixPosition = isEVIXLiquidated ? { collateral: "0", debt: "0", cr: 0 } : rawEvixPosition;
       
-      console.log('🔍 Liquidation check:', { isEVIXLiquidated, rawEvixPosition, overriddenEvixPosition: evixPosition });
+      console.log('🔍 Vault-specific liquidation check:', { 
+        isBVIXLiquidated, 
+        isEVIXLiquidated, 
+        rawBvixPosition, 
+        rawEvixPosition, 
+        finalBvixPosition: bvixPosition,
+        finalEvixPosition: evixPosition 
+      });
 
       // Calculate collateral ratios
       let bvixCR = 0;
       let evixCR = 0;
 
       try {
-        // For BVIX: CR = (collateral) / (debt * price) * 100
-        if (Number(bvixPosition.debt) > 0 && bvixPrice > 0n) {
+        // For BVIX: CR = (collateral) / (debt * price) * 100 - only if not liquidated
+        if (!isBVIXLiquidated && Number(bvixPosition.debt) > 0 && bvixPrice > 0n) {
           const bvixPriceFormatted = Number(bvixPrice) / 1e8;
           const debtValueInUSDC = Number(bvixPosition.debt) * bvixPriceFormatted;
           bvixCR = Math.floor((Number(bvixPosition.collateral) / debtValueInUSDC) * 100);
@@ -128,8 +138,8 @@ export function useUserPositions() {
           });
         }
 
-        // For EVIX: CR = (collateral) / (debt * price) * 100
-        if (Number(evixPosition.debt) > 0 && evixPrice > 0n) {
+        // For EVIX: CR = (collateral) / (debt * price) * 100 - only if not liquidated
+        if (!isEVIXLiquidated && Number(evixPosition.debt) > 0 && evixPrice > 0n) {
           const evixPriceFormatted = Number(evixPrice) / 1e8;
           const debtValueInUSDC = Number(evixPosition.debt) * evixPriceFormatted;
           evixCR = Math.floor((Number(evixPosition.collateral) / debtValueInUSDC) * 100);
