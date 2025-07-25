@@ -2,18 +2,10 @@
 
 ## Overview
 
-This project is a decentralized finance (DeFi) application called Levitas Finance that provides tokenized volatility products. It's a React frontend DApp with Ethers.js Web3 integration, featuring volatility index tokens (BVIX, EVIX, VIXC) that allow users to hedge their cryptocurrency holdings on Polygon Amoy testnet.
+This project is a decentralized finance (DeFi) application called Levitas Finance that provides tokenized volatility products. It's a React frontend DApp with Ethers.js Web3 integration, featuring volatility index tokens (BVIX, EVIX, VIXC) that allow users to hedge their cryptocurrency holdings on Base Sepolia testnet.
 
 ## Recent Changes (January 2025)
 
-✅ **POLYGON AMOY MIGRATION 100% COMPLETE** - Full migration from Base Sepolia to Polygon PoS Amoy testnet completed successfully with all contracts deployed and functional  
-✅ **CRITICAL ORACLE DECIMAL BUG FIXED** - Fixed oracle price display showing $0.42 instead of $42.15 by correcting decimal handling from 8 to 6 decimals for Polygon Amoy network
-✓ **ALL CONTRACTS DEPLOYED ON POLYGON AMOY** - MockUSDC (0x4Cd0c0ed02363F27fC2A8a3D7dC9aEA88ddCCf5E), BVIX (0xb507A6743787E1Ee10365385F46DD5BFEa10Dcd5), EVIX (0x3c56D64B9bB348CC823742A861dB73405090408F), Oracles and MintRedeemV7 contracts all live
-✓ **MINT PREVIEW CALCULATIONS FIXED** - BVIX price now displays correctly as $42.15, EVIX as $37.98, fixing mint amount calculations
-✓ **BACKEND API UPDATED** - Vault stats API migrated to use Polygon Amoy contracts with correct 6-decimal oracle formatting
-✓ **COMPLETE MATIC→POL REBRANDING** - All UI references updated from "MATIC" to "POL" throughout application for Polygon's rebranding
-✓ **NETWORK DETECTION FIXED** - App now properly displays "Polygon Amoy Testnet" instead of "unknown network"
-✓ **FUNCTIONAL FAUCET INTEGRATION** - Test USDC faucet button connected to deployed MockUSDC contract with working faucet() function
 ✓ **PROJECT CLEANUP COMPLETED** - Removed 95+ testing/deployment .cjs files, old deployment JSONs, log files, and summary documents that accumulated during development
 ✓ **REAL-TIME PRICE SYSTEM FULLY INTEGRATED** - Sprint 2.1 complete with prices updating every 10 seconds, all vault calculations use live prices
 ✓ **LITEPAPER PDF CONNECTED** - Navigation link now properly connected to Levitas Litepaper PDF file in client/public directory
@@ -32,7 +24,6 @@ This project is a decentralized finance (DeFi) application called Levitas Financ
 ✓ **PROTOCOL-WIDE CR RESTORED** - Reverted to correct protocol-wide CR calculation per user feedback
 🔧 **EVIX MINTING BUG IDENTIFIED** - EVIX mint creates almost no tokens despite spending USDC, causing incorrect CR behavior
 ✅ **COMPLETE PROTOCOL WITH FAUCET** - Deployed final contracts with MockUSDC faucet: MockUSDC (0x9CC37B36FDd8CF5c0297BE15b75663Bf2a193297), BVIX (0xdcCCCC3A977cC0166788265eD4B683D41f3AED09), BVIX MintRedeem (0x4d0ddFBCBa76f2e72B0Fef2fdDcaE9ddd6922397), EVIX (0x089C132BC246bF2060F40B0608Cb14b2A0cC9127), EVIX MintRedeem (0xb187c5Ff48D69BB0b477dAf30Eec779E0D07771D). Users can now get test USDC via faucet button.
-⚠️ **POLYGON AMOY NETWORK ISSUES (July 25, 2025)** - Widespread "missing trie node" RPC errors affecting Polygon Amoy testnet causing mint/redeem transactions to fail in MetaMask. This is a confirmed network-wide issue, not a code problem. Alternative RPCs (PublicNode, Ankr) are also experiencing issues. The migration from Base Sepolia to Polygon Amoy is complete and correct - only the testnet infrastructure is unstable.
 ✓ **Vault Health Real-Time Updates** - Updated vault stats API to use V4 contracts and reduced refresh interval to 5 seconds for faster updates
 ✓ **Post-Transaction Cache Invalidation** - Added automatic vault cache refresh after BVIX transactions for immediate collateral ratio updates (EVIX transactions don't affect BVIX vault)
 ✓ **Comprehensive Debug Logging** - Added detailed console logging for mint process troubleshooting

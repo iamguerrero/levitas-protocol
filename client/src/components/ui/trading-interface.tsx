@@ -29,12 +29,15 @@ import {
   redeemBVIX,
   mintEVIX,
   redeemEVIX,
-  switchToPolygonAmoy,
+  switchToBaseSepolia,
   getContractDebugInfo,
   getTestUSDC,
   formatPrice,
-  ADDRESSES,
-  getCurrentChainId,
+  BVIX_ADDRESS,
+  EVIX_ADDRESS,
+  ORACLE_ADDRESS,
+  MINT_REDEEM_ADDRESS,
+  MOCK_USDC_ADDRESS,
 } from "@/lib/web3";
 import { getUserPosition, getUserCollateralRatio, getUserPositionEVIX, getUserCollateralRatioEVIX } from "@/lib/web3";
 
@@ -108,12 +111,12 @@ export default function TradingInterface() {
   function explorerLink(hash: string) {
     return (
       <a
-        href={`https://amoy.polygonscan.com/tx/${hash}`}
+        href={`https://sepolia.basescan.org/tx/${hash}`}
         target="_blank"
         rel="noopener noreferrer"
         className="text-blue-600 underline"
       >
-        View on Polygonscan
+        View on Basescan
       </a>
     );
   }
@@ -128,34 +131,9 @@ export default function TradingInterface() {
     totalValue: "0.00",
   });
 
-  const [currentAddresses, setCurrentAddresses] = useState<any>({
-    bvix: "0x0000000000000000000000000000000000000000",
-    evix: "0x0000000000000000000000000000000000000000",
-    oracle: "0x0000000000000000000000000000000000000000",
-    evixOracle: "0x0000000000000000000000000000000000000000",
-    mockUsdc: "0x0000000000000000000000000000000000000000",
-    mintRedeem: "0x0000000000000000000000000000000000000000",
-    evixMintRedeem: "0x0000000000000000000000000000000000000000"
-  });
-  
-  // Get current network addresses
-  useEffect(() => {
-    const getAddresses = async () => {
-      try {
-        const chainId = (await getCurrentChainId()).toString();
-        const addresses = ADDRESSES[chainId];
-        if (addresses) {
-          setCurrentAddresses(addresses);
-        }
-      } catch (error) {
-        console.error("Error getting addresses:", error);
-      }
-    };
-    getAddresses();
-  }, []);
-  
-  // Check if contracts are deployed - now always returns a boolean
-  const contractsDeployed = Boolean(currentAddresses?.bvix && currentAddresses.bvix !== "0x0000000000000000000000000000000000000000");
+  // Check if contracts are deployed
+  // ✅ treat both sides as plain strings
+  const contractsDeployed = String(BVIX_ADDRESS) !== "0xBVIXAddressHere";
 
   // Load vault stats
   const { data: vaultData } = useQuery<{
@@ -200,7 +178,7 @@ export default function TradingInterface() {
     }
   }, [realtimeBvixPrice, realtimeEvixPrice, oracleConnected]);
 
-  // In the useEffect for address change - always called, logic inside handles conditions
+  // In the useEffect for address change
   useEffect(() => {
     if (address && contractsDeployed) {
       // Preserve existing prices, only reset balances
@@ -218,7 +196,7 @@ export default function TradingInterface() {
     }
   }, [address, contractsDeployed]);
 
-  // Auto-refresh contract data every 10 seconds - always called, logic inside handles conditions
+  // Auto-refresh contract data every 10 seconds
   useEffect(() => {
     if (!address || !contractsDeployed) return;
     
@@ -228,19 +206,6 @@ export default function TradingInterface() {
     
     return () => clearInterval(interval);
   }, [address, contractsDeployed]);
-
-  // Real-time price effects - moved here to ensure they're always called before any early returns
-  useEffect(() => {
-    if (realtimeBvixPrice && parseFloat(realtimeBvixPrice) > 0) {
-      setContractData(prev => ({ ...prev, bvixPrice: realtimeBvixPrice }));
-    }
-  }, [realtimeBvixPrice]);
-
-  useEffect(() => {
-    if (realtimeEvixPrice && parseFloat(realtimeEvixPrice) > 0) {
-      setContractData(prev => ({ ...prev, evixPrice: realtimeEvixPrice }));
-    }
-  }, [realtimeEvixPrice]);
 
   const loadContractData = async () => {
     if (!address) return;
@@ -332,8 +297,8 @@ export default function TradingInterface() {
     setMintingBVIX(true);
 
     try {
-      // Ensure user is on Polygon Amoy
-      await switchToPolygonAmoy();
+      // Ensure user is on Base Sepolia
+      await switchToBaseSepolia();
 
       const tx = await mintBVIX(amount, targetCR);
 
@@ -404,8 +369,8 @@ export default function TradingInterface() {
     setRedeemingBVIX(true);
 
     try {
-      // Ensure user is on Polygon Amoy
-      await switchToPolygonAmoy();
+      // Ensure user is on Base Sepolia
+      await switchToBaseSepolia();
 
       const tx = await redeemBVIX(redeemAmount);
 
@@ -466,7 +431,7 @@ export default function TradingInterface() {
     setIsTransacting(true);
     setMintingEVIX(true);
     try {
-      await switchToPolygonAmoy();
+      await switchToBaseSepolia();
       const tx = await mintEVIX(amount, targetCR);
       
       toast({
@@ -518,7 +483,7 @@ export default function TradingInterface() {
     setIsTransacting(true);
     setRedeemingEVIX(true);
     try {
-      await switchToPolygonAmoy();
+      await switchToBaseSepolia();
       const tx = await redeemEVIX(evixRedeemAmount);
       
       toast({
@@ -626,18 +591,18 @@ export default function TradingInterface() {
                   Contracts Not Deployed
                 </h3>
                 <p className="text-yellow-700">
-                  Smart contracts are not yet deployed to Polygon Amoy. Please
+                  Smart contracts are not yet deployed to Base Sepolia. Please
                   update contract addresses in web3.ts after deployment.
                 </p>
                 <div className="mt-4 space-y-2 text-sm">
                   <p>
-                    <strong>BVIX Token:</strong> {currentAddresses?.bvix || "Not deployed"}
+                    <strong>BVIX Token:</strong> {BVIX_ADDRESS}
                   </p>
                   <p>
-                    <strong>Oracle:</strong> {currentAddresses?.oracle || "Not deployed"}
+                    <strong>Oracle:</strong> {ORACLE_ADDRESS}
                   </p>
                   <p>
-                    <strong>MintRedeem:</strong> {currentAddresses?.mintRedeem || "Not deployed"}
+                    <strong>MintRedeem:</strong> {MINT_REDEEM_ADDRESS}
                   </p>
                 </div>
               </div>
@@ -669,7 +634,20 @@ export default function TradingInterface() {
     ratePerToken = (price * 0.997).toFixed(4);
   }
 
+  const { bvixPrice: realTimeBvix, evixPrice: realTimeEvix } = useRealTimeOracle();
 
+  // Add effects to update contractData on real-time changes
+  useEffect(() => {
+    if (realTimeBvix && parseFloat(realTimeBvix) > 0) {
+      setContractData(prev => ({ ...prev, bvixPrice: realTimeBvix }));
+    }
+  }, [realTimeBvix]);
+
+  useEffect(() => {
+    if (realTimeEvix && parseFloat(realTimeEvix) > 0) {
+      setContractData(prev => ({ ...prev, evixPrice: realTimeEvix }));
+    }
+  }, [realTimeEvix]);
 
   return (
     <div className="space-y-8">
