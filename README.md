@@ -5,7 +5,7 @@
 [![MintRedeem – verified](https://img.shields.io/badge/MintRedeem-verified-brightgreen?labelColor=212121&logo=data:image/svg+xml;base64,PHN2ZyBmaWxsPSJ3aGl0ZSIgaGVpZ2h...)](https://sepolia.basescan.org/address/0x27F971cb582BF9E50F397e4d29a5C7A34f11faA2)
 
 > **Mission** – Build the volatility layer of DeFi. Tokenize crypto-native, fully collateralized and composable volatility indices on-chain.  
-> Mint synthetic volatility, trade it permissionlessly, and earn fees by supplying liquidity – all on **Polygon Amoy** today.
+> Mint synthetic volatility, trade it permissionlessly, and earn fees by supplying liquidity – all on **Base Sepolia** today.
 
 ---
 
@@ -24,7 +24,7 @@ flowchart LR
   end
 
   %% ---------- Blockchain ----------
-  subgraph "Polygon Amoy"
+  subgraph "Base Sepolia"
     C["BVIX • EVIX • MockUSDC<br/>MintRedeem"]
     D["Uniswap V3 Pool"]
   end
@@ -35,17 +35,17 @@ flowchart LR
   C -- liquidity --> D
 ```
 
-### Deployed contracts (Polygon Amoy)
+### Deployed contracts
 
 | Name | Address | Explorer |
 |------|---------|----------|
-| Mock USDC | `0x0000000000000000000000000000000000000000` | https://amoy.polygonscan.com/address/0x0000000000000000000000000000000000000000 |
-| BVIX | `0x0000000000000000000000000000000000000000` | https://amoy.polygonscan.com/address/0x0000000000000000000000000000000000000000 |
-| EVIX | `0x0000000000000000000000000000000000000000` | https://amoy.polygonscan.com/address/0x0000000000000000000000000000000000000000 |
-| BVIX Oracle | `0x0000000000000000000000000000000000000000` | https://amoy.polygonscan.com/address/0x0000000000000000000000000000000000000000 |
-| EVIX Oracle | `0x0000000000000000000000000000000000000000` | https://amoy.polygonscan.com/address/0x0000000000000000000000000000000000000000 |
-| BVIX MintRedeemV7 | `0x0000000000000000000000000000000000000000` | https://amoy.polygonscan.com/address/0x0000000000000000000000000000000000000000 |
-| EVIX MintRedeemV7 | `0x0000000000000000000000000000000000000000` | https://amoy.polygonscan.com/address/0x0000000000000000000000000000000000000000 |
+| Mock USDC | `0x79640e0F510A7C6d59737442649D9600C84B035f` | https://sepolia.basescan.org/address/0x79640e0F510A7C6d59737442649D9600C84B035f |
+| BVIX | `0xEA3d08A5A5bC48Fc984F0F773826693B7480bF48` | https://sepolia.basescan.org/address/0xEA3d08A5A5bC48Fc984F0F773826693B7480bF48 |
+| EVIX | `0x37e3b45fEF91D54Ef4992B71382EC36307908463` | https://sepolia.basescan.org/address/0x37e3b45fEF91D54Ef4992B71382EC36307908463 |
+| EVIX Oracle | `0xCd7441A771a7F84E58d98E598B7Ff23A3688094F` | https://sepolia.basescan.org/address/0xCd7441A771a7F84E58d98E598B7Ff23A3688094F |
+| EVIX MintRedeem | `0xe521441B10F5b9a28499Ae37d1C93b42223eCff6` | https://sepolia.basescan.org/address/0xe521441B10F5b9a28499Ae37d1C93b42223eCff6 |
+| MintRedeem | `0x27F971cb582BF9E50F397e4d29a5C7A34f11faA2` | https://sepolia.basescan.org/address/0x27F971cb582BF9E50F397e4d29a5C7A34f11faA2 |
+| Uniswap V3 Pool (0.05 %) | `0x7883Ba215Bd4C8d81Ed8643e6CA7F15659fDD190` | https://sepolia.basescan.org/address/0x7883Ba215Bd4C8d81Ed8643e6CA7F15659fDD190 |
 
 ---
 

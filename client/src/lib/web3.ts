@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 import BVIX_ABI from "../contracts/BVIXToken.abi.json";
 import EVIX_ABI from "../contracts/EVIXToken.abi.json";
 import Oracle_ABI from "../contracts/MockOracle.abi.json";
-import MintRedeem_ABI from "../contracts/MintRedeemV7.abi.json";
+import MintRedeem_ABI from "../contracts/MintRedeemV6.abi.json";
 import USDC_ABI from "../contracts/MockUSDC.abi.json";
 import EVIXOracle_ABI from "../contracts/EVIXOracle.abi.json";
 import EVIXMintRedeem_ABI from "../contracts/EVIXMintRedeemV6.abi.json";
@@ -21,19 +21,17 @@ declare global {
   }
 }
 
-import { CHAIN_IDS, HEX_CHAIN_IDS, PRIMARY_CHAIN_ID, PRIMARY_HEX_CHAIN_ID, PRIMARY_RPC_URL } from './chains';
+export const CHAIN_IDS = {
+  baseSepolia: 84532,
+  sepolia: 11155111
+};
+
+export const HEX_CHAIN_IDS = {
+  baseSepolia: '0x14a34',
+  sepolia: '0xaa36a7'
+};
 
 export const ADDRESSES: { [key: string]: { bvix: string; evix: string; oracle: string; evixOracle: string; mockUsdc: string; mintRedeem: string; evixMintRedeem: string; } } = {
-  '80002': {
-    // Polygon Amoy testnet addresses - MATCHES SERVER CONFIG! 🎉
-    bvix: "0xb507A6743787E1Ee10365385F46DD5BFEa10Dcd5", // BVIX Token deployed
-    evix: "0x3c56D64B9bB348CC823742A861dB73405090408F", // EVIX Token deployed
-    oracle: "0xcA7aC262190a3d126971281c496a521F5dD0f8D0", // BVIX Oracle deployed
-    evixOracle: "0x9d12b251f8F6c432b1Ecd6ef722Bf45A8aFdE6A8", // EVIX Oracle deployed
-    mockUsdc: "0x4Cd0c0ed02363F27fC2A8a3D7dC9aEA88ddCCf5E", // MockUSDC with faucet - MATCHES SERVER
-    mintRedeem: "0xec319c7F63031952d3a296833575bF28eb6cDC5f", // BVIX MintRedeemV7 deployed - MATCHES SERVER
-    evixMintRedeem: "0xFe9c81A98F33F15B279DE45ba022302113245D9F" // EVIX MintRedeemV7 deployed
-  },
   '84532': {
     bvix: "0x2E3bef50887aD2A30069c79D19Bb91085351C92a",
     evix: "0x7066700CAf442501B308fAe34d5919091e1b2380",
@@ -54,10 +52,24 @@ export const ADDRESSES: { [key: string]: { bvix: string; evix: string; oracle: s
   }
 };
 
-export const POLYGON_AMOY_CHAIN_ID = PRIMARY_HEX_CHAIN_ID;
-export const POLYGON_AMOY_RPC_URL = PRIMARY_RPC_URL;
+export const BASE_SEPOLIA_CHAIN_ID = "0x14a34";
+export const BASE_SEPOLIA_RPC_URL = "https://sepolia.base.org";
 
-// Legacy constants removed - all contracts now use dynamic ADDRESSES configuration based on current network
+// Contract addresses - V6 with position tracking and surplus refunding
+export const BVIX_ADDRESS = "0x2E3bef50887aD2A30069c79D19Bb91085351C92a"; // Fresh BVIX token
+
+// V6 contract addresses deployed to Base Sepolia
+export const BVIX_MINT_REDEEM_V6_ADDRESS = '0x65Bec0Ab96ab751Fd0b1D9c907342d9A61FB1117'; // BVIX V6
+export const EVIX_MINT_REDEEM_V6_ADDRESS = '0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf'; // EVIX V6
+
+// Legacy V5 addresses (for backward compatibility)
+export const MINT_REDEEM_ADDRESS = '0x4d0ddFBCBa76f2e72B0Fef2fdDcaE9ddd6922397'; // V5 with faucet USDC
+export const EVIX_MINT_REDEEM_ADDRESS = "0xb187c5Ff48D69BB0b477dAf30Eec779E0D07771D"; // EVIX V5 with faucet USDC
+
+export const EVIX_ADDRESS = "0x7066700CAf442501B308fAe34d5919091e1b2380"; // Fresh EVIX token
+export const ORACLE_ADDRESS = "0x85485dD6cFaF5220150c413309C61a8EA24d24FE";
+export const MOCK_USDC_ADDRESS = "0x9CC37B36FDd8CF5c0297BE15b75663Bf2a193297"; // MockUSDC with public faucet
+export const EVIX_ORACLE_ADDRESS = "0xCd7441A771a7F84E58d98E598B7Ff23A3688094F";
 
 // Contract factory functions
 export const getBVIXContract = async (providerOrSigner: any) => {
@@ -117,12 +129,8 @@ export const getEVIXMintRedeemContract = async (providerOrSigner: any) => {
   return new ethers.Contract(addresses.evixMintRedeem, EVIXMintRedeem_ABI, providerOrSigner);
 };
 
-export const getEVIXMintRedeemContractV6 = async (providerOrSigner: any) => {
-  const chainId = (await getCurrentChainId()).toString();
-  const addresses = ADDRESSES[chainId];
-  if (!addresses) throw new Error("Unsupported network");
-  return new ethers.Contract(addresses.evixMintRedeem, EVIXMintRedeem_ABI, providerOrSigner);
-};
+export const getEVIXMintRedeemContractV6 = (providerOrSigner: any) =>
+  new ethers.Contract(EVIX_MINT_REDEEM_V6_ADDRESS, EVIXMintRedeem_ABI, providerOrSigner);
 
 // Provider functions
 export function getProvider() {
@@ -150,9 +158,7 @@ export async function getCurrentChainId(): Promise<number> {
 export async function getNetworkName(): Promise<string> {
   try {
     const chainId = await getCurrentChainId();
-    if (chainId === CHAIN_IDS.polygonAmoy) {
-      return "Polygon Amoy Testnet";
-    } else if (chainId === CHAIN_IDS.baseSepolia) {
+    if (chainId === CHAIN_IDS.baseSepolia) {
       return "Base Sepolia Testnet";
     } else if (chainId === CHAIN_IDS.sepolia) {
       return "ETH Sepolia Testnet";
@@ -163,7 +169,7 @@ export async function getNetworkName(): Promise<string> {
   }
 }
 
-export async function switchToPolygonAmoy() {
+export async function switchToBaseSepolia() {
   if (typeof window.ethereum === "undefined") {
     throw new Error("MetaMask not installed");
   }
@@ -171,7 +177,7 @@ export async function switchToPolygonAmoy() {
   try {
     await window.ethereum.request({
       method: "wallet_switchEthereumChain",
-      params: [{ chainId: POLYGON_AMOY_CHAIN_ID }],
+      params: [{ chainId: BASE_SEPOLIA_CHAIN_ID }],
     });
   } catch (switchError: any) {
     // If the chain hasn't been added to MetaMask, add it
@@ -180,19 +186,15 @@ export async function switchToPolygonAmoy() {
         method: "wallet_addEthereumChain",
         params: [
           {
-            chainId: POLYGON_AMOY_CHAIN_ID,
-            chainName: "Polygon Amoy Testnet",
-            rpcUrls: [
-              'https://polygon-amoy-bor-rpc.publicnode.com',
-              'https://rpc.ankr.com/polygon_amoy',
-              'https://rpc-amoy.polygon.technology'
-            ],
+            chainId: BASE_SEPOLIA_CHAIN_ID,
+            chainName: "Base Sepolia",
+            rpcUrls: [BASE_SEPOLIA_RPC_URL],
             nativeCurrency: {
-              name: "POL",
-              symbol: "POL",
+              name: "ETH",
+              symbol: "ETH",
               decimals: 18,
             },
-            blockExplorerUrls: ["https://amoy.polygonscan.com/"],
+            blockExplorerUrls: ["https://sepolia.basescan.org/"],
           },
         ],
       });
@@ -271,11 +273,9 @@ export async function getUSDCBalance(address: string): Promise<string> {
     const balance = await usdcContract.balanceOf(address);
     const formattedBalance = ethers.formatUnits(balance, 6); // USDC has 6 decimals
     
-    const chainId = (await getCurrentChainId()).toString();
-    const addresses = ADDRESSES[chainId];
     console.log("🔍 USDC Balance Debug:", { 
       address, 
-      contract: addresses?.mockUsdc || "unknown",
+      contract: MOCK_USDC_ADDRESS,
       balance: balance.toString(), 
       formatted: formattedBalance,
       timestamp: new Date().toISOString()
@@ -295,8 +295,8 @@ export async function getOraclePrice(): Promise<string> {
     const price = await oracleContract.getPrice();
     const chainId = await getCurrentChainId();
     
-    // ETH Sepolia uses 18 decimals, Base Sepolia uses 8 decimals, Polygon Amoy uses 6 decimals
-    const decimals = chainId === CHAIN_IDS.sepolia ? 18 : (chainId === CHAIN_IDS.polygonAmoy ? 6 : 8);
+    // ETH Sepolia uses 18 decimals, Base Sepolia uses 8 decimals
+    const decimals = chainId === CHAIN_IDS.sepolia ? 18 : 8;
     const formattedPrice = ethers.formatUnits(price, decimals);
     
     console.log("🔍 BVIX Price Debug:", {
@@ -350,8 +350,8 @@ export async function getEVIXPrice(): Promise<string> {
     const priceRaw = await evixOracle.getPrice();
     const chainId = await getCurrentChainId();
     
-    // ETH Sepolia uses 18 decimals, Base Sepolia uses 8 decimals, Polygon Amoy uses 6 decimals
-    const decimals = chainId === CHAIN_IDS.sepolia ? 18 : (chainId === CHAIN_IDS.polygonAmoy ? 6 : 8);
+    // ETH Sepolia uses 18 decimals, Base Sepolia uses 8 decimals
+    const decimals = chainId === CHAIN_IDS.sepolia ? 18 : 8;
     const formattedPrice = ethers.formatUnits(priceRaw, decimals);
     
     console.log("🔍 EVIX Price Debug:", {
@@ -403,94 +403,61 @@ export async function mintBVIX(
 ): Promise<ethers.ContractTransactionResponse> {
   console.log("🚀 Starting BVIX mint process for", usdcAmount, "USDC at", targetCR + "% CR");
   
-  try {
-    const signer = await getSigner();
-    const address = await signer.getAddress();
-    const mintRedeemContract = await getMintRedeemContract(signer);
-    const usdcContract = await getUSDCContract(signer);
+  const signer = await getSigner();
+  const address = await signer.getAddress();
+  const mintRedeemContract = await getMintRedeemContract(signer);
+  const usdcContract = await getUSDCContract(signer);
 
-    const usdcAmountWei = ethers.parseUnits(usdcAmount, 6); // USDC has 6 decimals
+  const usdcAmountWei = ethers.parseUnits(usdcAmount, 6); // USDC has 6 decimals
 
-    console.log("🔍 Checking balances and allowances...");
-    const chainId = (await getCurrentChainId()).toString();
-    const addresses = ADDRESSES[chainId];
-    console.log("User address:", address);
-    console.log("USDC contract:", addresses?.mockUsdc);
-    console.log("MintRedeem contract:", addresses?.mintRedeem);
+  console.log("🔍 Checking balances and allowances...");
+  console.log("User address:", address);
+  console.log("USDC contract:", MOCK_USDC_ADDRESS);
+      console.log("MintRedeem V6 contract:", BVIX_MINT_REDEEM_V6_ADDRESS);
 
-    // Check USDC balance first with retry logic for RPC issues
-    let usdcBalance;
-    try {
-      usdcBalance = await usdcContract.balanceOf(address);
-      console.log("USDC balance:", ethers.formatUnits(usdcBalance, 6));
-    } catch (balanceError: any) {
-      if (balanceError.message?.includes('missing trie node') || balanceError.code === 'CALL_EXCEPTION') {
-        throw new Error("Polygon Amoy network is experiencing temporary issues. Please try again in a few minutes. The error is: " + balanceError.shortMessage);
-      }
-      throw balanceError;
-    }
-    
-    console.log("Required amount:", usdcAmount);
-    
-    if (usdcBalance < usdcAmountWei) {
-      throw new Error(
-        `Insufficient USDC balance. You have ${ethers.formatUnits(usdcBalance, 6)} USDC but need ${usdcAmount} USDC.`,
-      );
-    }
-
-    // Check current allowance with retry logic
-    let currentAllowance;
-    try {
-      currentAllowance = await usdcContract.allowance(address, addresses.mintRedeem);
-      console.log("Current allowance:", ethers.formatUnits(currentAllowance, 6));
-    } catch (allowanceError: any) {
-      if (allowanceError.message?.includes('missing trie node') || allowanceError.code === 'CALL_EXCEPTION') {
-        throw new Error("Network issue detected while checking allowance. Please try again in a few minutes.");
-      }
-      throw allowanceError;
-    }
-
-    // Only approve if needed
-    if (currentAllowance < usdcAmountWei) {
-      console.log("🔄 Approving USDC spending...");
-      try {
-        const approveTx = await usdcContract.approve(addresses.mintRedeem, usdcAmountWei);
-        await approveTx.wait();
-        console.log("✅ USDC approval confirmed");
-      } catch (approveError: any) {
-        if (approveError.message?.includes('missing trie node') || approveError.code === 'CALL_EXCEPTION') {
-          throw new Error("Network issue during approval. Please try again in a few minutes.");
-        }
-        throw approveError;
-      }
-    } else {
-      console.log("✅ Sufficient allowance already exists");
-    }
-
-    // Use V7 collateral-aware mint function with error handling
-    console.log(`🎯 Using V7 mintWithCollateralRatio: ${usdcAmount} USDC at ${targetCR}% CR`);
-    console.log(`💰 Expected token value: $${(parseFloat(usdcAmount) / (targetCR / 100)).toFixed(2)}`);
-    
-    try {
-      const mintTx = await mintRedeemContract.mintWithCollateralRatio(usdcAmountWei, targetCR);
-      console.log("📄 Transaction hash:", mintTx.hash);
-      
-      // Wait for transaction confirmation
-      await mintTx.wait();
-      console.log("✅ V7 Mint transaction confirmed with proper CR enforcement!");
-      
-      return mintTx;
-    } catch (mintError: any) {
-      if (mintError.message?.includes('missing trie node') || mintError.code === 'CALL_EXCEPTION') {
-        // Enhanced error message with specific guidance
-        throw new Error("Polygon Amoy network is experiencing temporary issues. The error is: missing revert data");
-      }
-      throw mintError;
-    }
-  } catch (error: any) {
-    console.error("Mint error details:", error);
-    throw new Error(error.message || "Unknown minting error occurred");
+  // Check USDC balance first
+  const usdcBalance = await usdcContract.balanceOf(address);
+  console.log("USDC balance:", ethers.formatUnits(usdcBalance, 6));
+  console.log("Required amount:", usdcAmount);
+  
+  if (usdcBalance < usdcAmountWei) {
+    throw new Error(
+      `Insufficient USDC balance. You have ${ethers.formatUnits(usdcBalance, 6)} USDC but need ${usdcAmount} USDC.`,
+    );
   }
+
+  // Check current allowance
+  const currentAllowance = await usdcContract.allowance(
+    address,
+    BVIX_MINT_REDEEM_V6_ADDRESS,
+  );
+  console.log("Current allowance:", ethers.formatUnits(currentAllowance, 6));
+
+  // Only approve if needed
+  if (currentAllowance < usdcAmountWei) {
+    console.log("🔄 Approving USDC spending...");
+    const approveTx = await usdcContract.approve(
+      BVIX_MINT_REDEEM_V6_ADDRESS,
+      usdcAmountWei,
+    );
+    await approveTx.wait();
+    console.log("✅ USDC approval confirmed");
+  } else {
+    console.log("✅ Sufficient allowance already exists");
+  }
+
+  // Use V6 collateral-aware mint function
+  console.log(`🎯 Using V6 mintWithCollateralRatio: ${usdcAmount} USDC at ${targetCR}% CR`);
+  console.log(`💰 Expected token value: $${(parseFloat(usdcAmount) / (targetCR / 100)).toFixed(2)}`);
+  
+  const mintTx = await mintRedeemContract.mintWithCollateralRatio(usdcAmountWei, targetCR);
+  console.log("📄 Transaction hash:", mintTx.hash);
+  
+  // Wait for transaction confirmation
+  await mintTx.wait();
+  console.log("✅ V6 Mint transaction confirmed with proper CR enforcement!");
+  
+  return mintTx;
 }
 
 export async function redeemBVIX(
@@ -537,20 +504,17 @@ export async function mintEVIX(
     );
   }
 
-  const chainId = (await getCurrentChainId()).toString();
-  const addresses = ADDRESSES[chainId];
-  
   // Check current allowance
   const currentAllowance = await usdcContract.allowance(
     address,
-    addresses.evixMintRedeem,
+    EVIX_MINT_REDEEM_V6_ADDRESS,
   );
 
   // Only approve if needed
   if (currentAllowance < usdcAmountWei) {
     console.log("🔄 Approving USDC spending for EVIX...");
     const approveTx = await usdcContract.approve(
-      addresses.evixMintRedeem,
+      EVIX_MINT_REDEEM_V6_ADDRESS,
       usdcAmountWei,
     );
     await approveTx.wait();
@@ -659,7 +623,7 @@ export async function getContractDebugInfo(): Promise<any> {
         usdcContract.balanceOf(address),
         bvixContract.balanceOf(address),
         oracleContract.getPrice(),
-        usdcContract.allowance(address, (await getMintRedeemContract(provider)).getAddress()),
+        usdcContract.allowance(address, MINT_REDEEM_ADDRESS),
       ]);
 
     return {
@@ -668,16 +632,12 @@ export async function getContractDebugInfo(): Promise<any> {
       bvixBalance: ethers.formatEther(bvixBalance),
       oraclePrice: ethers.formatEther(oraclePrice),
       usdcAllowance: ethers.formatUnits(usdcAllowance, 6),
-      contractAddresses: await (async () => {
-        const chainId = (await getCurrentChainId()).toString();
-        const addresses = ADDRESSES[chainId];
-        return {
-          usdc: addresses?.mockUsdc || "unknown",
-          bvix: addresses?.bvix || "unknown", 
-          oracle: addresses?.oracle || "unknown",
-          mintRedeem: addresses?.mintRedeem || "unknown",
-        };
-      })(),
+      contractAddresses: {
+        usdc: MOCK_USDC_ADDRESS,
+        bvix: BVIX_ADDRESS,
+        oracle: ORACLE_ADDRESS,
+        mintRedeem: MINT_REDEEM_ADDRESS,
+      },
     };
   } catch (error) {
     console.error("Error getting debug info:", error);
@@ -696,25 +656,12 @@ export const getCollateralRatio = async (): Promise<number> => {
     const usdc = await getUSDCContract(provider);
     const bvix = await getBVIXContract(provider);
 
-    // 2️⃣ read chain state in parallel with error handling for RPC issues
-    const mintRedeemContract = await getMintRedeemContract(provider);
-    
-    // Add retry logic for Polygon Amoy RPC issues
-    let rawVaultUSDC, rawSupply, price;
-    try {
-      [rawVaultUSDC, rawSupply, price] = await Promise.all([
-        usdc.balanceOf(await mintRedeemContract.getAddress()), // 6-decimals
-        bvix.totalSupply(),                  // 18-decimals
-        getOraclePrice()                     // plain string like "42.15"
-      ]);
-    } catch (rpcError: any) {
-      // Handle missing trie node errors on Polygon Amoy
-      if (rpcError.message?.includes('missing trie node') || rpcError.code === 'CALL_EXCEPTION') {
-        console.warn("Polygon Amoy RPC issue detected, using fallback for collateral ratio");
-        return 150; // Return default safe collateral ratio for display
-      }
-      throw rpcError;
-    }
+    // 2️⃣ read chain state in parallel
+    const [rawVaultUSDC, rawSupply, price] = await Promise.all([
+      usdc.balanceOf(MINT_REDEEM_ADDRESS), // 6-decimals
+      bvix.totalSupply(),                  // 18-decimals
+      getOraclePrice()                     // plain string like "42.15"
+    ]);
 
     // 3️⃣ convert to JS numbers (fine for frontend display)
     const vaultUSDC = Number(ethers.formatUnits(rawVaultUSDC, 6));   // → 1 234.56
@@ -726,7 +673,7 @@ export const getCollateralRatio = async (): Promise<number> => {
     return vaultUSDC / liability;         // e.g. 1.42
   } catch (error) {
     console.error("Error getting collateral ratio:", error);
-    return 150; // Return safe fallback instead of 0
+    return 0;
   }
 };
 
@@ -737,9 +684,7 @@ export async function getUserPosition(user: string) {
     const contract = await getMintRedeemContract(provider);
     
     console.log('🔍 Getting BVIX position for user:', user);
-    const chainId = (await getCurrentChainId()).toString();
-    const addresses = ADDRESSES[chainId];
-    console.log('🔍 Using V6 contract address:', addresses?.mintRedeem);
+    console.log('🔍 Using V6 contract address:', BVIX_MINT_REDEEM_V6_ADDRESS);
     
     // Get user's position from V6 contract using positions(address) function
     const position = await contract.positions(user);
@@ -796,9 +741,7 @@ export async function getUserPositionEVIX(user: string) {
     const contract = await getEVIXMintRedeemContract(provider);
     
     console.log('🔍 Getting EVIX position for user:', user);
-    const chainId = (await getCurrentChainId()).toString();
-    const addresses = ADDRESSES[chainId];
-    console.log('🔍 Using EVIX V6 contract address:', addresses?.evixMintRedeem);
+    console.log('🔍 Using EVIX V6 contract address:', EVIX_MINT_REDEEM_V6_ADDRESS);
     
     // Get user's position from V6 contract using positions(address) function
     const position = await contract.positions(user);
@@ -832,9 +775,7 @@ export async function getUserCollateralRatioEVIX(user: string): Promise<number> 
     const contract = await getEVIXMintRedeemContract(provider);
     
     console.log('🔍 Getting EVIX CR for user:', user);
-    const chainId = (await getCurrentChainId()).toString();
-    const addresses = ADDRESSES[chainId];
-    console.log('🔍 Using EVIX V6 contract address:', addresses?.evixMintRedeem);
+    console.log('🔍 Using EVIX V6 contract address:', EVIX_MINT_REDEEM_V6_ADDRESS);
     
     // Get user's individual collateral ratio from V6 contract
     const ratio = await contract.getUserCollateralRatio(user);
