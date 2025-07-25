@@ -2,7 +2,7 @@ import { Github, MessageCircle } from "lucide-react";
 import { SiX, SiDiscord } from "react-icons/si";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import levitasLogoPath from "@assets/levitas-new-logo.svg";
+const levitasLogoPath = "/assets/levitas-new-logo.png";
 
 export default function Footer() {
   return (
