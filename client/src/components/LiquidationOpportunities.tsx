@@ -22,9 +22,16 @@ import { useWallet } from '@/hooks/use-wallet';
 
 export default function LiquidationOpportunities() {
   const { address } = useWallet();
-  const { vaults, isLoading: vaultsLoading } = useLiquidatableVaults();
-  const { liquidate } = useLiquidation();
-  const permissionless = usePermissionlessLiquidation();
+  const vaultsQuery = useLiquidatableVaults();
+  const vaults = vaultsQuery.data;
+  const vaultsLoading = vaultsQuery.isLoading;
+  
+  const liquidationMutation = useLiquidation();
+  const liquidate = liquidationMutation.mutate;
+  
+  const permissionlessQuery = usePermissionlessLiquidation();
+  const permissionless = permissionlessQuery.data;
+  
   const { health } = useVaultHealth(address);
   
   const getRiskBadge = (cr: number) => {
@@ -70,7 +77,7 @@ export default function LiquidationOpportunities() {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              ${vaults?.reduce((sum, v) => sum + parseFloat(v.maxBonus), 0).toFixed(2) || '0.00'}
+              ${vaults?.reduce((sum: number, v: any) => sum + parseFloat(v.maxBonus), 0).toFixed(2) || '0.00'}
             </p>
             <p className="text-xs text-gray-500 mt-1">5% liquidation bonus</p>
           </CardContent>
@@ -121,7 +128,7 @@ export default function LiquidationOpportunities() {
             </AlertDescription>
           </Alert>
           
-          {vaults.map((vault) => (
+          {vaults.map((vault: any) => (
             <Card key={`${vault.tokenType}-${vault.vaultId}`}>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -169,7 +176,7 @@ export default function LiquidationOpportunities() {
                   </div>
                   
                   <Button 
-                    onClick={() => liquidate(vault.vaultId, vault.tokenType as 'BVIX' | 'EVIX')}
+                    onClick={() => liquidate({ vault })}
                     className="bg-red-600 hover:bg-red-700"
                     disabled={vault.gracePeriodActive}
                   >
