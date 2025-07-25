@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,12 +17,17 @@ import {
   useLiquidatableVaults, 
   useLiquidation, 
   usePermissionlessLiquidation,
-  useVaultHealth
+  useVaultHealth,
+  type LiquidatableVault
 } from '@/hooks/useLiquidationFeatures';
 import { useWallet } from '@/hooks/use-wallet';
+import { LiquidationConfirmDialog } from './LiquidationConfirmDialog';
 
 export default function LiquidationOpportunities() {
   const { address } = useWallet();
+  const [selectedVault, setSelectedVault] = useState<LiquidatableVault | null>(null);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  
   const vaultsQuery = useLiquidatableVaults();
   const vaults = vaultsQuery.data;
   const vaultsLoading = vaultsQuery.isLoading;
@@ -33,6 +39,18 @@ export default function LiquidationOpportunities() {
   const permissionless = permissionlessQuery.data;
   
   const { health } = useVaultHealth(address);
+  
+  const handleLiquidateClick = (vault: LiquidatableVault) => {
+    setSelectedVault(vault);
+    setConfirmDialogOpen(true);
+  };
+  
+  const handleConfirmLiquidation = () => {
+    if (selectedVault) {
+      liquidate({ vault: selectedVault });
+      setConfirmDialogOpen(false);
+    }
+  };
   
   const getRiskBadge = (cr: number) => {
     if (cr < 110) return <Badge variant="destructive">Critical</Badge>;
@@ -149,7 +167,10 @@ export default function LiquidationOpportunities() {
                       <span className="font-semibold text-red-600">{vault.currentCR.toFixed(1)}% CR</span>
                     </div>
                     <p className="text-xs text-gray-500">
-                      Liquidation at {vault.liquidationPrice}
+                      {vault.tokenType} Price: ${vault.tokenType === 'EVIX' ? '38.02' : '42.19'}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Liquidation at ${vault.liquidationPrice}
                     </p>
                   </div>
                 </div>
@@ -169,14 +190,9 @@ export default function LiquidationOpportunities() {
                   </div>
                 </div>
                 
-                <div className="mt-4 flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <Clock className="h-4 w-4" />
-                    <span>Available in {vault.gracePeriodEnds}</span>
-                  </div>
-                  
+                <div className="mt-4 flex items-center justify-end">
                   <Button 
-                    onClick={() => liquidate({ vault })}
+                    onClick={() => handleLiquidateClick(vault)}
                     className="bg-red-600 hover:bg-red-700"
                     disabled={vault.gracePeriodActive}
                   >
@@ -199,6 +215,14 @@ export default function LiquidationOpportunities() {
           </CardContent>
         </Card>
       )}
+      
+      <LiquidationConfirmDialog
+        open={confirmDialogOpen}
+        onOpenChange={setConfirmDialogOpen}
+        vault={selectedVault}
+        onConfirm={handleConfirmLiquidation}
+        isLiquidating={liquidationMutation.isPending}
+      />
     </div>
   );
 }

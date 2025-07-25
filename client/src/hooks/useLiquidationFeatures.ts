@@ -38,15 +38,21 @@ export function useLiquidatableVaults() {
     queryFn: async () => {
       // For now, return mock data since V8 contracts are not deployed
       // This will be replaced with actual contract calls when V8 is deployed
+      // Calculate proper liquidation amounts
+      const evixPrice = 38.02; // Current EVIX price
+      const debt = 218.76;
+      const debtValue = debt * evixPrice; // Value of debt in USDC
+      const bonusAmount = debtValue * 0.05; // 5% bonus on debt value
+      
       const mockVaults: LiquidatableVault[] = [
         {
           vaultId: 1,
           owner: '0x18633ea30ad5c91e13d2e5714fe5e3d97043679b',
           collateral: '9970',
-          debt: '218.75548533438651922',
+          debt: debt.toFixed(2),
           currentCR: 119,
-          liquidationPrice: '45.60',
-          maxBonus: '498.50',
+          liquidationPrice: '38.14', // Liquidation threshold price
+          maxBonus: bonusAmount.toFixed(2), // 5% bonus on debt value
           canLiquidate: true,
           tokenType: 'EVIX',
           contractAddress: EVIX_MINT_REDEEM_V8_ADDRESS
@@ -55,9 +61,13 @@ export function useLiquidatableVaults() {
 
       // Filter out liquidated vaults from history
       const history = JSON.parse(localStorage.getItem('liquidationHistory') || '[]');
-      const liquidatedIds = history.map((h: any) => `${h.vault.tokenType}-${h.vault.vaultId}`);
+      
+      // Check if this specific vault has been liquidated
+      const isLiquidated = history.some((h: any) => 
+        h.vault && h.vault.vaultId === mockVaults[0].vaultId && h.vault.tokenType === mockVaults[0].tokenType
+      );
 
-      return mockVaults.filter(v => !liquidatedIds.includes(`${v.tokenType}-${v.vaultId}`));
+      return isLiquidated ? [] : mockVaults;
     },
     refetchInterval: 30000, // Refresh every 30 seconds
   });
@@ -134,12 +144,17 @@ export function useLiquidation() {
       // Simulate a successful liquidation
       await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
 
-      const mockBonus = parseFloat(vault.collateral) * 0.05; // 5% bonus
+      // Calculate proper liquidation amounts based on DeFi mechanics
+      const tokenPrice = vault.tokenType === 'EVIX' ? 38.02 : 42.19; // Current prices
+      const debtValue = parseFloat(vault.debt) * tokenPrice; // Value of debt in USDC
+      const bonusAmount = debtValue * 0.05; // 5% bonus on debt value
+      const totalCollateralSeized = debtValue + bonusAmount; // Total USDC liquidator receives
+      
       const mockResult: LiquidationResult = {
         txHash: '0x' + Math.random().toString(16).substr(2, 64),
         debtRepaid: vault.debt,
-        collateralSeized: vault.collateral,
-        bonus: mockBonus.toFixed(2),
+        collateralSeized: totalCollateralSeized.toFixed(2),
+        bonus: bonusAmount.toFixed(2),
         isPartial: false
       };
 
@@ -147,8 +162,12 @@ export function useLiquidation() {
       const history = JSON.parse(localStorage.getItem('liquidationHistory') || '[]');
       history.push({
         ...mockResult,
-        vault,
-        timestamp: Date.now()
+        vault: {
+          ...vault,
+          vaultId: vault.vaultId || `#${Math.floor(Math.random() * 1000)}` // Ensure vault ID exists
+        },
+        timestamp: Date.now(),
+        type: 'liquidation'
       });
       localStorage.setItem('liquidationHistory', JSON.stringify(history));
 
