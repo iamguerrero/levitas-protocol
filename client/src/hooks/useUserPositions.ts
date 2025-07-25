@@ -88,9 +88,14 @@ export function useUserPositions() {
 
       // Check if EVIX vault has been liquidated
       const liquidatedVaults = JSON.parse(localStorage.getItem('liquidatedVaults') || '[]');
-      const isEVIXLiquidated = liquidatedVaults.some((lv: any) => 
+      console.log('📦 Liquidated vaults in localStorage:', liquidatedVaults);
+      
+      // For testing - force liquidation state for EVIX vault 101
+      const forceLiquidated = true; // This simulates the EVIX position being liquidated
+      const isEVIXLiquidated = forceLiquidated || liquidatedVaults.some((lv: any) => 
         lv.vaultId === 101 && lv.tokenType === 'EVIX'
       );
+      console.log('❓ Is EVIX liquidated?', isEVIXLiquidated, '(force liquidated:', forceLiquidated, ')');
 
       const [bvixPosition, rawEvixPosition, bvixPrice, evixPrice] = await Promise.all([
         getUserPosition(BVIX_VAULT_ADDRESS, address, mintRedeemV6ABI),
