@@ -24,6 +24,8 @@ import {
   useVaultHealth,
   useLiquidationHistory 
 } from '@/hooks/useLiquidationFeatures';
+import { Link } from 'wouter';
+import { ArrowLeft } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -197,6 +199,15 @@ export function LiquidationDashboard() {
   
   return (
     <div className="container mx-auto py-8 space-y-6">
+      <div className="mb-6">
+        <Link href="/trading">
+          <Button variant="outline" size="sm" className="mb-4">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Trading
+          </Button>
+        </Link>
+      </div>
+      
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Liquidation Center</h1>

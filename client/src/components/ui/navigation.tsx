@@ -68,10 +68,15 @@ export default function Navigation() {
             >
               Liquidity
             </a>
-            {location === "/app" || location === "/liquidation" ? (
+            {location === "/app" || location === "/trading" || location === "/liquidation" ? (
               <>
+                <Link href="/app">
+                  <span className={`${location === "/app" || location === "/trading" ? "text-black font-medium" : "text-gray-600"} hover:text-black transition-colors cursor-pointer`}>
+                    Trading
+                  </span>
+                </Link>
                 <Link href="/liquidation">
-                  <span className="text-gray-600 hover:text-black transition-colors cursor-pointer">
+                  <span className={`${location === "/liquidation" ? "text-black font-medium" : "text-gray-600"} hover:text-black transition-colors cursor-pointer`}>
                     Liquidation
                   </span>
                 </Link>
@@ -140,10 +145,15 @@ export default function Navigation() {
             >
               Governance
             </a>
-            {location === "/app" || location === "/liquidation" ? (
+            {location === "/app" || location === "/trading" || location === "/liquidation" ? (
               <div className="mt-2">
+                <Link href="/app">
+                  <span className={`block py-2 ${location === "/app" || location === "/trading" ? "text-black font-medium" : "text-gray-600"} hover:text-black cursor-pointer`}>
+                    Trading
+                  </span>
+                </Link>
                 <Link href="/liquidation">
-                  <span className="block py-2 text-gray-600 hover:text-black cursor-pointer">
+                  <span className={`block py-2 ${location === "/liquidation" ? "text-black font-medium" : "text-gray-600"} hover:text-black cursor-pointer`}>
                     Liquidation
                   </span>
                 </Link>
