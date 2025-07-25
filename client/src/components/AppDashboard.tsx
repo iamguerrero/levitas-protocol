@@ -14,7 +14,7 @@ export default function AppDashboard() {
   const historyResult = useLiquidationHistory();
   const history = historyResult.data || [];
   const { address } = useWallet();
-  const { positions } = useUserPositions();
+  const { data: userPositions } = useUserPositions();
   const [location] = useLocation();
   const [defaultTab, setDefaultTab] = useState("trading");
   

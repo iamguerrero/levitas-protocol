@@ -163,7 +163,7 @@ export function useUserPositions() {
   });
 
   return {
-    positions,
+    data: positions,
     isLoading
   };
 }
