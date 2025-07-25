@@ -56,17 +56,31 @@ export default function AppDashboard() {
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <Badge>{item.tokenType}</Badge>
+                          <Badge>{item.vault?.tokenType || 'EVIX'}</Badge>
                           <span className="font-semibold">
-                            {item.type === 'liquidation' ? 'Liquidated' : item.type}
+                            {item.type === 'liquidation' ? 'Liquidated' : item.type || 'Liquidation'}
                           </span>
                           <span className="text-sm text-gray-500">
-                            Vault #{item.vaultId}
+                            Vault {item.vault?.vaultId ? `#${item.vault.vaultId}` : '#001'}
                           </span>
                         </div>
                         <div className="text-right">
-                          <p className="font-medium text-green-600">+${item.bonusReceived}</p>
+                          <p className="font-medium text-green-600">+${item.bonus || '0.00'} USDC</p>
                           <p className="text-xs text-gray-500">{new Date(item.timestamp).toLocaleString()}</p>
+                        </div>
+                      </div>
+                      <div className="mt-3 pt-3 border-t grid grid-cols-3 gap-4 text-sm">
+                        <div>
+                          <p className="text-gray-500">Debt Repaid</p>
+                          <p className="font-medium">{item.debtRepaid} {item.vault?.tokenType || 'EVIX'}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500">Collateral Seized</p>
+                          <p className="font-medium">${item.collateralSeized} USDC</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500">Transaction</p>
+                          <p className="font-mono text-xs">{item.txHash?.slice(0, 10)}...</p>
                         </div>
                       </div>
                     </CardContent>
