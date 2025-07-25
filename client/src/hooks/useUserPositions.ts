@@ -66,40 +66,43 @@ export function useUserPositions() {
     queryFn: async () => {
       if (!address) return null;
 
-      const [bvixPosition, evixPosition] = await Promise.all([
+      // Get positions and prices in parallel for better performance
+      const provider = getProvider();
+      const bvixContract = new Contract(BVIX_VAULT_ADDRESS, mintRedeemV6ABI, provider);
+      const evixContract = new Contract(EVIX_VAULT_ADDRESS, evixMintRedeemV6ABI, provider);
+
+      const [bvixPosition, evixPosition, bvixPrice, evixPrice] = await Promise.all([
         getUserPosition(BVIX_VAULT_ADDRESS, address, mintRedeemV6ABI),
-        getUserPosition(EVIX_VAULT_ADDRESS, address, evixMintRedeemV6ABI)
+        getUserPosition(EVIX_VAULT_ADDRESS, address, evixMintRedeemV6ABI),
+        bvixContract.getPrice().catch(() => 0n),
+        evixContract.getPrice().catch(() => 0n)
       ]);
 
-      // Calculate collateral ratios manually to avoid divide by zero
+      // Calculate collateral ratios
       let bvixCR = 0;
       let evixCR = 0;
 
       try {
-        const provider = getProvider();
-        const bvixContract = new Contract(BVIX_VAULT_ADDRESS, mintRedeemV6ABI, provider);
-        const evixContract = new Contract(EVIX_VAULT_ADDRESS, evixMintRedeemV6ABI, provider);
-
-        const bvixPositionData = await getUserPosition(BVIX_VAULT_ADDRESS, address, mintRedeemV6ABI);
-        const evixPositionData = await getUserPosition(EVIX_VAULT_ADDRESS, address, evixMintRedeemV6ABI);
-
         // For BVIX: CR = (collateral) / (debt * price) * 100
-        if (Number(bvixPositionData.debt) > 0) {
-          const bvixPrice = await bvixContract.getPrice();
-          const bvixPriceFormatted = Number(bvixPrice) / 1e8; // Oracle returns 8-decimal format
-          const debtValueInUSDC = Number(bvixPositionData.debt) * bvixPriceFormatted;
-          bvixCR = Math.floor((Number(bvixPositionData.collateral) / debtValueInUSDC) * 100);
+        if (Number(bvixPosition.debt) > 0 && bvixPrice > 0n) {
+          const bvixPriceFormatted = Number(bvixPrice) / 1e8;
+          const debtValueInUSDC = Number(bvixPosition.debt) * bvixPriceFormatted;
+          bvixCR = Math.floor((Number(bvixPosition.collateral) / debtValueInUSDC) * 100);
+          console.log('🔍 BVIX CR calculation:', {
+            collateral: bvixPosition.collateral,
+            debt: bvixPosition.debt,
+            price: bvixPriceFormatted,
+            debtValueInUSDC,
+            calculatedCR: bvixCR
+          });
         }
-
 
         // For EVIX: CR = (collateral) / (debt * price) * 100
-        if (Number(evixPositionData.debt) > 0) {
-          const evixPrice = await evixContract.getPrice();
-          const evixPriceFormatted = Number(evixPrice) / 1e8; // Oracle returns 8-decimal format
-          const debtValueInUSDC = Number(evixPositionData.debt) * evixPriceFormatted;
-          evixCR = Math.floor((Number(evixPositionData.collateral) / debtValueInUSDC) * 100);
+        if (Number(evixPosition.debt) > 0 && evixPrice > 0n) {
+          const evixPriceFormatted = Number(evixPrice) / 1e8;
+          const debtValueInUSDC = Number(evixPosition.debt) * evixPriceFormatted;
+          evixCR = Math.floor((Number(evixPosition.collateral) / debtValueInUSDC) * 100);
         }
-
 
       } catch (error) {
         console.log('🔍 CR calculation failed:', error);
@@ -111,7 +114,8 @@ export function useUserPositions() {
       };
     },
     enabled: isConnected && !!address,
-    refetchInterval: 10000 // Refresh every 10 seconds
+    refetchInterval: 10000, // Refresh every 10 seconds
+    staleTime: 5000 // Consider data stale after 5 seconds for faster updates
   });
 
   return {
