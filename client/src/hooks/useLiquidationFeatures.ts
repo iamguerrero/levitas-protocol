@@ -210,6 +210,15 @@ export function useLiquidation() {
       
       localStorage.setItem('mockBalances', JSON.stringify(mockBalances));
 
+      // Force refresh user positions by invalidating cache
+      if (typeof window !== 'undefined') {
+        // Trigger a storage event to force re-query
+        window.dispatchEvent(new StorageEvent('storage', {
+          key: 'liquidatedVaults',
+          newValue: JSON.stringify(liquidatedVaults)
+        }));
+      }
+
       return mockResult;
 
       /* Original implementation for when V8 is deployed:

@@ -4,6 +4,7 @@ import { getProvider } from '@/lib/web3';
 import { Contract } from 'ethers';
 import mintRedeemV6ABI from '@/contracts/MintRedeemV6.abi.json';
 import evixMintRedeemV6ABI from '@/contracts/EVIXMintRedeemV6.abi.json';
+import { useState, useEffect } from 'react';
 
 const BVIX_VAULT_ADDRESS = "0x65Bec0Ab96ab751Fd0b1D9c907342d9A61FB1117";
 const EVIX_VAULT_ADDRESS = "0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf";
@@ -61,8 +62,22 @@ async function getUserPosition(
 export function useUserPositions() {
   const { address, isConnected } = useWallet();
 
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Listen for liquidation events
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'liquidatedVaults') {
+        setRefreshTrigger(prev => prev + 1);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
   const { data: positions, isLoading } = useQuery({
-    queryKey: ['userPositions', address],
+    queryKey: ['userPositions', address, refreshTrigger],
     queryFn: async () => {
       if (!address) return null;
 
@@ -77,12 +92,17 @@ export function useUserPositions() {
         lv.vaultId === 101 && lv.tokenType === 'EVIX'
       );
 
-      const [bvixPosition, evixPosition, bvixPrice, evixPrice] = await Promise.all([
+      const [bvixPosition, rawEvixPosition, bvixPrice, evixPrice] = await Promise.all([
         getUserPosition(BVIX_VAULT_ADDRESS, address, mintRedeemV6ABI),
-        isEVIXLiquidated ? Promise.resolve({ collateral: "0", debt: "0", cr: 0 }) : getUserPosition(EVIX_VAULT_ADDRESS, address, evixMintRedeemV6ABI),
+        getUserPosition(EVIX_VAULT_ADDRESS, address, evixMintRedeemV6ABI),
         bvixContract.getPrice().catch(() => 0n),
         evixContract.getPrice().catch(() => 0n)
       ]);
+
+      // Override EVIX position if it has been liquidated
+      const evixPosition = isEVIXLiquidated ? { collateral: "0", debt: "0", cr: 0 } : rawEvixPosition;
+      
+      console.log('🔍 Liquidation check:', { isEVIXLiquidated, rawEvixPosition, overriddenEvixPosition: evixPosition });
 
       // Calculate collateral ratios
       let bvixCR = 0;
