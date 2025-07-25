@@ -140,7 +140,7 @@ function LiquidationModal({ vault, isOpen, onClose }: LiquidationModalProps) {
               <p className="text-lg">${estimatedPayout} USDC</p>
               <p className="text-sm text-gray-500">Includes 5% liquidation bonus</p>
               <p className="text-xs text-gray-500 mt-2">
-                Note: You need {isPartial ? repayAmount || '0' : vault.debt} {vault.tokenType} worth of USDC to execute this liquidation
+                Note: You need {isPartial ? repayAmount || '0' : vault.debt} {vault.tokenType} tokens to execute this liquidation
               </p>
             </AlertDescription>
           </Alert>
