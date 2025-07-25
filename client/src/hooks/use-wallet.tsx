@@ -1,7 +1,6 @@
 import { useState, useEffect, createContext, useContext } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { switchToPolygonAmoy } from "@/lib/web3";
-import { PRIMARY_HEX_CHAIN_ID } from "@/lib/chains";
+import { switchToBaseSepolia } from "@/lib/web3";
 
 interface WalletContextType {
   isConnected: boolean;
@@ -65,23 +64,23 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
           description: `Connected to ${accounts[0].slice(0, 6)}...${accounts[0].slice(-4)}`,
         });
 
-        // Check if on correct network (Polygon Amoy) and switch if needed
+        // Check if on correct network (Base Sepolia) and switch if needed
         const chainId = await window.ethereum.request({
           method: "eth_chainId",
         });
-        if (chainId !== PRIMARY_HEX_CHAIN_ID) {
-          // Polygon Amoy chain ID
+        if (chainId !== "0x14a34") {
+          // Base Sepolia chain ID
           try {
-            await switchToPolygonAmoy();
+            await switchToBaseSepolia();
             toast({
               title: "Network Switched",
-              description: "Successfully switched to Polygon Amoy testnet.",
+              description: "Successfully switched to Base Sepolia testnet.",
             });
           } catch (switchError) {
             toast({
               title: "Network Switch Failed",
               description:
-                "Please manually switch to Polygon Amoy testnet in MetaMask.",
+                "Please manually switch to Base Sepolia testnet in MetaMask.",
               variant: "destructive",
             });
           }

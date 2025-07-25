@@ -1,33 +1,75 @@
 import { useState, useEffect } from 'react';
+import { getOraclePrice, getEVIXPrice } from '@/lib/web3';
 
-export function useRealTimeOracle() {
-  const [bvixPrice, setBvixPrice] = useState<string>("0.00");
-  const [evixPrice, setEvixPrice] = useState<string>("0.00");
-  const [isConnected, setIsConnected] = useState<boolean>(false);
+/**
+ * Sprint 2.1: Real-time Oracle System Implementation
+ * 
+ * Implements dynamic price simulation system that updates BVIX and EVIX prices 
+ * every 60 seconds with realistic volatility patterns as specified in feature_recommendations.md
+ */
+export const useRealTimeOracle = () => {
+  const [bvixPrice, setBvixPrice] = useState<string>('');
+  const [evixPrice, setEvixPrice] = useState<string>('');
+  const [isConnected, setIsConnected] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
-  const [error, setError] = useState<string | null>(null);
+
+  // Price simulation parameters from Sprint 2.1 specs
+  const PRICE_BOUNDS = {
+    BVIX: { min: 15, max: 150, current: 42.15 },
+    EVIX: { min: 20, max: 180, current: 37.98 }
+  };
+
+  const generateRealisticPrice = (currentPrice: number, bounds: { min: number, max: number }) => {
+    // Implement random walk with mean reversion as specified in Sprint 2.1
+    const volatility = 0.02; // 2% max movement per update
+    const meanReversion = 0.1; // Tendency to revert to mean
+    const mean = (bounds.min + bounds.max) / 2;
+    
+    // Random walk component
+    const randomChange = (Math.random() - 0.5) * volatility * currentPrice;
+    
+    // Mean reversion component
+    const meanReversionChange = (mean - currentPrice) * meanReversion * 0.01;
+    
+    // Circuit breaker: max 1% price movement per minute as specified
+    const maxChange = currentPrice * 0.01;
+    const totalChange = Math.max(-maxChange, Math.min(maxChange, randomChange + meanReversionChange));
+    
+    const newPrice = currentPrice + totalChange;
+    
+    // Ensure price stays within bounds
+    return Math.max(bounds.min, Math.min(bounds.max, newPrice));
+  };
 
   useEffect(() => {
-    console.log('🚀 Sprint 2.1 Real-time Oracle System initialized - updating every 10 seconds for demonstration');
+    let updateInterval: NodeJS.Timeout | null = null;
+    let currentBvixPrice = PRICE_BOUNDS.BVIX.current;
+    let currentEvixPrice = PRICE_BOUNDS.EVIX.current;
 
-    // Simulate price updates every 10 seconds
-    const updatePrices = () => {
+    const updatePrices = async () => {
       try {
-        // Generate realistic BVIX price (15-150 range)
-        const newBvixPrice = (Math.random() * (50 - 35) + 35).toFixed(2);
-        // Generate realistic EVIX price (20-180 range)  
-        const newEvixPrice = (Math.random() * (45 - 30) + 30).toFixed(2);
+        // Sprint 2.1: Always use simulated prices with realistic volatility for demo
+        // Generate new prices with realistic volatility patterns
+        const newBvixPrice = generateRealisticPrice(currentBvixPrice, PRICE_BOUNDS.BVIX);
+        const newEvixPrice = generateRealisticPrice(currentEvixPrice, PRICE_BOUNDS.EVIX);
+        
+        // Update the current price tracking variables
+        currentBvixPrice = newBvixPrice;
+        currentEvixPrice = newEvixPrice;
 
-        setBvixPrice(newBvixPrice);
-        setEvixPrice(newEvixPrice);
-        setLastUpdate(new Date());
+        const updateTime = new Date();
+        const formattedBvix = newBvixPrice.toFixed(2);
+        const formattedEvix = newEvixPrice.toFixed(2);
+
+        setBvixPrice(formattedBvix);
+        setEvixPrice(formattedEvix);
+        setLastUpdate(updateTime);
         setIsConnected(true);
-        setError(null);
 
-        console.log(`🔄 SPRINT 2.1 PRICE UPDATE: BVIX $${newBvixPrice}, EVIX $${newEvixPrice} at ${new Date().toLocaleTimeString()}`);
-      } catch (err) {
-        console.error('Error updating prices:', err);
-        setError(err instanceof Error ? err.message : 'Unknown error');
+        console.log(`🔄 SPRINT 2.1 PRICE UPDATE: BVIX $${formattedBvix}, EVIX $${formattedEvix} at ${updateTime.toLocaleTimeString()}`);
+
+      } catch (error) {
+        console.error('Error updating oracle prices:', error);
         setIsConnected(false);
       }
     };
@@ -35,8 +77,10 @@ export function useRealTimeOracle() {
     // Initial price update
     updatePrices();
 
-    // Set up interval for regular updates
-    const updateInterval = setInterval(updatePrices, 10000);
+    // Set up 10-second interval for demonstration, 60 seconds for production
+    updateInterval = setInterval(updatePrices, 10000); // 10 seconds for easy testing
+
+    console.log('🚀 Sprint 2.1 Real-time Oracle System initialized - updating every 10 seconds for demonstration');
 
     return () => {
       if (updateInterval) {
@@ -45,13 +89,12 @@ export function useRealTimeOracle() {
       setIsConnected(false);
       console.log('Real-time oracle system stopped');
     };
-  }, []); // Empty dependency array ensures this effect runs once
+  }, []);
 
   return { 
     bvixPrice, 
     evixPrice, 
     isConnected, 
-    lastUpdate: lastUpdate?.toLocaleTimeString(),
-    error
+    lastUpdate: lastUpdate?.toLocaleTimeString() 
   };
-}
+}; 
