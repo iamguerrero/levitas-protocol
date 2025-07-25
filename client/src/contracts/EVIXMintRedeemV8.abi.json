@@ -3,22 +3,17 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_usdc",
+        "name": "_tokenAddress",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "_evix",
+        "name": "_usdcAddress",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "_oracle",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_governor",
+        "name": "_oracleAddress",
         "type": "address"
       }
     ],
@@ -29,65 +24,15 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "oldMinCR",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "newMinCR",
-        "type": "uint256"
-      }
-    ],
-    "name": "CollateralRatioUpdated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "oldMintFee",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "newMintFee",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "oldRedeemFee",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "newRedeemFee",
-        "type": "uint256"
-      }
-    ],
-    "name": "FeesUpdated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
         "indexed": true,
         "internalType": "address",
-        "name": "user",
+        "name": "liquidator",
         "type": "address"
       },
       {
         "indexed": true,
         "internalType": "address",
-        "name": "liquidator",
+        "name": "vaultOwner",
         "type": "address"
       },
       {
@@ -115,88 +60,7 @@
         "type": "bool"
       }
     ],
-    "name": "Liquidation",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "oldThreshold",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "newThreshold",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "oldBonus",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "newBonus",
-        "type": "uint256"
-      }
-    ],
-    "name": "LiquidationParamsUpdated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "vaultId",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "newPrice",
-        "type": "uint256"
-      }
-    ],
-    "name": "LiquidationPriceUpdated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "user",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "usdcAmount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "evixMinted",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "targetCR",
-        "type": "uint256"
-      }
-    ],
-    "name": "Mint",
+    "name": "Liquidated",
     "type": "event"
   },
   {
@@ -213,38 +77,13 @@
     "type": "event"
   },
   {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "user",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "evixAmount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "usdcRedeemed",
-        "type": "uint256"
-      }
-    ],
-    "name": "Redeem",
-    "type": "event"
-  },
-  {
     "inputs": [],
-    "name": "evix",
+    "name": "LIQUIDATION_BONUS",
     "outputs": [
       {
-        "internalType": "contract EVIXToken",
+        "internalType": "uint256",
         "name": "",
-        "type": "address"
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -252,7 +91,7 @@
   },
   {
     "inputs": [],
-    "name": "getCollateralRatio",
+    "name": "LIQUIDATION_THRESHOLD",
     "outputs": [
       {
         "internalType": "uint256",
@@ -264,63 +103,8 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "vaultId",
-        "type": "uint256"
-      }
-    ],
-    "name": "getLiquidationDetails",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "owner",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "collateral",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "debt",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "currentCR",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "liquidationPrice",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "maxBonus",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bool",
-        "name": "canLiquidate",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "user",
-        "type": "address"
-      }
-    ],
-    "name": "getLiquidationPrice",
+    "inputs": [],
+    "name": "MIN_COLLATERAL_RATIO",
     "outputs": [
       {
         "internalType": "uint256",
@@ -332,14 +116,8 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "user",
-        "type": "address"
-      }
-    ],
-    "name": "getUserCollateralRatio",
+    "inputs": [],
+    "name": "GRACE_PERIOD",
     "outputs": [
       {
         "internalType": "uint256",
@@ -366,8 +144,88 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "vaultId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getLiquidationDetails",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "owner",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "collateral",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "debt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "currentCR",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "liquidationPrice",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxBonus",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "canLiquidate",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lastUpdateTime",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct EVIXMintRedeemV8.LiquidationDetails",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "getUserLiquidationPrice",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "vaultOwner",
         "type": "address"
       },
       {
@@ -385,37 +243,18 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "amount",
+        "name": "vaultId",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "targetCR",
+        "name": "repayAmount",
         "type": "uint256"
       }
     ],
-    "name": "mintWithCollateralRatio",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
+    "name": "liquidateById",
+    "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "oracle",
-    "outputs": [
-      {
-        "internalType": "contract PriceOracle",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -434,27 +273,48 @@
   {
     "inputs": [
       {
+        "internalType": "bool",
+        "name": "enabled",
+        "type": "bool"
+      }
+    ],
+    "name": "setPermissionlessLiquidation",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "liquidator",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "authorized",
+        "type": "bool"
+      }
+    ],
+    "name": "setLiquidator",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "",
         "type": "address"
       }
     ],
-    "name": "positions",
+    "name": "authorizedLiquidators",
     "outputs": [
       {
-        "internalType": "uint256",
-        "name": "collateral",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "debt",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "lastActivity",
-        "type": "uint256"
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -466,41 +326,40 @@
         "internalType": "uint256",
         "name": "amount",
         "type": "uint256"
-      }
-    ],
-    "name": "redeem",
-    "outputs": [
+      },
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "targetCR",
         "type": "uint256"
       }
     ],
+    "name": "mintWithCollateralRatio",
+    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "usdc",
-    "outputs": [
+    "inputs": [
       {
-        "internalType": "contract IERC20",
-        "name": "",
-        "type": "address"
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
       }
     ],
-    "stateMutability": "view",
+    "name": "redeem",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
     "inputs": [
       {
         "internalType": "address",
-        "name": "",
+        "name": "user",
         "type": "address"
       }
     ],
-    "name": "userVaultId",
+    "name": "getUserCollateralRatio",
     "outputs": [
       {
         "internalType": "uint256",
@@ -514,17 +373,22 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
       }
     ],
-    "name": "vaultOwner",
+    "name": "getUserPosition",
     "outputs": [
       {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
+        "internalType": "uint256",
+        "name": "collateral",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "debt",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
