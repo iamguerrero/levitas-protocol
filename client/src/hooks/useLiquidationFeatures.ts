@@ -59,15 +59,9 @@ export function useLiquidatableVaults() {
         }
       ];
 
-      // Filter out liquidated vaults from history
-      const history = JSON.parse(localStorage.getItem('liquidationHistory') || '[]');
-      
-      // Check if this specific vault has been liquidated
-      const isLiquidated = history.some((h: any) => 
-        h.vault && h.vault.vaultId === mockVaults[0].vaultId && h.vault.tokenType === mockVaults[0].tokenType
-      );
-
-      return isLiquidated ? [] : mockVaults;
+      // For testing purposes, always show the liquidatable vault
+      // In production, this would check actual blockchain state
+      return mockVaults;
     },
     refetchInterval: 30000, // Refresh every 30 seconds
   });
