@@ -113,7 +113,6 @@ export function useLiquidationPrice(userAddress: string | null, tokenType: 'BVIX
 
 // Hook to perform liquidation
 export function useLiquidation() {
-  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async ({ 
