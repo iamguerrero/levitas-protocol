@@ -59,9 +59,15 @@ export function useLiquidatableVaults() {
         }
       ];
 
-      // For testing purposes, always show the liquidatable vault
-      // In production, this would check actual blockchain state
-      return mockVaults;
+      // Filter out liquidated vaults
+      const liquidatedVaults = JSON.parse(localStorage.getItem('liquidatedVaults') || '[]');
+      const activeMockVaults = mockVaults.filter(vault => {
+        return !liquidatedVaults.some((lv: any) => 
+          lv.vaultId === vault.vaultId && lv.tokenType === vault.tokenType
+        );
+      });
+      
+      return activeMockVaults;
     },
     refetchInterval: 30000, // Refresh every 30 seconds
   });
@@ -165,6 +171,27 @@ export function useLiquidation() {
       });
       localStorage.setItem('liquidationHistory', JSON.stringify(history));
 
+      // Mark this vault as liquidated
+      const liquidatedVaults = JSON.parse(localStorage.getItem('liquidatedVaults') || '[]');
+      liquidatedVaults.push({
+        vaultId: vault.vaultId,
+        tokenType: vault.tokenType,
+        timestamp: Date.now()
+      });
+      localStorage.setItem('liquidatedVaults', JSON.stringify(liquidatedVaults));
+
+      // Update mock balances in local storage
+      const mockBalances = JSON.parse(localStorage.getItem('mockBalances') || '{}');
+      const currentEVIXBalance = parseFloat(mockBalances.evix || '218.75548533438651922');
+      const currentUSDCBalance = parseFloat(mockBalances.usdc || '999988994.009');
+      
+      // Reduce EVIX balance by debt amount
+      mockBalances.evix = (currentEVIXBalance - parseFloat(vault.debt)).toString();
+      // Increase USDC balance by collateral seized
+      mockBalances.usdc = (currentUSDCBalance + parseFloat(mockResult.collateralSeized)).toString();
+      
+      localStorage.setItem('mockBalances', JSON.stringify(mockBalances));
+
       return mockResult;
 
       /* Original implementation for when V8 is deployed:
@@ -209,10 +236,17 @@ export function useLiquidation() {
         description: `You received ${data.collateralSeized} USDC (including ${data.bonus} USDC bonus)`,
       });
 
-      // Invalidate relevant queries
+      // Invalidate all relevant queries to trigger UI updates
       queryClient.invalidateQueries({ queryKey: ['liquidatable-vaults'] });
       queryClient.invalidateQueries({ queryKey: ['user-position'] });
       queryClient.invalidateQueries({ queryKey: ['vault-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['userPositions'] });
+      queryClient.invalidateQueries({ queryKey: ['liquidationHistory'] });
+      
+      // Force refresh the page to ensure all components update
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     },
     onError: (error: any) => {
       console.error('Liquidation error:', error);

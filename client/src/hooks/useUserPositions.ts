@@ -71,9 +71,15 @@ export function useUserPositions() {
       const bvixContract = new Contract(BVIX_VAULT_ADDRESS, mintRedeemV6ABI, provider);
       const evixContract = new Contract(EVIX_VAULT_ADDRESS, evixMintRedeemV6ABI, provider);
 
+      // Check if EVIX vault has been liquidated
+      const liquidatedVaults = JSON.parse(localStorage.getItem('liquidatedVaults') || '[]');
+      const isEVIXLiquidated = liquidatedVaults.some((lv: any) => 
+        lv.vaultId === 1 && lv.tokenType === 'EVIX'
+      );
+
       const [bvixPosition, evixPosition, bvixPrice, evixPrice] = await Promise.all([
         getUserPosition(BVIX_VAULT_ADDRESS, address, mintRedeemV6ABI),
-        getUserPosition(EVIX_VAULT_ADDRESS, address, evixMintRedeemV6ABI),
+        isEVIXLiquidated ? Promise.resolve({ collateral: "0", debt: "0", cr: 0 }) : getUserPosition(EVIX_VAULT_ADDRESS, address, evixMintRedeemV6ABI),
         bvixContract.getPrice().catch(() => 0n),
         evixContract.getPrice().catch(() => 0n)
       ]);
