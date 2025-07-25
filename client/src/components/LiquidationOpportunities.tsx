@@ -18,12 +18,14 @@ import {
   usePermissionlessLiquidation,
   useVaultHealth
 } from '@/hooks/useLiquidationFeatures';
+import { useWallet } from '@/hooks/use-wallet';
 
 export default function LiquidationOpportunities() {
+  const { address } = useWallet();
   const { vaults, isLoading: vaultsLoading } = useLiquidatableVaults();
   const { liquidate } = useLiquidation();
   const permissionless = usePermissionlessLiquidation();
-  const health = useVaultHealth();
+  const { health } = useVaultHealth(address);
   
   const getRiskBadge = (cr: number) => {
     if (cr < 110) return <Badge variant="destructive">Critical</Badge>;
