@@ -8,6 +8,7 @@ import { MINT_REDEEM_V8_ADDRESS, EVIX_MINT_REDEEM_V8_ADDRESS } from '@/lib/const
 import MintRedeemV8ABI from '@/contracts/MintRedeemV8.abi.json';
 import EVIXMintRedeemV8ABI from '@/contracts/EVIXMintRedeemV8.abi.json';
 import { useUserPositions } from '@/hooks/useUserPositions';
+import { useVault } from '@/hooks/useVault';
 
 export interface LiquidatableVault {
   vaultId: number;
@@ -40,27 +41,15 @@ export function useLiquidatableVaults() {
       const mockVaults: LiquidatableVault[] = [
         {
           vaultId: 1,
-          owner: '0x742d35Cc6634C0532925a3b844Bc9e7095931a48',
-          collateral: '1000',
-          debt: '900',
-          currentCR: 111,
-          liquidationPrice: '50.00',
-          maxBonus: '45.00',
+          owner: '0x18633ea30ad5c91e13d2e5714fe5e3d97043679b',
+          collateral: '9970',
+          debt: '218.75548533438651922',
+          currentCR: 119,
+          liquidationPrice: '45.60',
+          maxBonus: '498.50',
           canLiquidate: true,
-          tokenType: 'BVIX',
-          contractAddress: MINT_REDEEM_V8_ADDRESS
-        },
-        {
-          vaultId: 2,
-          owner: '0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199',
-          collateral: '2000',
-          debt: '1700',
-          currentCR: 118,
-          liquidationPrice: '48.00',
-          maxBonus: '85.00',
-          canLiquidate: true,
-          tokenType: 'BVIX',
-          contractAddress: MINT_REDEEM_V8_ADDRESS
+          tokenType: 'EVIX',
+          contractAddress: EVIX_MINT_REDEEM_V8_ADDRESS
         }
       ];
 
@@ -250,74 +239,55 @@ export function usePermissionlessLiquidation() {
 // Hook for vault health monitoring
 export function useVaultHealth(address: string | null) {
   const { positions } = useUserPositions();
+  const { vaultStats } = useVault();
 
   const health = useMemo(() => {
-    if (!positions) {
+    // Use vault stats API for accurate CR calculation
+    if (vaultStats?.cr) {
+      const vaultCR = parseFloat(vaultStats.cr);
+      const avgHealthScore = Math.min(100, (vaultCR / 150) * 100);
+      
+      const positionsList = [];
+      
+      // Add individual position info if available
+      if (positions?.bvix && parseFloat(positions.bvix.collateral) > 0) {
+        positionsList.push({
+          token: 'BVIX',
+          currentCR: positions.bvix.cr || vaultCR, // Fallback to vault CR if individual CR is 0
+          healthScore: Math.min(100, (vaultCR / 150) * 100),
+          isAtRisk: vaultCR < 130,
+          liquidationPrice: 45 * 1.2 // Approximate liquidation price
+        });
+      }
+      
+      if (positions?.evix && parseFloat(positions.evix.collateral) > 0) {
+        positionsList.push({
+          token: 'EVIX',
+          currentCR: positions.evix.cr,
+          healthScore: Math.min(100, (positions.evix.cr / 150) * 100),
+          isAtRisk: positions.evix.cr < 130,
+          liquidationPrice: 38 * 1.2
+        });
+      }
+      
       return {
-        avgHealthScore: 0,
-        isHealthy: true,
-        isAtRisk: false,
-        positions: []
+        avgHealthScore,
+        isHealthy: vaultCR >= 130,
+        isAtRisk: vaultCR < 120,
+        positions: positionsList
       };
     }
-
-    // Use the same calculation as Vault Summary - combined vault CR
-    let totalCollateral = 0;
-    let totalDebtValue = 0;
-
-    const positionsList = [];
-
-    // Add BVIX position if it exists
-    if (parseFloat(positions.bvix.collateral) > 0) {
-      const bvixDebt = parseFloat(positions.bvix.debt);
-      const bvixCollateral = parseFloat(positions.bvix.collateral);
-      totalCollateral += bvixCollateral;
-
-      // Use a reasonable price estimate for debt value calculation
-      // This should ideally come from the same source as trading interface
-      const bvixPrice = 42; // Use approximate current price
-      totalDebtValue += bvixDebt * bvixPrice;
-
-      positionsList.push({
-        token: 'BVIX',
-        currentCR: positions.bvix.cr,
-        healthScore: Math.min(100, (positions.bvix.cr / 150) * 100),
-        isAtRisk: positions.bvix.cr < 130,
-        liquidationPrice: bvixPrice * 1.2
-      });
-    }
-
-    // Add EVIX position if it exists  
-    if (parseFloat(positions.evix.collateral) > 0) {
-      const evixDebt = parseFloat(positions.evix.debt);
-      const evixCollateral = parseFloat(positions.evix.collateral);
-      totalCollateral += evixCollateral;
-
-      const evixPrice = 38; // Use approximate current price
-      totalDebtValue += evixDebt * evixPrice;
-
-      positionsList.push({
-        token: 'EVIX',
-        currentCR: positions.evix.cr,
-        healthScore: Math.min(100, (positions.evix.cr / 150) * 100),
-        isAtRisk: positions.evix.cr < 130,
-        liquidationPrice: evixPrice * 1.2
-      });
-    }
-
-    // Calculate combined vault CR (same as Vault Summary)
-    const vaultCR = totalDebtValue > 0 ? (totalCollateral / totalDebtValue) * 100 : 0;
-    const avgHealthScore = Math.min(100, (vaultCR / 150) * 100);
-
+    
+    // Fallback if vault stats not available
     return {
-      avgHealthScore,
-      isHealthy: avgHealthScore >= 75,
-      isAtRisk: avgHealthScore < 65,
-      positions: positionsList
+      avgHealthScore: 0,
+      isHealthy: true,
+      isAtRisk: false,
+      positions: []
     };
-  }, [positions]);
+  }, [positions, vaultStats]);
 
-  return { health, isLoading: !positions };
+  return { health, isLoading: !vaultStats };
 }
 
 // Hook to get liquidation history
