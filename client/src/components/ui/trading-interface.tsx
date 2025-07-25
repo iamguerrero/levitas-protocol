@@ -15,6 +15,8 @@ import { CollateralAwareMinting } from "@/components/ui/CollateralAwareMinting";
 import { useWallet } from "@/hooks/use-wallet";
 import { useToast } from "@/hooks/use-toast";
 import { useRealTimeOracle } from '@/hooks/useRealTimeOracle';
+import { usePriceHistory } from '@/hooks/usePriceHistory';
+import { PriceChart } from '@/components/ui/PriceChart';
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useVault } from "@/hooks/useVault";
@@ -57,6 +59,9 @@ export default function TradingInterface() {
   
   // Real-time oracle data
   const { bvixPrice: realtimeBvixPrice, evixPrice: realtimeEvixPrice, isConnected: oracleConnected, lastUpdate: oracleLastUpdate } = useRealTimeOracle();
+  
+  // Price history tracking (Sprint 2.1)
+  const { history, addPricePoint } = usePriceHistory();
   
   // Import vault refresh functions
   const { refetch: refetchVault } = useVault();
@@ -175,8 +180,16 @@ export default function TradingInterface() {
         bvixPrice: realtimeBvixPrice || prev.bvixPrice,
         evixPrice: realtimeEvixPrice || prev.evixPrice,
       }));
+      
+      // Track price history for charts
+      if (realtimeBvixPrice && parseFloat(realtimeBvixPrice) > 0) {
+        addPricePoint('bvix', parseFloat(realtimeBvixPrice));
+      }
+      if (realtimeEvixPrice && parseFloat(realtimeEvixPrice) > 0) {
+        addPricePoint('evix', parseFloat(realtimeEvixPrice));
+      }
     }
-  }, [realtimeBvixPrice, realtimeEvixPrice, oracleConnected]);
+  }, [realtimeBvixPrice, realtimeEvixPrice, oracleConnected, addPricePoint]);
 
   // In the useEffect for address change
   useEffect(() => {
@@ -1066,6 +1079,22 @@ export default function TradingInterface() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Sprint 2.1: Price History Charts */}
+      <div className="grid md:grid-cols-2 gap-8 mt-8">
+        <PriceChart
+          token="bvix"
+          data={history.bvix}
+          currentPrice={realtimeBvixPrice || formatPrice(contractData.bvixPrice)}
+          isConnected={oracleConnected}
+        />
+        <PriceChart
+          token="evix"
+          data={history.evix}
+          currentPrice={realtimeEvixPrice || formatPrice(contractData.evixPrice)}
+          isConnected={oracleConnected}
+        />
+      </div>
 
       <div className="mt-6">
         <NetworkHelpers />
