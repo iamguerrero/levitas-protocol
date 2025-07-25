@@ -18,7 +18,7 @@ export default function Navigation() {
               <img 
                 src={levitasLogoPath} 
                 alt="Levitas Finance Logo"
-                className="w-8 h-8"
+                className="w-10 h-8 object-cover rounded-md"
               />
               <div>
                 <span className="text-xl font-bold text-black">
