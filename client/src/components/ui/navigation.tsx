@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import { Link, useLocation } from "wouter";
+import WalletConnect from "@/components/ui/wallet-connect";
 const levitasLogoPath = "/levi large.jpg";
 
 export default function Navigation() {
@@ -67,11 +68,15 @@ export default function Navigation() {
             >
               Liquidity
             </a>
-            <Link href="/app">
-              <Button className="bg-blue-600 text-white hover:bg-blue-700">
-                Launch App
-              </Button>
-            </Link>
+            {location === "/app" ? (
+              <WalletConnect />
+            ) : (
+              <Link href="/app">
+                <Button className="bg-blue-600 text-white hover:bg-blue-700">
+                  Launch App
+                </Button>
+              </Link>
+            )}
           </div>
 
           <button
@@ -128,11 +133,17 @@ export default function Navigation() {
             >
               Governance
             </a>
-            <Link href="/app">
-              <Button className="w-full mt-2 bg-blue-600 text-white hover:bg-blue-700">
-                Launch App
-              </Button>
-            </Link>
+            {location === "/app" ? (
+              <div className="mt-2">
+                <WalletConnect />
+              </div>
+            ) : (
+              <Link href="/app">
+                <Button className="w-full mt-2 bg-blue-600 text-white hover:bg-blue-700">
+                  Launch App
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       )}
