@@ -874,7 +874,8 @@ export default function TradingInterface() {
                 </div>
               </div>
               <div className="space-y-4">
-                <div className="flex justify-between items-center py-2 border-b border-gray-100                  <span className="text-gray-600">Wallet Balance</span>
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <span className="text-gray-600">Wallet Balance</span>
                   <span className="font-mono font-semibold text-gray-900 dark:text-white">{parseFloat(contractData.bvixBalance).toFixed(2)} BVIX</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">

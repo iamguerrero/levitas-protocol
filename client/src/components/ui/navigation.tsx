@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import { Link, useLocation } from "wouter";
-import levitasLogoPath from "@assets/levitas-new-logo.svg";
+const levitasLogoPath = "/assets/levitas-new-logo.png";
 
 export default function Navigation() {
   const [location] = useLocation();
