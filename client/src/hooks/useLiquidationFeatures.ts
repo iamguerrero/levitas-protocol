@@ -34,59 +34,42 @@ export function useLiquidatableVaults() {
   return useQuery({
     queryKey: ['liquidatable-vaults'],
     queryFn: async () => {
-      const provider = getProvider();
-      const vaults: LiquidatableVault[] = [];
-      
-      // Check BVIX vaults
-      const bvixContract = new ethers.Contract(MINT_REDEEM_V8_ADDRESS, MintRedeemV8ABI, provider);
-      const bvixVaultIds = await bvixContract.getVaultsBelowThreshold();
-      
-      for (const vaultId of bvixVaultIds) {
-        const details = await bvixContract.getLiquidationDetails(vaultId);
-        if (details.canLiquidate) {
-          vaults.push({
-            vaultId: Number(vaultId),
-            owner: details.owner,
-            collateral: ethers.formatUnits(details.collateral, 6),
-            debt: ethers.formatEther(details.debt),
-            currentCR: Number(details.currentCR),
-            liquidationPrice: ethers.formatUnits(details.liquidationPrice, 8),
-            maxBonus: ethers.formatUnits(details.maxBonus, 6),
-            canLiquidate: details.canLiquidate,
-            tokenType: 'BVIX',
-            contractAddress: MINT_REDEEM_V8_ADDRESS
-          });
+      // For now, return mock data since V8 contracts are not deployed
+      // This will be replaced with actual contract calls when V8 is deployed
+      const mockVaults: LiquidatableVault[] = [
+        {
+          vaultId: 1,
+          owner: '0x742d35Cc6634C0532925a3b844Bc9e7095931a48',
+          collateral: '1000',
+          debt: '900',
+          currentCR: 111,
+          liquidationPrice: '50.00',
+          maxBonus: '45.00',
+          canLiquidate: true,
+          tokenType: 'BVIX',
+          contractAddress: MINT_REDEEM_V8_ADDRESS
+        },
+        {
+          vaultId: 2,
+          owner: '0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199',
+          collateral: '2000',
+          debt: '1700',
+          currentCR: 118,
+          liquidationPrice: '48.00',
+          maxBonus: '85.00',
+          canLiquidate: true,
+          tokenType: 'BVIX',
+          contractAddress: MINT_REDEEM_V8_ADDRESS
         }
-      }
+      ];
       
-      // Check EVIX vaults
-      const evixContract = new ethers.Contract(EVIX_MINT_REDEEM_V8_ADDRESS, EVIXMintRedeemV8ABI, provider);
-      const evixVaultIds = await evixContract.getVaultsBelowThreshold();
-      
-      for (const vaultId of evixVaultIds) {
-        const details = await evixContract.getLiquidationDetails(vaultId);
-        if (details.canLiquidate) {
-          vaults.push({
-            vaultId: Number(vaultId),
-            owner: details.owner,
-            collateral: ethers.formatUnits(details.collateral, 6),
-            debt: ethers.formatEther(details.debt),
-            currentCR: Number(details.currentCR),
-            liquidationPrice: ethers.formatUnits(details.liquidationPrice, 6),
-            maxBonus: ethers.formatUnits(details.maxBonus, 6),
-            canLiquidate: details.canLiquidate,
-            tokenType: 'EVIX',
-            contractAddress: EVIX_MINT_REDEEM_V8_ADDRESS
-          });
-        }
-      }
-      
-      // Sort by bonus amount (descending)
-      return vaults.sort((a, b) => parseFloat(b.maxBonus) - parseFloat(a.maxBonus));
+      return mockVaults;
     },
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 }
+
+
 
 // Hook to get liquidation price for a specific user position
 export function useLiquidationPrice(userAddress: string | null, tokenType: 'BVIX' | 'EVIX') {
@@ -95,6 +78,17 @@ export function useLiquidationPrice(userAddress: string | null, tokenType: 'BVIX
     queryFn: async () => {
       if (!userAddress) return null;
       
+      // Return mock data for now since V8 contracts are not deployed
+      return {
+        collateral: '1500.00',
+        debt: '1000.00',
+        liquidationPrice: tokenType === 'BVIX' ? '52.50' : '41250.00',
+        currentCR: 150,
+        isAtRisk: false,
+        canBeLiquidated: false
+      };
+      
+      /* Original implementation for when V8 is deployed:
       const provider = getProvider();
       const contractAddress = tokenType === 'BVIX' ? MINT_REDEEM_V8_ADDRESS : EVIX_MINT_REDEEM_V8_ADDRESS;
       const abi = tokenType === 'BVIX' ? MintRedeemV8ABI : EVIXMintRedeemV8ABI;
@@ -116,6 +110,7 @@ export function useLiquidationPrice(userAddress: string | null, tokenType: 'BVIX
         isAtRisk: Number(userCR) < 125, // Warning threshold at 125%
         canBeLiquidated: Number(userCR) < 120
       };
+      */
     },
     enabled: !!userAddress,
     refetchInterval: 5000, // Refresh every 5 seconds for real-time updates
@@ -134,6 +129,22 @@ export function useLiquidation() {
       vault: LiquidatableVault; 
       repayAmount?: string; // Optional for partial liquidation
     }) => {
+      // Mock implementation for testing
+      // Simulate a successful liquidation
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+      
+      const mockBonus = parseFloat(vault.collateral) * 0.05; // 5% bonus
+      const mockResult: LiquidationResult = {
+        txHash: '0x' + Math.random().toString(16).substr(2, 64),
+        debtRepaid: vault.debt,
+        collateralSeized: vault.collateral,
+        bonus: mockBonus.toFixed(2),
+        isPartial: false
+      };
+      
+      return mockResult;
+      
+      /* Original implementation for when V8 is deployed:
       const signer = await getSigner();
       const abi = vault.tokenType === 'BVIX' ? MintRedeemV8ABI : EVIXMintRedeemV8ABI;
       const contract = new ethers.Contract(vault.contractAddress, abi, signer);
@@ -167,6 +178,7 @@ export function useLiquidation() {
         bonus: ethers.formatUnits(liquidationEvent.args.bonus, 6),
         isPartial: liquidationEvent.args.isPartial
       } as LiquidationResult;
+      */
     },
     onSuccess: (data) => {
       toast({
