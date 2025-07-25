@@ -27,11 +27,11 @@ async function getUserPosition(
   try {
     const provider = getProvider();
     const contract = new Contract(vaultAddress, abi, provider);
-    
+
     const position = await contract.positions(userAddress);
     const collateral = position.collateral.toString();
     const debt = position.debt.toString();
-    
+
     let cr = 0;
     try {
       // Only get CR if there's actual debt to avoid divide-by-zero
@@ -42,7 +42,7 @@ async function getUserPosition(
     } catch (error) {
       console.log("Error getting CR, position might be empty");
     }
-    
+
     return {
       collateral: (Number(collateral) / 1e6).toFixed(2), // USDC has 6 decimals
       debt: (Number(debt) / 1e18).toFixed(2), // Tokens have 18 decimals
@@ -60,26 +60,56 @@ async function getUserPosition(
 
 export function useUserPositions() {
   const { address, isConnected } = useWallet();
-  
+
   const { data: positions, isLoading } = useQuery({
     queryKey: ['userPositions', address],
     queryFn: async () => {
       if (!address) return null;
-      
+
       const [bvixPosition, evixPosition] = await Promise.all([
         getUserPosition(BVIX_VAULT_ADDRESS, address, mintRedeemV6ABI),
         getUserPosition(EVIX_VAULT_ADDRESS, address, evixMintRedeemV6ABI)
       ]);
-      
+
+      // Calculate collateral ratios manually to avoid divide by zero
+      let bvixCR = 0;
+      let evixCR = 0;
+
+      try {
+        const provider = getProvider();
+        const bvixContract = new Contract(BVIX_VAULT_ADDRESS, mintRedeemV6ABI, provider);
+        const evixContract = new Contract(EVIX_VAULT_ADDRESS, evixMintRedeemV6ABI, provider);
+
+        const bvixPositionData = await getUserPosition(BVIX_VAULT_ADDRESS, address, mintRedeemV6ABI);
+        const evixPositionData = await getUserPosition(EVIX_VAULT_ADDRESS, address, evixMintRedeemV6ABI);
+
+        // For BVIX: CR = (collateral * price) / debt * 100
+        if (Number(bvixPositionData.debt) > 0) {
+          const bvixPrice = await bvixContract.getPrice();
+          bvixCR = Math.floor((Number(bvixPositionData.collateral) * Number(bvixPrice)) / (Number(bvixPositionData.debt) / 1e12) * 100);
+        }
+
+
+        // For EVIX: CR = (collateral * price) / debt * 100
+        if (Number(evixPositionData.debt) > 0) {
+          const evixPrice = await evixContract.getPrice();
+          evixCR = Math.floor((Number(evixPositionData.collateral) * Number(evixPrice)) / (Number(evixPositionData.debt) / 1e12) * 100);
+        }
+
+
+      } catch (error) {
+        console.log('🔍 CR calculation failed:', error);
+      }
+
       return {
-        bvix: bvixPosition,
-        evix: evixPosition
+        bvix: {...bvixPosition, cr: bvixCR},
+        evix: {...evixPosition, cr: evixCR}
       };
     },
     enabled: isConnected && !!address,
     refetchInterval: 10000 // Refresh every 10 seconds
   });
-  
+
   return {
     positions,
     isLoading

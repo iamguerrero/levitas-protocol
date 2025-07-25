@@ -54,16 +54,18 @@ app.use((req, res, next) => {
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
+    const isProduction = app.get("env") === "production";
     serveStatic(app);
+
+    // SPA fallback for production - only catch non-API routes
+    app.get('*', (req, res, next) => {
+      // Skip SPA fallback for API routes
+      if (req.path.startsWith('/api/')) {
+        return next();
+      }
+      res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+    });
   }
-
-  // SPA fallback - handles direct URL access
-  app.use(express.static(path.join(__dirname, '../client/dist')));
-
-  // Serve React app for all other routes (SPA fallback)
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
-  });
 
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
