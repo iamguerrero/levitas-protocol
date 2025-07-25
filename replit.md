@@ -7,13 +7,19 @@ This project is a decentralized finance (DeFi) application called Levitas Financ
 ## Recent Changes (January 2025)
 
 ✓ **SPRINT 2.2: ADVANCED LIQUIDATION FEATURES** - Implemented comprehensive liquidation system with 5% liquidator bonuses, real-time collateral ratio monitoring, and permissionless liquidation support
+✓ **LIQUIDATION MECHANICS FIXED** - Corrected liquidation to pay debt value + 5% bonus (not full collateral), matching DeFi whitepaper standards
+✓ **CONFIRMATION DIALOG ADDED** - Created LiquidationConfirmDialog component showing transaction details before execution
+✓ **VAULT REMOVAL ON LIQUIDATION** - Liquidated vaults now properly disappear from opportunities list
+✓ **CURRENT PRICE DISPLAY** - Added real-time EVIX/BVIX price display above liquidation threshold price
+✓ **UI CLEANUP** - Removed unnecessary "Available in" clock text from vault displays
+✓ **PROPER BONUS CALCULATION** - 5% bonus calculated on debt value (e.g., 218.76 EVIX @ $38.02 = $415.99 bonus)
+✓ **LIQUIDATION HISTORY TRACKING** - Stores vault ID, amounts, and timestamp in local storage
 ✓ **V8 SMART CONTRACTS CREATED** - Built MintRedeemV8.sol and EVIXMintRedeemV8.sol with advanced liquidation mechanics including grace periods and partial liquidations
 ✓ **LIQUIDATION DASHBOARD** - Complete liquidation center at /liquidation with opportunities tracking, vault health monitoring, and liquidation execution interface
 ✓ **LIQUIDATION HOOKS** - Created useLiquidationFeatures.ts with mock data for testing, includes liquidation history tracking and proper USDC payment mechanics
 ✓ **VAULT LIQUIDATION INFO** - Integrated liquidation warnings and prices into vault displays with visual risk indicators
 ✓ **MAKER-STYLE MECHANICS** - 120% liquidation threshold with 5% bonus incentive for liquidators following industry best practices
 ✓ **PERMISSIONLESS LIQUIDATION** - Anyone can liquidate positions below 120% CR, no authorization required
-✓ **LIQUIDATION HISTORY** - Local storage-based history tracking with detailed transaction records and bonus calculations
 ✓ **PROPER PAYMENT FLOW** - Liquidators use BVIX/EVIX tokens to repay debt and receive USDC collateral + 5% bonus
 ✓ **PROJECT CLEANUP COMPLETED** - Removed 95+ testing/deployment .cjs files, old deployment JSONs, log files, and summary documents that accumulated during development
 ✓ **REAL-TIME PRICE SYSTEM FULLY INTEGRATED** - Sprint 2.1 complete with prices updating every 10 seconds, all vault calculations use live prices
