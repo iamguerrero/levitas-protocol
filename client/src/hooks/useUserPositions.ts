@@ -34,8 +34,11 @@ async function getUserPosition(
     
     let cr = 0;
     try {
-      const crRatio = await contract.getUserCollateralRatio(userAddress);
-      cr = Number(crRatio);
+      // Only get CR if there's actual debt to avoid divide-by-zero
+      if (position.debt && position.debt > 0n) {
+        const crRatio = await contract.getUserCollateralRatio(userAddress);
+        cr = Number(crRatio);
+      }
     } catch (error) {
       console.log("Error getting CR, position might be empty");
     }

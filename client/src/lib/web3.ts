@@ -719,6 +719,13 @@ export async function getUserCollateralRatio(user: string): Promise<number> {
     
     console.log('🔍 Getting BVIX CR for user:', user);
     
+    // First check if user has a position
+    const position = await contract.positions(user);
+    if (!position || position.debt === 0n) {
+      console.log('🔍 User has no BVIX position, returning 0 CR');
+      return 0;
+    }
+    
     // Get user's individual collateral ratio from V6 contract
     const ratio = await contract.getUserCollateralRatio(user);
     // The contract returns CR as percentage (e.g., 200 for 200%), no need for formatEther
@@ -776,6 +783,13 @@ export async function getUserCollateralRatioEVIX(user: string): Promise<number> 
     
     console.log('🔍 Getting EVIX CR for user:', user);
     console.log('🔍 Using EVIX V6 contract address:', EVIX_MINT_REDEEM_V6_ADDRESS);
+    
+    // First check if user has a position
+    const position = await contract.positions(user);
+    if (!position || position.debt === 0n) {
+      console.log('🔍 User has no EVIX position, returning 0 CR');
+      return 0;
+    }
     
     // Get user's individual collateral ratio from V6 contract
     const ratio = await contract.getUserCollateralRatio(user);
