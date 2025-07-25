@@ -21,7 +21,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const EVIX_ORACLE_ADDRESS = '0x9d12b251f8F6c432b1Ecd6ef722Bf45A8aFdE6A8'; // EVIX Oracle on Polygon Amoy
       // EVIX contracts - V7 Final addresses on Polygon Amoy
       const EVIX_MINT_REDEEM_ADDRESS = '0xFe9c81A98F33F15B279DE45ba022302113245D9F'; // EVIX MintRedeemV7 on Polygon Amoy
-      const POLYGON_AMOY_RPC_URL = 'https://rpc-amoy.polygon.technology';
+      // Try multiple RPC endpoints for better reliability
+      const POLYGON_AMOY_RPC_URLS = [
+        'https://polygon-amoy-bor-rpc.publicnode.com', // More stable
+        'https://rpc.ankr.com/polygon_amoy',
+        'https://rpc-amoy.polygon.technology' // Official but less stable
+      ];
 
       // Minimal ERC20 ABI for balance and supply queries
       const ERC20_ABI = [
@@ -34,8 +39,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'function getPrice() external view returns (uint256)',
       ];
 
-      // Initialize provider
-      const provider = new ethers.JsonRpcProvider(POLYGON_AMOY_RPC_URL);
+      // Initialize provider with fallback mechanism
+      let provider: ethers.JsonRpcProvider | null = null;
+      for (const rpcUrl of POLYGON_AMOY_RPC_URLS) {
+        try {
+          const testProvider = new ethers.JsonRpcProvider(rpcUrl);
+          await testProvider.getBlockNumber(); // Test connection
+          provider = testProvider;
+          console.log(`Connected to RPC: ${rpcUrl}`);
+          break;
+        } catch (error) {
+          console.warn(`Failed to connect to ${rpcUrl}, trying next...`);
+        }
+      }
+      
+      if (!provider) {
+        throw new Error('All RPC endpoints failed');
+      }
       
       // Initialize contracts
       const usdcContract = new ethers.Contract(MOCK_USDC_ADDRESS, ERC20_ABI, provider);
