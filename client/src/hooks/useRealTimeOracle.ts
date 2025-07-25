@@ -21,7 +21,7 @@ export const useRealTimeOracle = () => {
 
   const generateRealisticPrice = (currentPrice: number, bounds: { min: number, max: number }) => {
     // Implement random walk with mean reversion as specified in Sprint 2.1
-    const volatility = 0.02; // 2% max movement per update
+    const volatility = 0.001; // 0.1% max movement per update (5 seconds)
     const meanReversion = 0.1; // Tendency to revert to mean
     const mean = (bounds.min + bounds.max) / 2;
 
@@ -31,8 +31,8 @@ export const useRealTimeOracle = () => {
     // Mean reversion component
     const meanReversionChange = (mean - currentPrice) * meanReversion * 0.01;
 
-    // Circuit breaker: max 1% price movement per minute as specified
-    const maxChange = currentPrice * 0.01;
+    // Circuit breaker: max 0.1% price movement per 5-second interval
+    const maxChange = currentPrice * 0.001;
     const totalChange = Math.max(-maxChange, Math.min(maxChange, randomChange + meanReversionChange));
 
     const newPrice = currentPrice + totalChange;
@@ -80,7 +80,7 @@ export const useRealTimeOracle = () => {
     // Set up 10-second interval for demonstration, 60 seconds for production
     updateInterval = setInterval(updatePrices, 5000); // Update every 5 seconds for better chart visualization
 
-    console.log('🚀 Sprint 2.1 Real-time Oracle System initialized - updating every 10 seconds for demonstration');
+    console.log('🚀 Sprint 2.1 Real-time Oracle System initialized - updating every 5 seconds for demonstration');
 
     return () => {
       if (updateInterval) {
