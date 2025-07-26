@@ -23,7 +23,7 @@ import {
 import { useWallet } from '@/hooks/use-wallet';
 import { LiquidationConfirmDialog } from './LiquidationConfirmDialog';
 import { useQuery } from '@tanstack/react-query';
-import { getBVIXBalance, getEVIXBalance, formatPrice } from '@/lib/web3';
+import { getBVIXBalance, getEVIXBalance, getAllBalances, formatPrice } from '@/lib/web3';
 import { useRealTimeOracle } from '@/hooks/useRealTimeOracle';
 
 export default function LiquidationOpportunities() {
@@ -62,14 +62,11 @@ export default function LiquidationOpportunities() {
     if (!address) return;
     
     try {
-      const [bvixBalance, evixBalance] = await Promise.all([
-        getBVIXBalance(address),
-        getEVIXBalance(address)
-      ]);
+      const balances = await getAllBalances(address);
       
       setWalletBalances({
-        bvixBalance,
-        evixBalance
+        bvixBalance: balances.bvixBalance,
+        evixBalance: balances.evixBalance
       });
     } catch (error) {
       console.error("Error loading wallet balances:", error);
@@ -80,8 +77,8 @@ export default function LiquidationOpportunities() {
     if (address) {
       loadWalletBalances();
       
-      // Refresh every 10 seconds
-      const interval = setInterval(loadWalletBalances, 10000);
+      // Refresh every 30 seconds to match trading interface
+      const interval = setInterval(loadWalletBalances, 30000);
       return () => clearInterval(interval);
     }
   }, [address]);
