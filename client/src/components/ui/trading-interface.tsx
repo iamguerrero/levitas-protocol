@@ -82,6 +82,16 @@ export default function TradingInterface() {
 
   // Use liquidation-aware user positions hook instead of raw blockchain data
   const { data: userPositions, isLoading: userPositionLoading } = useUserPositions();
+  
+  // Debug log to see what's happening with the hook
+  useEffect(() => {
+    console.log('🔧 useUserPositions hook state:', {
+      userPositions,
+      userPositionLoading,
+      address,
+      hasData: !!userPositions
+    });
+  }, [userPositions, userPositionLoading, address]);
 
   function explorerLink(hash: string) {
     return (
@@ -869,23 +879,23 @@ export default function TradingInterface() {
                   <span className="text-gray-600">Portfolio Value</span>
                   <span className="font-mono font-semibold text-blue-600">${(parseFloat(contractData.bvixBalance) * parseFloat(realtimeBvixPrice || formatPrice(contractData.bvixPrice))).toFixed(2)}</span>
                 </div>
-                {parseFloat(contractData.bvixBalance) > 0 && (
+                {userPositions?.bvix && parseFloat(userPositions.bvix.collateral) > 0 && (
                   <div className="pt-4">
                     <div className="text-xs text-black font-bold mb-2">Active Position</div>
                     <div className="flex justify-between items-center py-2 border-b border-gray-100">
                       <span className="text-gray-600">Collateral (USDC)</span>
-                      <span className="font-mono font-semibold text-gray-900 dark:text-white">{vaultStats?.bvixVaultUsdc || "0.00"}</span>
+                      <span className="font-mono font-semibold text-gray-900 dark:text-white">{Number(userPositions.bvix.collateral).toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center py-2 border-b border-gray-100">
                       <span className="text-gray-600">Debt (BVIX)</span>
-                      <span className="font-mono font-semibold text-gray-900 dark:text-white">{parseFloat(contractData.bvixBalance).toFixed(2)}</span>
+                      <span className="font-mono font-semibold text-gray-900 dark:text-white">{Number(userPositions.bvix.debt).toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center py-2">
                       <span className="text-gray-600">Position CR</span>
                       {(() => {
                         // Calculate real-time CR: (Collateral / (Debt * Current Price)) * 100
-                        const collateral = parseFloat(vaultStats?.bvixVaultUsdc || "0");
-                        const debt = parseFloat(contractData.bvixBalance);
+                        const collateral = parseFloat(userPositions.bvix.collateral);
+                        const debt = parseFloat(userPositions.bvix.debt);
                         const currentPrice = parseFloat(realtimeBvixPrice || formatPrice(contractData.bvixPrice));
                         const realtimeCR = debt > 0 ? (collateral / (debt * currentPrice)) * 100 : 0;
 
