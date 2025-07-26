@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +23,7 @@ import {
 import { useWallet } from '@/hooks/use-wallet';
 import { LiquidationConfirmDialog } from './LiquidationConfirmDialog';
 import { useQuery } from '@tanstack/react-query';
+import { getBVIXBalance, getEVIXBalance } from '@/lib/web3';
 
 export default function LiquidationOpportunities() {
   const { address } = useWallet();
@@ -47,11 +48,39 @@ export default function LiquidationOpportunities() {
     refetchInterval: 5000
   });
   
-  const { data: contractData } = useQuery({
-    queryKey: ['contractData', address],
-    enabled: !!address,
-    refetchInterval: 10000
+  // Load wallet balances directly
+  const [walletBalances, setWalletBalances] = useState({
+    bvixBalance: "0",
+    evixBalance: "0"
   });
+
+  const loadWalletBalances = async () => {
+    if (!address) return;
+    
+    try {
+      const [bvixBalance, evixBalance] = await Promise.all([
+        getBVIXBalance(address),
+        getEVIXBalance(address)
+      ]);
+      
+      setWalletBalances({
+        bvixBalance,
+        evixBalance
+      });
+    } catch (error) {
+      console.error("Error loading wallet balances:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (address) {
+      loadWalletBalances();
+      
+      // Refresh every 10 seconds
+      const interval = setInterval(loadWalletBalances, 10000);
+      return () => clearInterval(interval);
+    }
+  }, [address]);
   
   const handleLiquidateClick = (vault: LiquidatableVault) => {
     setSelectedVault(vault);
@@ -120,7 +149,7 @@ export default function LiquidationOpportunities() {
               <div className="w-4 h-4 bg-orange-100 rounded flex items-center justify-center">
                 <span className="text-xs text-orange-600 font-bold">B</span>
               </div>
-              BVIX Liquidation Info
+              BVIX Stats
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -128,13 +157,13 @@ export default function LiquidationOpportunities() {
               <div className="flex justify-between items-center">
                 <span className="text-xs text-gray-500">Your Vault</span>
                 <span className="text-sm font-medium">
-                  {vaultStats?.bvixVaultCR ? `${vaultStats.bvixVaultCR.toFixed(0)}% CR` : 'No Vault'}
+                  {vaultStats?.bvixVaultCR && vaultStats.bvixVaultCR > 0 ? `${vaultStats.bvixVaultCR.toFixed(1)}% CR` : 'No Vault'}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-xs text-gray-500">Wallet Balance</span>
                 <span className="text-sm font-medium text-orange-600">
-                  {contractData?.bvixBalance ? `${parseFloat(contractData.bvixBalance).toFixed(1)} BVIX` : '0 BVIX'}
+                  {walletBalances.bvixBalance && parseFloat(walletBalances.bvixBalance) > 0 ? `${parseFloat(walletBalances.bvixBalance).toFixed(2)} BVIX` : '0 BVIX'}
                 </span>
               </div>
               <div className="mt-2 pt-2 border-t border-gray-100">
@@ -165,7 +194,7 @@ export default function LiquidationOpportunities() {
               <div className="w-4 h-4 bg-blue-100 rounded flex items-center justify-center">
                 <span className="text-xs text-blue-600 font-bold">E</span>
               </div>
-              EVIX Liquidation Info
+              EVIX Stats
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -179,7 +208,7 @@ export default function LiquidationOpportunities() {
               <div className="flex justify-between items-center">
                 <span className="text-xs text-gray-500">Wallet Balance</span>
                 <span className="text-sm font-medium text-blue-600">
-                  {contractData?.evixBalance ? `${parseFloat(contractData.evixBalance).toFixed(1)} EVIX` : '0 EVIX'}
+                  {walletBalances.evixBalance && parseFloat(walletBalances.evixBalance) > 0 ? `${parseFloat(walletBalances.evixBalance).toFixed(1)} EVIX` : '0 EVIX'}
                 </span>
               </div>
               <div className="mt-2 pt-2 border-t border-gray-100">
