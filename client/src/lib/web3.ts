@@ -263,11 +263,17 @@ export async function getAllBalances(address: string): Promise<{
       usdcContract.balanceOf(address)
     ]);
     
-    return {
+    // Format the real blockchain balances
+    const result = {
       bvixBalance: ethers.formatEther(bvixBalance),
       evixBalance: ethers.formatEther(evixBalance),
       usdcBalance: ethers.formatUnits(usdcBalance, 6)
     };
+    
+    // Don't use mock balances in getAllBalances - keep it clean
+    // Mock balances should only be used in specific liquidation contexts
+    
+    return result;
   } catch (error) {
     console.error("Error getting balances:", error);
     return {
@@ -292,16 +298,14 @@ export async function getBVIXBalance(address: string): Promise<string> {
 
 export async function getEVIXBalance(address: string): Promise<string> {
   try {
-    // Check if we have mock balances from liquidation
-    const mockBalances = JSON.parse(localStorage.getItem('mockBalances') || '{}');
-    if (mockBalances.evix !== undefined) {
-      return mockBalances.evix;
-    }
-    
     const provider = getProvider();
     const evixContract = await getEVIXContract(provider);
     const balance = await evixContract.balanceOf(address);
-    return ethers.formatEther(balance);
+    const formatted = ethers.formatEther(balance);
+    
+    // Don't use mock balances - return real balance only
+    
+    return formatted;
   } catch (error) {
     console.error("Error getting EVIX balance:", error);
     return "0.0";
@@ -310,11 +314,7 @@ export async function getEVIXBalance(address: string): Promise<string> {
 
 export async function getUSDCBalance(address: string): Promise<string> {
   try {
-    // Check if we have mock balances from liquidation
-    const mockBalances = JSON.parse(localStorage.getItem('mockBalances') || '{}');
-    if (mockBalances.usdc !== undefined) {
-      return mockBalances.usdc;
-    }
+    // Don't use mock balances - return real balance only
     
     const provider = getProvider();
     const usdcContract = await getUSDCContract(provider);
