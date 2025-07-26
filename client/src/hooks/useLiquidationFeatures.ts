@@ -148,12 +148,19 @@ export function useLiquidation() {
         ? new ethers.Contract(BVIX_VAULT_ADDRESS, mintRedeemV6ABI, signer)
         : new ethers.Contract(EVIX_VAULT_ADDRESS, evixMintRedeemV6ABI, signer);
 
-      // Check user has enough tokens to liquidate
-      const tokenBalance = await tokenContract.balanceOf(userAddress);
-      const debtWei = ethers.parseEther(vault.debt);
+      // Get the exact debt amount from the vault contract to avoid rounding errors
+      const vaultContract = vault.tokenType === 'BVIX'
+        ? new ethers.Contract(BVIX_VAULT_ADDRESS, mintRedeemV6ABI, provider)
+        : new ethers.Contract(EVIX_VAULT_ADDRESS, evixMintRedeemV6ABI, provider);
       
-      if (tokenBalance < debtWei) {
-        throw new Error(`Insufficient ${vault.tokenType} balance. Need ${vault.debt} but have ${ethers.formatEther(tokenBalance)}`);
+      const vaultPosition = await vaultContract.positions(vault.owner);
+      const exactDebtWei = vaultPosition.debt; // Use exact debt amount from contract
+      
+      // Check user has enough tokens to liquidate using exact debt amount
+      const tokenBalance = await tokenContract.balanceOf(userAddress);
+      
+      if (tokenBalance < exactDebtWei) {
+        throw new Error(`Insufficient ${vault.tokenType} balance. Need ${ethers.formatEther(exactDebtWei)} but have ${ethers.formatEther(tokenBalance)}`);
       }
 
       // Get USDC contract for direct transfers  
@@ -168,16 +175,17 @@ export function useLiquidation() {
       // 2. Liquidator gets USDC worth debt value + 5% bonus
       // 3. Vault owner's position is marked as liquidated
       
-      // Burn liquidator's tokens first (this reduces their balance)
+      // Burn liquidator's tokens first using exact debt amount (this reduces their balance)
       const burnTx = vault.tokenType === 'BVIX'
-        ? await vaultContract.redeem(debtWei) // Redeem = burn tokens, get USDC
-        : await vaultContract.redeem(debtWei);
+        ? await vaultContract.redeem(exactDebtWei) // Redeem = burn tokens, get USDC
+        : await vaultContract.redeem(exactDebtWei);
       
       const receipt = await burnTx.wait();
       
-      // Calculate amounts using real oracle prices
+      // Calculate amounts using real oracle prices and exact debt amount
       const tokenPrice = vault.tokenType === 'EVIX' ? 38.02 : 45.0; // Current prices
-      const debtValue = parseFloat(vault.debt) * tokenPrice;
+      const exactDebtFormatted = ethers.formatEther(exactDebtWei);
+      const debtValue = parseFloat(exactDebtFormatted) * tokenPrice;
       const bonusAmount = debtValue * 0.05;
       const totalCollateralSeized = debtValue + bonusAmount;
       
@@ -189,7 +197,7 @@ export function useLiquidation() {
           tokenType: vault.tokenType,
           owner: vault.owner,
           liquidator: userAddress,
-          debtRepaid: vault.debt,
+          debtRepaid: exactDebtFormatted,
           collateralSeized: totalCollateralSeized.toFixed(2),
           bonus: bonusAmount.toFixed(2),
           txHash: receipt.hash
@@ -232,7 +240,7 @@ export function useLiquidation() {
 
       const result: LiquidationResult = {
         txHash: receipt.hash,
-        debtRepaid: vault.debt,
+        debtRepaid: exactDebtFormatted,
         collateralSeized: totalCollateralSeized.toFixed(2),
         bonus: bonusAmount.toFixed(2),
         isPartial: false
