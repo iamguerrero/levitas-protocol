@@ -972,6 +972,15 @@ export default function TradingInterface() {
                 const currentBvixPrice = parseFloat(realtimeBvixPrice || formatPrice(contractData.bvixPrice));
                 const currentEvixPrice = parseFloat(realtimeEvixPrice || formatPrice(contractData.evixPrice));
 
+                // Debug logging
+                console.log('🔍 Vault Summary Debug:', {
+                  userPositions,
+                  userPositionLoading,
+                  bvixPosition: userPositions?.bvix,
+                  evixPosition: userPositions?.evix,
+                  vaultStats
+                });
+
                 // Only count active positions (vaults), not wallet balances
                 // BVIX vault
                 if (userPositions?.bvix && parseFloat(userPositions.bvix.collateral) > 0) {
@@ -987,6 +996,9 @@ export default function TradingInterface() {
                   totalDebtValue += evixDebt * currentEvixPrice;
                 }
 
+                // If no active vaults, don't show any CR
+                const hasActiveVaults = (userPositions?.bvix && parseFloat(userPositions.bvix.collateral) > 0) || 
+                                      (userPositions?.evix && parseFloat(userPositions.evix.collateral) > 0);
                 const vaultCR = totalDebtValue > 0 ? (totalCollateral / totalDebtValue) * 100 : 0;
 
                 return (
@@ -1008,30 +1020,36 @@ export default function TradingInterface() {
                     <div className="pt-4 border-t border-gray-200">
                       <div className="flex justify-between mb-3">
                         <span className="font-medium">Vault CR%:</span>
-                        <span className={getRiskColor(vaultCR)}>
-                          {vaultCR.toFixed(1)}% ({getRiskLevel(vaultCR)})
-                        </span>
+                        {hasActiveVaults ? (
+                          <span className={getRiskColor(vaultCR)}>
+                            {vaultCR.toFixed(1)}% ({getRiskLevel(vaultCR)})
+                          </span>
+                        ) : (
+                          <span className="text-gray-500">No active vaults</span>
+                        )}
                       </div>
-                      {/* Health Bar */}
-                      <div className="space-y-2">
-                        <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                          <div 
-                            className={`h-3 rounded-full transition-all duration-300 ${
-                              vaultCR >= 150 ? 'bg-green-500' :
-                              vaultCR >= 120 ? 'bg-yellow-500' :
-                              'bg-red-500'
-                            }`}
-                            style={{ 
-                              width: `${Math.min(100, Math.max(0, (vaultCR / 250) * 100))}%` 
-                            }}
-                          ></div>
+                      {/* Health Bar - only show if there are active vaults */}
+                      {hasActiveVaults && (
+                        <div className="space-y-2">
+                          <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                            <div 
+                              className={`h-3 rounded-full transition-all duration-300 ${
+                                vaultCR >= 150 ? 'bg-green-500' :
+                                vaultCR >= 120 ? 'bg-yellow-500' :
+                                'bg-red-500'
+                              }`}
+                              style={{ 
+                                width: `${Math.min(100, Math.max(0, (vaultCR / 250) * 100))}%` 
+                              }}
+                            ></div>
+                          </div>
+                          <div className="flex justify-between text-xs text-gray-500">
+                            <span>120% (Min)</span>
+                            <span>150% (Safe)</span>
+                            <span>200%+ (Optimal)</span>
+                          </div>
                         </div>
-                        <div className="flex justify-between text-xs text-gray-500">
-                          <span>120% (Min)</span>
-                          <span>150% (Safe)</span>
-                          <span>200%+ (Optimal)</span>
-                        </div>
-                      </div>
+                      )}
                     </div>
                   </>
                 );
