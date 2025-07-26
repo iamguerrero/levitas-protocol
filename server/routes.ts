@@ -162,6 +162,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         evixOracle.getPrice()
       ]);
       
+
+      
       const liquidatable = [];
       
       // Check BVIX position
@@ -194,7 +196,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const price = parseFloat(ethers.formatUnits(evixPrice, 8));
         const cr = debt > 0 ? (collateral / (debt * price)) * 100 : 0;
         
-        if (cr < 120 && cr > 0) {
+
+        
+        if (cr <= 120.1 && cr > 0) { // Allow small floating point precision
           liquidatable.push({
             vaultId: 2,
             owner: knownAddress,
@@ -210,7 +214,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      console.log('Liquidatable positions found:', liquidatable);
       res.json({ bvix: liquidatable.filter(v => v.tokenType === 'BVIX'), evix: liquidatable.filter(v => v.tokenType === 'EVIX') });
       
     } catch (error) {
