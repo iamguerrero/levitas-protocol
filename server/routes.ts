@@ -13,17 +13,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Vault statistics endpoint
   app.get("/api/v1/vault-stats", async (req, res) => {
     try {
-      // Contract addresses - V5 Final with fresh BVIX and proper ownership
+      // Contract addresses - V6 (current production)
       const MOCK_USDC_ADDRESS = '0x9CC37B36FDd8CF5c0297BE15b75663Bf2a193297'; // MockUSDC with public faucet
-      const BVIX_ADDRESS = '0xdcCCCC3A977cC0166788265eD4B683D41f3AED09'; // Fresh BVIX with faucet USDC
-      const MINT_REDEEM_ADDRESS = '0x4d0ddFBCBa76f2e72B0Fef2fdDcaE9ddd6922397'; // V5 with faucet USDC
-      // Update oracle addresses to latest deployed
-      // BVIX_ORACLE_ADDRESS remains '0x85485dD6cFaF5220150c413309C61a8EA24d24FE' as it's the BVIX oracle controlled by simulator
-      // Correct EVIX_ORACLE_ADDRESS to '0xCd7441A771a7F84E58d98E598B7Ff23A3688094F'
+      const BVIX_ADDRESS = '0x2E3bef50887aD2A30069c79D19Bb91085351C92a'; // BVIX token V6
+      const MINT_REDEEM_ADDRESS = '0x65Bec0Ab96ab751Fd0b1D9c907342d9A61FB1117'; // BVIX MintRedeem V6
+      // Oracle addresses
       const BVIX_ORACLE_ADDRESS = '0x85485dD6cFaF5220150c413309C61a8EA24d24FE';
-      const EVIX_ORACLE_ADDRESS = '0xCd7441A771a7F84E58d98E598B7Ff23A3688094F';
-      // EVIX contracts - V5 Final addresses
-      const EVIX_MINT_REDEEM_ADDRESS = '0xb187c5Ff48D69BB0b477dAf30Eec779E0D07771D'; // EVIX V5 with faucet USDC
+      const EVIX_ORACLE_ADDRESS = '0xBd6E9809B9608eCAc3610cA65327735CC3c08104'; // Updated EVIX Oracle
+      // EVIX contracts - V6 addresses
+      const EVIX_ADDRESS = '0x7066700CAf442501B308fAe34d5919091e1b2380'; // EVIX token V6
+      const EVIX_MINT_REDEEM_ADDRESS = '0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf'; // EVIX MintRedeem V6
       const BASE_SEPOLIA_RPC_URL = 'https://sepolia.base.org';
 
       // Minimal ERC20 ABI for balance and supply queries
@@ -68,9 +67,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const priceFloat = parseFloat(price);
       
       // Add EVIX data for complete protocol-wide collateral ratio
-      const evixContract = new ethers.Contract('0x089C132BC246bF2060F40B0608Cb14b2A0cC9127', ERC20_ABI, provider);
+      const evixContract = new ethers.Contract(EVIX_ADDRESS, ERC20_ABI, provider);
       
-      console.log('Debug: Using EVIX contract address:', '0x089C132BC246bF2060F40B0608Cb14b2A0cC9127');
+      console.log('Debug: Using EVIX contract address:', EVIX_ADDRESS);
       console.log('Debug: Using EVIX vault address:', EVIX_MINT_REDEEM_ADDRESS);
       
       const [evixTotalSupply, evixPrice] = await Promise.all([
