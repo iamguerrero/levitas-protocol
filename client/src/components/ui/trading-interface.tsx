@@ -978,7 +978,10 @@ export default function TradingInterface() {
                   userPositionLoading,
                   bvixPosition: userPositions?.bvix,
                   evixPosition: userPositions?.evix,
-                  vaultStats
+                  vaultStats,
+                  isConnected,
+                  address,
+                  hasPositions: userPositions !== null && userPositions !== undefined
                 });
 
                 // Only count active positions (vaults), not wallet balances
