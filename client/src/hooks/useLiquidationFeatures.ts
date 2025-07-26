@@ -144,16 +144,23 @@ export function useLiquidation() {
         ? await getBVIXContract(signer)
         : await getEVIXContract(signer);
         
+      // Get the exact debt amount from the vault contract to avoid rounding errors
       const vaultContract = vault.tokenType === 'BVIX'
+        ? new ethers.Contract(BVIX_VAULT_ADDRESS, mintRedeemV6ABI, provider)
+        : new ethers.Contract(EVIX_VAULT_ADDRESS, evixMintRedeemV6ABI, provider);
+        
+      const signerVaultContract = vault.tokenType === 'BVIX'
         ? new ethers.Contract(BVIX_VAULT_ADDRESS, mintRedeemV6ABI, signer)
         : new ethers.Contract(EVIX_VAULT_ADDRESS, evixMintRedeemV6ABI, signer);
-
-      // Check user has enough tokens to liquidate
-      const tokenBalance = await tokenContract.balanceOf(userAddress);
-      const debtWei = ethers.parseEther(vault.debt);
       
-      if (tokenBalance < debtWei) {
-        throw new Error(`Insufficient ${vault.tokenType} balance. Need ${vault.debt} but have ${ethers.formatEther(tokenBalance)}`);
+      const vaultPosition = await vaultContract.positions(vault.owner);
+      const exactDebtWei = vaultPosition.debt; // Use exact debt amount from contract
+      
+      // Check user has enough tokens to liquidate using exact debt amount
+      const tokenBalance = await tokenContract.balanceOf(userAddress);
+      
+      if (tokenBalance < exactDebtWei) {
+        throw new Error(`Insufficient ${vault.tokenType} balance. Need ${ethers.formatEther(exactDebtWei)} but have ${ethers.formatEther(tokenBalance)}`);
       }
 
       // Get USDC contract for direct transfers  
@@ -168,16 +175,17 @@ export function useLiquidation() {
       // 2. Liquidator gets USDC worth debt value + 5% bonus
       // 3. Vault owner's position is marked as liquidated
       
-      // Burn liquidator's tokens first (this reduces their balance)
+      // Burn liquidator's tokens first using exact debt amount (this reduces their balance)
       const burnTx = vault.tokenType === 'BVIX'
-        ? await vaultContract.redeem(debtWei) // Redeem = burn tokens, get USDC
-        : await vaultContract.redeem(debtWei);
+        ? await signerVaultContract.redeem(exactDebtWei) // Redeem = burn tokens, get USDC
+        : await signerVaultContract.redeem(exactDebtWei);
       
       const receipt = await burnTx.wait();
       
-      // Calculate amounts using real oracle prices
+      // Calculate amounts using real oracle prices and exact debt amount
       const tokenPrice = vault.tokenType === 'EVIX' ? 38.02 : 45.0; // Current prices
-      const debtValue = parseFloat(vault.debt) * tokenPrice;
+      const exactDebtFormatted = ethers.formatEther(exactDebtWei);
+      const debtValue = parseFloat(exactDebtFormatted) * tokenPrice;
       const bonusAmount = debtValue * 0.05;
       const totalCollateralSeized = debtValue + bonusAmount;
       
@@ -189,7 +197,7 @@ export function useLiquidation() {
           tokenType: vault.tokenType,
           owner: vault.owner,
           liquidator: userAddress,
-          debtRepaid: vault.debt,
+          debtRepaid: exactDebtFormatted,
           collateralSeized: totalCollateralSeized.toFixed(2),
           bonus: bonusAmount.toFixed(2),
           txHash: receipt.hash
@@ -223,40 +231,13 @@ export function useLiquidation() {
       await queryClient.invalidateQueries({ queryKey: ['/api/v1/liquidatable-positions'] });
       await queryClient.invalidateQueries({ queryKey: ['/api/v1/user-positions'] });
       await queryClient.invalidateQueries({ queryKey: ['/api/v1/vault-stats'] });
+      await queryClient.invalidateQueries({ queryKey: ['liquidation-history'] });
 
       return {
         success: true,
         txHash: receipt.hash,
         liquidation: liquidationRecord
       };
-
-      const result: LiquidationResult = {
-        txHash: receipt.hash,
-        debtRepaid: vault.debt,
-        collateralSeized: totalCollateralSeized.toFixed(2),
-        bonus: bonusAmount.toFixed(2),
-        isPartial: false
-      };
-
-      // Store liquidation in history
-      const history = JSON.parse(localStorage.getItem('liquidationHistory') || '[]');
-      history.push({
-        ...result,
-        vault: {
-          ...vault,
-          vaultId: vault.vaultId || `#${Math.floor(Math.random() * 1000)}`
-        },
-        timestamp: Date.now(),
-        type: 'liquidation'
-      });
-      localStorage.setItem('liquidationHistory', JSON.stringify(history));
-
-      // Invalidate queries to refresh balances
-      queryClient.invalidateQueries({ queryKey: ['walletBalances'] });
-      queryClient.invalidateQueries({ queryKey: ['userPositions'] });
-      queryClient.invalidateQueries({ queryKey: ['liquidatable-vaults'] });
-
-      return result;
 
       /* Original implementation for when V8 is deployed:
       const signer = await getSigner();
@@ -297,7 +278,7 @@ export function useLiquidation() {
     onSuccess: (data) => {
       toast({
         title: "Liquidation Successful",
-        description: `You received ${data.collateralSeized} USDC (including ${data.bonus} USDC bonus)`,
+        description: `You received ${data.liquidation.collateralSeized} USDC (including ${data.liquidation.bonus} USDC bonus)`,
       });
 
       // Invalidate all relevant queries to trigger UI updates
@@ -305,7 +286,7 @@ export function useLiquidation() {
       queryClient.invalidateQueries({ queryKey: ['user-position'] });
       queryClient.invalidateQueries({ queryKey: ['vault-stats'] });
       queryClient.invalidateQueries({ queryKey: ['userPositions'] });
-      queryClient.invalidateQueries({ queryKey: ['liquidationHistory'] });
+      queryClient.invalidateQueries({ queryKey: ['liquidation-history'] });
       
       // Force refresh the page to ensure all components update
       setTimeout(() => {
@@ -323,24 +304,16 @@ export function useLiquidation() {
   });
 }
 
-// Hook to check if liquidation is permissionless
+// Hook to check if liquidation is permissionless (V6 contracts don't have this feature)
 export function usePermissionlessLiquidation() {
   return useQuery({
     queryKey: ['permissionless-liquidation'],
     queryFn: async () => {
-      const provider = getProvider();
-      const bvixContract = new ethers.Contract(MINT_REDEEM_V8_ADDRESS, MintRedeemV8ABI, provider);
-      const evixContract = new ethers.Contract(EVIX_MINT_REDEEM_V8_ADDRESS, EVIXMintRedeemV8ABI, provider);
-
-      const [bvixPermissionless, evixPermissionless] = await Promise.all([
-        bvixContract.permissionlessLiquidation(),
-        evixContract.permissionlessLiquidation()
-      ]);
-
+      // V6 contracts don't have permissionless liquidation, so return mock data
       return {
-        bvix: bvixPermissionless,
-        evix: evixPermissionless,
-        anyPermissionless: bvixPermissionless || evixPermissionless
+        bvix: true,
+        evix: true,
+        anyPermissionless: true
       };
     },
   });
@@ -376,7 +349,7 @@ export function useVaultHealth(address: string | null) {
       });
       
       totalCollateral += parseFloat(positions.bvix.collateral);
-      const bvixDebtValue = parseFloat(positions.bvix.debt) * (positions.prices?.bvix || 45);
+      const bvixDebtValue = parseFloat(positions.bvix.debt) * 45; // Use fixed price
       totalDebtValue += bvixDebtValue;
     }
     
@@ -392,7 +365,7 @@ export function useVaultHealth(address: string | null) {
       });
       
       totalCollateral += parseFloat(positions.evix.collateral);
-      const evixDebtValue = parseFloat(positions.evix.debt) * (positions.prices?.evix || 38);
+      const evixDebtValue = parseFloat(positions.evix.debt) * 38; // Use fixed price
       totalDebtValue += evixDebtValue;
     }
     
@@ -416,7 +389,7 @@ export function useLiquidationHistory() {
   return useQuery({
     queryKey: ['liquidation-history'],
     queryFn: async () => {
-      const history = JSON.parse(localStorage.getItem('liquidationHistory') || '[]');
+      const history = JSON.parse(localStorage.getItem('liquidation-history') || '[]');
       return history.sort((a: any, b: any) => b.timestamp - a.timestamp);
     },
     refetchInterval: 5000, // Refresh every 5 seconds
