@@ -857,23 +857,23 @@ export default function TradingInterface() {
                   <span className="text-gray-600">Portfolio Value</span>
                   <span className="font-mono font-semibold text-blue-600">${(parseFloat(contractData.bvixBalance) * parseFloat(realtimeBvixPrice || formatPrice(contractData.bvixPrice))).toFixed(2)}</span>
                 </div>
-                {userPositions?.bvix && parseFloat(userPositions.bvix.collateral) > 0 && (
+                {parseFloat(contractData.bvixBalance) > 0 && (
                   <div className="pt-4">
                     <div className="text-xs text-black font-bold mb-2">Active Position</div>
                     <div className="flex justify-between items-center py-2 border-b border-gray-100">
                       <span className="text-gray-600">Collateral (USDC)</span>
-                      <span className="font-mono font-semibold text-gray-900 dark:text-white">{Number(userPositions.bvix.collateral).toFixed(2)}</span>
+                      <span className="font-mono font-semibold text-gray-900 dark:text-white">{vaultStats?.bvixVaultUsdc || "0.00"}</span>
                     </div>
                     <div className="flex justify-between items-center py-2 border-b border-gray-100">
                       <span className="text-gray-600">Debt (BVIX)</span>
-                      <span className="font-mono font-semibold text-gray-900 dark:text-white">{Number(userPositions.bvix.debt).toFixed(2)}</span>
+                      <span className="font-mono font-semibold text-gray-900 dark:text-white">{parseFloat(contractData.bvixBalance).toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center py-2">
                       <span className="text-gray-600">Position CR</span>
                       {(() => {
                         // Calculate real-time CR: (Collateral / (Debt * Current Price)) * 100
-                        const collateral = parseFloat(userPositions.bvix.collateral);
-                        const debt = parseFloat(userPositions.bvix.debt);
+                        const collateral = parseFloat(vaultStats?.bvixVaultUsdc || "0");
+                        const debt = parseFloat(contractData.bvixBalance);
                         const currentPrice = parseFloat(realtimeBvixPrice || formatPrice(contractData.bvixPrice));
                         const realtimeCR = debt > 0 ? (collateral / (debt * currentPrice)) * 100 : 0;
 
@@ -950,7 +950,7 @@ export default function TradingInterface() {
             <h4 className="font-semibold text-lg mb-6 text-gray-900 dark:text-white">Vault Summary</h4>
             <div className="space-y-4">
               {(() => {
-                // Calculate combined vault metrics
+                // Calculate combined vault metrics using real data
                 let totalCollateral = 0;
                 let bvixDebt = 0;
                 let evixDebt = 0;
@@ -960,15 +960,16 @@ export default function TradingInterface() {
                 const currentBvixPrice = parseFloat(realtimeBvixPrice || formatPrice(contractData.bvixPrice));
                 const currentEvixPrice = parseFloat(realtimeEvixPrice || formatPrice(contractData.evixPrice));
 
-                if (userPositions?.bvix && parseFloat(userPositions.bvix.collateral) > 0) {
-                  totalCollateral += parseFloat(userPositions.bvix.collateral);
-                  bvixDebt = parseFloat(userPositions.bvix.debt);
+                // Use actual wallet balances and vault stats data
+                if (parseFloat(contractData.bvixBalance) > 0) {
+                  totalCollateral += parseFloat(vaultStats?.bvixVaultUsdc || "0");
+                  bvixDebt = parseFloat(contractData.bvixBalance);
                   totalDebtValue += bvixDebt * currentBvixPrice;
                 }
 
-                if (userPositions?.evix && parseFloat(userPositions.evix.collateral) > 0) {
-                  totalCollateral += parseFloat(userPositions.evix.collateral);
-                  evixDebt = parseFloat(userPositions.evix.debt);
+                if (parseFloat(contractData.evixBalance) > 0) {
+                  totalCollateral += parseFloat(vaultStats?.evixVaultUsdc || "0");
+                  evixDebt = parseFloat(contractData.evixBalance);
                   totalDebtValue += evixDebt * currentEvixPrice;
                 }
 
