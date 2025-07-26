@@ -22,6 +22,7 @@ import {
 } from '@/hooks/useLiquidationFeatures';
 import { useWallet } from '@/hooks/use-wallet';
 import { LiquidationConfirmDialog } from './LiquidationConfirmDialog';
+import { useQuery } from '@tanstack/react-query';
 
 export default function LiquidationOpportunities() {
   const { address } = useWallet();
@@ -39,6 +40,18 @@ export default function LiquidationOpportunities() {
   const permissionless = permissionlessQuery.data;
   
   const { health } = useVaultHealth(address);
+  
+  // Get vault stats and contract data for liquidation info cards
+  const { data: vaultStats } = useQuery({
+    queryKey: ['/api/v1/vault-stats'],
+    refetchInterval: 5000
+  });
+  
+  const { data: contractData } = useQuery({
+    queryKey: ['contractData', address],
+    enabled: !!address,
+    refetchInterval: 10000
+  });
   
   const handleLiquidateClick = (vault: LiquidatableVault) => {
     setSelectedVault(vault);
@@ -103,29 +116,91 @@ export default function LiquidationOpportunities() {
         
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Your Vault Health</CardTitle>
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <div className="w-4 h-4 bg-orange-100 rounded flex items-center justify-center">
+                <span className="text-xs text-orange-600 font-bold">B</span>
+              </div>
+              BVIX Liquidation Info
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-2">
-              <Progress value={health.avgHealthScore} className="flex-1" />
-              <span className="text-sm font-medium">{health.avgHealthScore.toFixed(0)}%</span>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-gray-500">Your Vault</span>
+                <span className="text-sm font-medium">
+                  {vaultStats?.bvixVaultCR ? `${vaultStats.bvixVaultCR.toFixed(0)}% CR` : 'No Vault'}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-gray-500">Wallet Balance</span>
+                <span className="text-sm font-medium text-orange-600">
+                  {contractData?.bvixBalance ? `${parseFloat(contractData.bvixBalance).toFixed(1)} BVIX` : '0 BVIX'}
+                </span>
+              </div>
+              <div className="mt-2 pt-2 border-t border-gray-100">
+                <div className="flex items-center gap-1">
+                  {vaultStats?.bvixVaultCR && vaultStats.bvixVaultCR > 150 ? (
+                    <Shield className="h-3 w-3 text-green-500" />
+                  ) : vaultStats?.bvixVaultCR && vaultStats.bvixVaultCR > 120 ? (
+                    <AlertTriangle className="h-3 w-3 text-yellow-500" />
+                  ) : (
+                    <TrendingDown className="h-3 w-3 text-red-500" />
+                  )}
+                  <span className="text-xs">
+                    {vaultStats?.bvixVaultCR && vaultStats.bvixVaultCR > 150 
+                      ? 'Safe to liquidate' 
+                      : vaultStats?.bvixVaultCR && vaultStats.bvixVaultCR > 120
+                      ? 'Moderate risk'
+                      : 'High risk - avoid liquidating'}
+                  </span>
+                </div>
+              </div>
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              {health.isHealthy ? 'Healthy' : health.isAtRisk ? 'At Risk' : 'Critical'}
-            </p>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Network Status</CardTitle>
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <div className="w-4 h-4 bg-blue-100 rounded flex items-center justify-center">
+                <span className="text-xs text-blue-600 font-bold">E</span>
+              </div>
+              EVIX Liquidation Info
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-2">
-              <Shield className="h-5 w-5 text-green-500" />
-              <span className="text-sm">Protection Active</span>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-gray-500">Your Vault</span>
+                <span className="text-sm font-medium">
+                  {vaultStats?.evixVaultCR && vaultStats.evixVaultCR > 0 ? `${vaultStats.evixVaultCR.toFixed(0)}% CR` : 'No Vault'}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-gray-500">Wallet Balance</span>
+                <span className="text-sm font-medium text-blue-600">
+                  {contractData?.evixBalance ? `${parseFloat(contractData.evixBalance).toFixed(1)} EVIX` : '0 EVIX'}
+                </span>
+              </div>
+              <div className="mt-2 pt-2 border-t border-gray-100">
+                <div className="flex items-center gap-1">
+                  {vaultStats?.evixVaultCR && vaultStats.evixVaultCR > 150 ? (
+                    <Shield className="h-3 w-3 text-green-500" />
+                  ) : vaultStats?.evixVaultCR && vaultStats.evixVaultCR > 120 ? (
+                    <AlertTriangle className="h-3 w-3 text-yellow-500" />
+                  ) : (
+                    <TrendingDown className="h-3 w-3 text-red-500" />
+                  )}
+                  <span className="text-xs">
+                    {vaultStats?.evixVaultCR && vaultStats.evixVaultCR > 150 
+                      ? 'Safe to liquidate' 
+                      : vaultStats?.evixVaultCR && vaultStats.evixVaultCR > 120
+                      ? 'Moderate risk'
+                      : 'No active vault'}
+                  </span>
+                </div>
+              </div>
             </div>
-            <p className="text-xs text-gray-500 mt-1">1 hour grace period</p>
           </CardContent>
         </Card>
       </div>
