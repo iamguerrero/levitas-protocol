@@ -198,7 +198,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
 
         
-        if (cr <= 120.1 && cr > 0) { // Allow small floating point precision
+        // Check if this vault has been liquidated
+        const liquidationKey = `liquidated_evix_${knownAddress}`;
+        global.liquidatedVaults = global.liquidatedVaults || {};
+        const isLiquidated = !!global.liquidatedVaults[liquidationKey];
+        
+        if (cr <= 120.1 && cr > 0 && !isLiquidated) { // Allow small floating point precision, exclude liquidated
           liquidatable.push({
             vaultId: 2,
             owner: knownAddress,
@@ -273,9 +278,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const bvixDebt = ethers.formatEther(bvixPosition.debt); // Tokens have 18 decimals
       const bvixPriceFormatted = parseFloat(ethers.formatUnits(bvixPrice, 8));
       
-      // Format EVIX position
-      const evixCollateral = ethers.formatUnits(evixPosition.collateral, 6);
-      const evixDebt = ethers.formatEther(evixPosition.debt);
+      // Check if EVIX vault was liquidated and format position accordingly
+      const evixLiquidationKey = `liquidated_evix_${userAddress}`;
+      global.liquidatedVaults = global.liquidatedVaults || {};
+      const evixLiquidated = !!global.liquidatedVaults[evixLiquidationKey];
+      
+      const evixCollateral = evixLiquidated ? "0" : ethers.formatUnits(evixPosition.collateral, 6);
+      const evixDebt = evixLiquidated ? "0" : ethers.formatEther(evixPosition.debt);
       const evixPriceFormatted = parseFloat(ethers.formatUnits(evixPrice, 8));
 
       // Calculate CRs
@@ -287,7 +296,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         bvixCR = (parseFloat(bvixCollateral) / bvixDebtValue) * 100;
       }
       
-      if (parseFloat(evixDebt) > 0) {
+      if (parseFloat(evixDebt) > 0 && !evixLiquidated) {
         const evixDebtValue = parseFloat(evixDebt) * evixPriceFormatted;
         evixCR = (parseFloat(evixCollateral) / evixDebtValue) * 100;
       }
@@ -315,6 +324,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
         error: 'Failed to fetch user positions',
         details: error instanceof Error ? error.message : String(error)
       });
+    }
+  });
+
+  // Liquidation tracking endpoint
+  app.post('/api/v1/liquidate-vault', async (req, res) => {
+    try {
+      const { tokenType, owner, liquidator, debtRepaid, collateralSeized, bonus, txHash } = req.body;
+      
+      // Store liquidated vaults in memory (in production, use database)
+      const liquidationKey = `liquidated_${tokenType.toLowerCase()}_${owner}`;
+      const liquidationData = {
+        tokenType,
+        owner,
+        liquidator,
+        debtRepaid,
+        collateralSeized,
+        bonus,
+        txHash,
+        timestamp: Date.now()
+      };
+      
+      // For simplicity, store in a global object (in production, use proper storage)
+      global.liquidatedVaults = global.liquidatedVaults || {};
+      global.liquidatedVaults[liquidationKey] = liquidationData;
+      
+      console.log(`📋 Vault liquidated: ${tokenType} owner ${owner} by ${liquidator}`);
+      
+      res.json({ success: true, liquidation: liquidationData });
+    } catch (error) {
+      console.error('Error processing liquidation:', error);
+      res.status(500).json({ error: 'Failed to process liquidation' });
+    }
+  });
+
+  // Check if vault is liquidated endpoint
+  app.get('/api/v1/vault-liquidated/:tokenType/:owner', async (req, res) => {
+    try {
+      const { tokenType, owner } = req.params;
+      const liquidationKey = `liquidated_${tokenType.toLowerCase()}_${owner}`;
+      
+      global.liquidatedVaults = global.liquidatedVaults || {};
+      const isLiquidated = !!global.liquidatedVaults[liquidationKey];
+      
+      res.json({ isLiquidated, liquidation: global.liquidatedVaults[liquidationKey] || null });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to check liquidation status' });
     }
   });
 
