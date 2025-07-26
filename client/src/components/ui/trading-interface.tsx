@@ -972,16 +972,18 @@ export default function TradingInterface() {
                 const currentBvixPrice = parseFloat(realtimeBvixPrice || formatPrice(contractData.bvixPrice));
                 const currentEvixPrice = parseFloat(realtimeEvixPrice || formatPrice(contractData.evixPrice));
 
-                // Use actual wallet balances and vault stats data
-                if (parseFloat(contractData.bvixBalance) > 0) {
-                  totalCollateral += parseFloat(vaultStats?.bvixVaultUsdc || "0");
-                  bvixDebt = parseFloat(contractData.bvixBalance);
+                // Only count active positions (vaults), not wallet balances
+                // BVIX vault
+                if (userPositions?.bvix && parseFloat(userPositions.bvix.collateral) > 0) {
+                  totalCollateral += parseFloat(userPositions.bvix.collateral);
+                  bvixDebt = parseFloat(userPositions.bvix.debt);
                   totalDebtValue += bvixDebt * currentBvixPrice;
                 }
 
-                if (parseFloat(contractData.evixBalance) > 0) {
-                  totalCollateral += parseFloat(vaultStats?.evixVaultUsdc || "0");
-                  evixDebt = parseFloat(contractData.evixBalance);
+                // EVIX vault  
+                if (userPositions?.evix && parseFloat(userPositions.evix.collateral) > 0) {
+                  totalCollateral += parseFloat(userPositions.evix.collateral);
+                  evixDebt = parseFloat(userPositions.evix.debt);
                   totalDebtValue += evixDebt * currentEvixPrice;
                 }
 
