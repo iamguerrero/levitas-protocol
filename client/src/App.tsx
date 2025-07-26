@@ -8,6 +8,7 @@ import LandingPage from "@/pages/landing";
 import DAppPage from "@/pages/dapp";
 import LiquidationPage from "@/pages/liquidation";
 import NotFound from "@/pages/not-found";
+import { clearAllMockData } from "@/utils/clearMockData";
 
 function Router() {
   return (
