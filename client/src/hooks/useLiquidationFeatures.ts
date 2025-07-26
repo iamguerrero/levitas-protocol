@@ -53,11 +53,11 @@ export function useLiquidatableVaults() {
         const liquidatable = [];
         
         if (data.bvix && data.bvix.length > 0) {
-          liquidatable.push(...data.bvix.filter((v: any) => v.currentCR < 120));
+          liquidatable.push(...data.bvix.filter((v: any) => v.currentCR <= 120));
         }
         
         if (data.evix && data.evix.length > 0) {
-          liquidatable.push(...data.evix.filter((v: any) => v.currentCR < 120));
+          liquidatable.push(...data.evix.filter((v: any) => v.currentCR <= 120));
         }
         
         console.log('Liquidatable vaults found:', liquidatable);
