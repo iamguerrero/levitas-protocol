@@ -240,6 +240,44 @@ export async function switchToSepolia() {
 }
 
 // Helper functions for contract interactions
+// Optimized batch balance fetcher - reuses provider and contracts
+export async function getAllBalances(address: string): Promise<{
+  bvixBalance: string;
+  evixBalance: string;
+  usdcBalance: string;
+}> {
+  try {
+    const provider = getProvider();
+    
+    // Initialize all contracts in parallel
+    const [bvixContract, evixContract, usdcContract] = await Promise.all([
+      getBVIXContract(provider),
+      getEVIXContract(provider),
+      getUSDCContract(provider)
+    ]);
+    
+    // Fetch all balances in parallel
+    const [bvixBalance, evixBalance, usdcBalance] = await Promise.all([
+      bvixContract.balanceOf(address),
+      evixContract.balanceOf(address),
+      usdcContract.balanceOf(address)
+    ]);
+    
+    return {
+      bvixBalance: ethers.formatEther(bvixBalance),
+      evixBalance: ethers.formatEther(evixBalance),
+      usdcBalance: ethers.formatUnits(usdcBalance, 6)
+    };
+  } catch (error) {
+    console.error("Error getting balances:", error);
+    return {
+      bvixBalance: "0.0",
+      evixBalance: "0.0",
+      usdcBalance: "0.0"
+    };
+  }
+}
+
 export async function getBVIXBalance(address: string): Promise<string> {
   try {
     const provider = getProvider();
