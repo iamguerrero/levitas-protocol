@@ -1,9 +1,9 @@
 // Contract addresses for Base Sepolia
 export const MOCK_USDC_ADDRESS = '0x9CC37B36FDd8CF5c0297BE15b75663Bf2a193297';
-export const BVIX_ADDRESS = '0x93fd7d3BF951df6f5B0220ac92FA8D7E2322BA01';
-export const EVIX_ADDRESS = '0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf';
+export const BVIX_ADDRESS = '0x2E3bef50887aD2A30069c79D19Bb91085351C92a'; // BVIX token V6
+export const EVIX_ADDRESS = '0x7066700CAf442501B308fAe34d5919091e1b2380'; // EVIX token V6
 
-// V7 Contract addresses (current production)
+// V6 Contract addresses (current production)
 export const MINT_REDEEM_ADDRESS = '0x65Bec0Ab96ab751Fd0b1D9c907342d9A61FB1117';
 export const EVIX_MINT_REDEEM_ADDRESS = '0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf';
 
