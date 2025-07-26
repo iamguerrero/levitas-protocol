@@ -595,7 +595,7 @@ export default function TradingInterface() {
     );
   }
 
-  const selectedPosition = selectedToken === 'bvix' ? userPosition?.bvix : userPosition?.evix;
+  const selectedPosition = selectedToken === 'bvix' ? userPositions?.bvix : userPositions?.evix;
   let expectedRefund = "0.00";
   let ratePerToken = "0.00";
   const redeemNum = parseFloat(selectedToken === 'bvix' ? redeemAmount : evixRedeemAmount) || 0;
