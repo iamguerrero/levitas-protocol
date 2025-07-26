@@ -169,55 +169,10 @@ export default function LiquidationOpportunities() {
           <CardContent>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-xs text-gray-500">Your Vault</span>
-                <span className="text-sm font-medium">
-                  {userPositions?.bvix && parseFloat(userPositions.bvix.collateral) > 0 
-                    ? `${userPositions.bvix.cr.toFixed(1)}% CR` 
-                    : 'No Vault'}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
                 <span className="text-xs text-gray-500">Wallet Balance</span>
                 <span className="text-sm font-medium text-orange-600">
                   {walletBalances.bvixBalance && parseFloat(walletBalances.bvixBalance) > 0 ? `${parseFloat(walletBalances.bvixBalance).toFixed(2)} BVIX` : '0 BVIX'}
                 </span>
-              </div>
-              <div className="mt-2 pt-2 border-t border-gray-100">
-                <div className="flex items-center gap-1">
-                  {(() => {
-                    const bvixCR = userPositions?.bvix?.cr || 0;
-                    const hasVault = userPositions?.bvix && parseFloat(userPositions.bvix.collateral) > 0;
-                    
-                    if (!hasVault) {
-                      return (
-                        <>
-                          <Shield className="h-3 w-3 text-green-500" />
-                          <span className="text-xs">No active vault</span>
-                        </>
-                      );
-                    }
-                    
-                    return (
-                      <>
-                        {bvixCR > 150 ? (
-                          <Shield className="h-3 w-3 text-green-500" />
-                        ) : bvixCR > 120 ? (
-                          <AlertTriangle className="h-3 w-3 text-yellow-500" />
-                        ) : (
-                          <TrendingDown className="h-3 w-3 text-red-500" />
-                        )}
-                        <span className="text-xs">
-                          {bvixCR > 150 
-                            ? 'Safe to liquidate' 
-                            : bvixCR > 120
-                            ? 'Moderate risk'
-                            : 'High risk - avoid liquidating'}
-                        </span>
-                      </>
-                    );
-                  })()}
-                
-                </div>
               </div>
             </div>
           </CardContent>
@@ -235,54 +190,10 @@ export default function LiquidationOpportunities() {
           <CardContent>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-xs text-gray-500">Your Vault</span>
-                <span className="text-sm font-medium">
-                  {userPositions?.evix && parseFloat(userPositions.evix.collateral) > 0 
-                    ? `${userPositions.evix.cr.toFixed(1)}% CR` 
-                    : 'No Vault'}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
                 <span className="text-xs text-gray-500">Wallet Balance</span>
                 <span className="text-sm font-medium text-blue-600">
                   {walletBalances.evixBalance && parseFloat(walletBalances.evixBalance) > 0 ? `${parseFloat(walletBalances.evixBalance).toFixed(1)} EVIX` : '0 EVIX'}
                 </span>
-              </div>
-              <div className="mt-2 pt-2 border-t border-gray-100">
-                <div className="flex items-center gap-1">
-                  {(() => {
-                    const evixCR = userPositions?.evix?.cr || 0;
-                    const hasVault = userPositions?.evix && parseFloat(userPositions.evix.collateral) > 0;
-                    
-                    if (!hasVault) {
-                      return (
-                        <>
-                          <Shield className="h-3 w-3 text-green-500" />
-                          <span className="text-xs">No active vault</span>
-                        </>
-                      );
-                    }
-                    
-                    return (
-                      <>
-                        {evixCR > 150 ? (
-                          <Shield className="h-3 w-3 text-green-500" />
-                        ) : evixCR > 120 ? (
-                          <AlertTriangle className="h-3 w-3 text-yellow-500" />
-                        ) : (
-                          <TrendingDown className="h-3 w-3 text-red-500" />
-                        )}
-                        <span className="text-xs">
-                          {evixCR > 150 
-                            ? 'Safe to liquidate' 
-                            : evixCR > 120
-                            ? 'Moderate risk'
-                            : 'High risk - liquidatable!'}
-                        </span>
-                      </>
-                    );
-                  })()}
-                </div>
               </div>
             </div>
           </CardContent>
