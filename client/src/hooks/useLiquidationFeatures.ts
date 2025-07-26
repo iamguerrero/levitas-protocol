@@ -3,12 +3,16 @@ import { ethers } from 'ethers';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
 import { toast } from '@/hooks/use-toast';
-import { getProvider, getSigner } from '@/lib/web3';
-import { MINT_REDEEM_V8_ADDRESS, EVIX_MINT_REDEEM_V8_ADDRESS } from '@/lib/constants';
-import MintRedeemV8ABI from '@/contracts/MintRedeemV8.abi.json';
-import EVIXMintRedeemV8ABI from '@/contracts/EVIXMintRedeemV8.abi.json';
+import { getProvider, getSigner, getBVIXContract, getEVIXContract } from '@/lib/web3';
+import mintRedeemV6ABI from '@/contracts/MintRedeemV6.abi.json';
+import evixMintRedeemV6ABI from '@/contracts/EVIXMintRedeemV6.abi.json';
+
 import { useUserPositions } from '@/hooks/useUserPositions';
 import { useVault } from '@/hooks/useVault';
+
+// Define vault addresses (these are the current deployed addresses)
+const BVIX_VAULT_ADDRESS = "0x4d0ddFBCBa76f2e72B0Fef2fdDcaE9ddd6922397";
+const EVIX_VAULT_ADDRESS = "0xb187c5Ff48D69BB0b477dAf30Eec779E0D07771D";
 
 export interface LiquidatableVault {
   vaultId: number;
@@ -102,81 +106,72 @@ export function useLiquidation() {
       vault: LiquidatableVault; 
       repayAmount?: string; // Optional for partial liquidation
     }) => {
-      // Mock implementation for testing
-      // Check if user has sufficient token balance to repay debt
+      // Real liquidation implementation
+      const signer = await getSigner();
       const provider = getProvider();
-      const accounts = await provider.send('eth_requestAccounts', []);
-      if (accounts.length === 0) throw new Error('No wallet connected');
-
-      // Liquidators need BVIX/EVIX tokens to repay the debt, not USDC
-      const requiredTokens = parseFloat(vault.debt);
-
-      // Request MetaMask confirmation (simulate transaction)
-      try {
-        // Create a mock transaction request to trigger MetaMask
-        const txRequest = {
-          to: vault.contractAddress,
-          from: accounts[0],
-          data: '0x' + Math.random().toString(16).substr(2, 8), // Mock transaction data
-          value: '0x0'
-        };
+      const userAddress = await signer.getAddress();
+      
+      // Get the appropriate contracts
+      const tokenContract = vault.tokenType === 'BVIX' 
+        ? await getBVIXContract(signer)
+        : await getEVIXContract(signer);
         
-        // This will open MetaMask for user confirmation
-        await provider.send('eth_sendTransaction', [txRequest]);
-      } catch (error) {
-        // User rejected transaction
-        throw new Error('Transaction rejected by user');
+      const vaultContract = vault.tokenType === 'BVIX'
+        ? new ethers.Contract(BVIX_VAULT_ADDRESS, mintRedeemV6ABI, signer)
+        : new ethers.Contract(EVIX_VAULT_ADDRESS, evixMintRedeemV6ABI, signer);
+
+      // Check user has enough tokens to liquidate
+      const tokenBalance = await tokenContract.balanceOf(userAddress);
+      const debtWei = ethers.parseEther(vault.debt);
+      
+      if (tokenBalance < debtWei) {
+        throw new Error(`Insufficient ${vault.tokenType} balance. Need ${vault.debt} but have ${ethers.formatEther(tokenBalance)}`);
       }
 
-      // Calculate proper liquidation amounts based on DeFi mechanics
-      const tokenPrice = vault.tokenType === 'EVIX' ? 38.02 : 42.19; // Current prices
-      const debtValue = parseFloat(vault.debt) * tokenPrice; // Value of debt in USDC
-      const bonusAmount = debtValue * 0.05; // 5% bonus on debt value
-      const totalCollateralSeized = debtValue + bonusAmount; // Total USDC liquidator receives
+      // Approve vault contract to spend tokens
+      const currentAllowance = await tokenContract.allowance(userAddress, vaultContract.target);
+      if (currentAllowance < debtWei) {
+        const approveTx = await tokenContract.approve(vaultContract.target, debtWei);
+        await approveTx.wait();
+      }
+
+      // Perform the liquidation
+      const liquidateTx = await vaultContract.liquidate(vault.owner, debtWei);
+      const receipt = await liquidateTx.wait();
       
-      const mockResult: LiquidationResult = {
-        txHash: '0x' + Math.random().toString(16).substr(2, 64),
+      // Calculate the USDC received (debt value + 5% bonus)
+      const tokenPrice = vault.tokenType === 'EVIX' ? 38.02 : 42.19;
+      const debtValue = parseFloat(vault.debt) * tokenPrice;
+      const bonusAmount = debtValue * 0.05;
+      const totalCollateralSeized = debtValue + bonusAmount;
+
+      const result: LiquidationResult = {
+        txHash: receipt.hash,
         debtRepaid: vault.debt,
         collateralSeized: totalCollateralSeized.toFixed(2),
         bonus: bonusAmount.toFixed(2),
         isPartial: false
       };
 
-      // Store liquidation in local storage for history
+      // Store liquidation in history
       const history = JSON.parse(localStorage.getItem('liquidationHistory') || '[]');
       history.push({
-        ...mockResult,
+        ...result,
         vault: {
           ...vault,
-          vaultId: vault.vaultId || `#${Math.floor(Math.random() * 1000)}` // Ensure vault ID exists
+          vaultId: vault.vaultId || `#${Math.floor(Math.random() * 1000)}`
         },
         timestamp: Date.now(),
         type: 'liquidation'
       });
       localStorage.setItem('liquidationHistory', JSON.stringify(history));
 
-      // Mark this vault as liquidated
-      const liquidatedVaults = JSON.parse(localStorage.getItem('liquidatedVaults') || '[]');
-      liquidatedVaults.push({
-        vaultId: vault.vaultId,
-        tokenType: vault.tokenType,
-        timestamp: Date.now()
-      });
-      localStorage.setItem('liquidatedVaults', JSON.stringify(liquidatedVaults));
+      // Invalidate queries to refresh balances
+      queryClient.invalidateQueries({ queryKey: ['walletBalances'] });
+      queryClient.invalidateQueries({ queryKey: ['userPositions'] });
+      queryClient.invalidateQueries({ queryKey: ['liquidatable-vaults'] });
 
-      // Don't update mock balances - remove this entirely
-      // The app should only use real wallet balances
-
-      // Force refresh user positions by invalidating cache
-      if (typeof window !== 'undefined') {
-        // Trigger a storage event to force re-query
-        window.dispatchEvent(new StorageEvent('storage', {
-          key: 'liquidatedVaults',
-          newValue: JSON.stringify(liquidatedVaults)
-        }));
-      }
-
-      return mockResult;
+      return result;
 
       /* Original implementation for when V8 is deployed:
       const signer = await getSigner();
