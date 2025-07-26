@@ -36,39 +36,8 @@ export function useLiquidatableVaults() {
   return useQuery({
     queryKey: ['liquidatable-vaults'],
     queryFn: async () => {
-      // For now, return mock data since V8 contracts are not deployed
-      // This will be replaced with actual contract calls when V8 is deployed
-      // Calculate proper liquidation amounts
-      const evixPrice = 38.02; // Current EVIX price
-      const debt = 218.76;
-      const debtValue = debt * evixPrice; // Value of debt in USDC
-      const bonusAmount = debtValue * 0.05; // 5% bonus on debt value
-      
-      // Use a fixed vault ID for the EVIX vault so it can be properly tracked
-      const mockVaults: LiquidatableVault[] = [
-        {
-          vaultId: 101, // Fixed ID for EVIX vault
-          owner: '0x18633ea30ad5c91e13d2e5714fe5e3d97043679b',
-          collateral: '9970',
-          debt: '218.75548533438651922', // Full precision debt
-          currentCR: 119,
-          liquidationPrice: '38.14', // Liquidation threshold price
-          maxBonus: bonusAmount.toFixed(2), // 5% bonus on debt value
-          canLiquidate: true,
-          tokenType: 'EVIX',
-          contractAddress: EVIX_MINT_REDEEM_V8_ADDRESS
-        }
-      ];
-
-      // Filter out liquidated vaults
-      const liquidatedVaults = JSON.parse(localStorage.getItem('liquidatedVaults') || '[]');
-      const activeMockVaults = mockVaults.filter(vault => {
-        return !liquidatedVaults.some((lv: any) => 
-          lv.vaultId === vault.vaultId && lv.tokenType === vault.tokenType
-        );
-      });
-      
-      return activeMockVaults;
+      // Return empty array - no mock vaults, only real blockchain data
+      return [];
     },
     refetchInterval: 30000, // Refresh every 30 seconds
   });
@@ -195,20 +164,8 @@ export function useLiquidation() {
       });
       localStorage.setItem('liquidatedVaults', JSON.stringify(liquidatedVaults));
 
-      // Update mock balances in local storage
-      const mockBalances = JSON.parse(localStorage.getItem('mockBalances') || '{}');
-      const currentEVIXBalance = parseFloat(mockBalances.evix || '218.75548533438651922');
-      const currentUSDCBalance = parseFloat(mockBalances.usdc || '999988994.009');
-      
-      // Reduce EVIX balance by debt amount (using full precision)
-      const debtAmount = vault.tokenType === 'EVIX' ? 218.75548533438651922 : parseFloat(vault.debt);
-      const newEVIXBalance = Math.max(0, currentEVIXBalance - debtAmount); // Never go negative
-      
-      mockBalances.evix = newEVIXBalance.toString();
-      // Increase USDC balance by collateral seized
-      mockBalances.usdc = (currentUSDCBalance + parseFloat(mockResult.collateralSeized)).toString();
-      
-      localStorage.setItem('mockBalances', JSON.stringify(mockBalances));
+      // Don't update mock balances - remove this entirely
+      // The app should only use real wallet balances
 
       // Force refresh user positions by invalidating cache
       if (typeof window !== 'undefined') {
