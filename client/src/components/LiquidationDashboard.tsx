@@ -202,7 +202,7 @@ export function LiquidationDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Liquidation Center</h1>
-          <p className="text-gray-500 mt-1">Monitor and execute liquidations</p>
+          <p className="text-gray-500 mt-1">Keep the protocol safe and earn 5% instant profits</p>
         </div>
         {permissionless?.anyPermissionless && (
           <Badge variant="secondary" className="flex items-center gap-1">
