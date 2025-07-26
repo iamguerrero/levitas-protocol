@@ -25,6 +25,7 @@ import {
   getBVIXBalance,
   getEVIXBalance,
   getUSDCBalance,
+  getAllBalances,
   getOraclePrice,
   getEVIXPrice,
   getCollateralRatio,
@@ -178,16 +179,19 @@ export default function TradingInterface() {
     }
   }, [address, contractsDeployed]);
 
-  // Auto-refresh contract data every 10 seconds
+  // Auto-refresh contract data every 30 seconds (reduced frequency)
   useEffect(() => {
     if (!address || !contractsDeployed) return;
 
     const interval = setInterval(() => {
-      loadContractData();
-    }, 10000);
+      // Only refresh if not currently loading to avoid overlapping calls
+      if (!isLoading) {
+        loadContractData();
+      }
+    }, 30000); // Increased from 10s to 30s
 
     return () => clearInterval(interval);
-  }, [address, contractsDeployed]);
+  }, [address, contractsDeployed, isLoading]);
 
   const loadContractData = async () => {
     if (!address) return;
@@ -195,14 +199,15 @@ export default function TradingInterface() {
     setIsLoading(true);
     try {
       console.log("🔄 Loading contract data for address:", address);
-      const [bvixBalance, evixBalance, usdcBalance, oraclePrice, evixPrice, ratio] = await Promise.all([
-        getBVIXBalance(address),
-        getEVIXBalance(address),
-        getUSDCBalance(address),
+      // Use optimized batch balance fetcher for faster loading
+      const [balances, oraclePrice, evixPrice, ratio] = await Promise.all([
+        getAllBalances(address),
         getOraclePrice(),
         getEVIXPrice(),
         getCollateralRatio(),
       ]);
+      
+      const { bvixBalance, evixBalance, usdcBalance } = balances;
 
       console.log("📊 Contract data loaded:", { bvixBalance, evixBalance, usdcBalance, oraclePrice, evixPrice, ratio });
 
@@ -305,14 +310,13 @@ export default function TradingInterface() {
         ),
       });
 
-      // Immediate refresh of all data
-      await loadContractData();
-      
+      // Only invalidate queries, don't double-load
       refetchVault();
-
-      // Invalidate all related queries
       queryClient.invalidateQueries({ queryKey: ['userPositions', address] });
       queryClient.invalidateQueries({ queryKey: ['/api/v1/vault-stats'] });
+      
+      // Single refresh after invalidation
+      setTimeout(() => loadContractData(), 1000);
     } catch (error: any) {
       console.error("Mint error:", error);
       toast({
@@ -378,14 +382,13 @@ export default function TradingInterface() {
       });
 
       setRedeemAmount("");
-      // Immediate refresh of all data
-      await loadContractData();
-      
+      // Only invalidate queries, don't double-load
       refetchVault();
-
-      // Invalidate all related queries
       queryClient.invalidateQueries({ queryKey: ['userPositions', address] });
       queryClient.invalidateQueries({ queryKey: ['/api/v1/vault-stats'] });
+      
+      // Single refresh after invalidation
+      setTimeout(() => loadContractData(), 1000);
     } catch (error: any) {
       console.error("Redeem error:", error);
       toast({
@@ -432,14 +435,13 @@ export default function TradingInterface() {
         description: `Successfully minted EVIX tokens for ${amount} USDC`,
       });
 
-      // Immediate refresh of all data
-      await loadContractData();
-      
+      // Only invalidate queries, don't double-load
       refetchVault();
-
-      // Invalidate all related queries
       queryClient.invalidateQueries({ queryKey: ['userPositions', address] });
       queryClient.invalidateQueries({ queryKey: ['/api/v1/vault-stats'] });
+      
+      // Single refresh after invalidation
+      setTimeout(() => loadContractData(), 1000);
     } catch (error: any) {
       toast({
         title: "Mint Failed",
@@ -485,14 +487,13 @@ export default function TradingInterface() {
       });
 
       setEvixRedeemAmount("");
-      // Immediate refresh of all data
-      await loadContractData();
-      
+      // Only invalidate queries, don't double-load
       refetchVault();
-
-      // Invalidate all related queries
       queryClient.invalidateQueries({ queryKey: ['userPositions', address] });
       queryClient.invalidateQueries({ queryKey: ['/api/v1/vault-stats'] });
+      
+      // Single refresh after invalidation
+      setTimeout(() => loadContractData(), 1000);
     } catch (error: any) {
       toast({
         title: "Redeem Failed",
@@ -539,7 +540,7 @@ export default function TradingInterface() {
           title: "Test USDC Received!",
           description: "Successfully received 1000 test USDC tokens.",
         });
-        await loadContractData(); // Refresh balances
+        setTimeout(() => loadContractData(), 1000); // Refresh balances after delay
       } else {
         toast({
           title: "No Faucet Available",
