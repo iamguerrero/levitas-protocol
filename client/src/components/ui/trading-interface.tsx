@@ -164,6 +164,9 @@ export default function TradingInterface() {
   // In the useEffect for address change
   useEffect(() => {
     if (address && contractsDeployed) {
+      // Clear any mock balances when loading the trading interface
+      localStorage.removeItem('mockBalances');
+      
       // Preserve existing prices, only reset balances
       setIsLoading(true);
       setContractData(prev => ({
@@ -191,7 +194,7 @@ export default function TradingInterface() {
     }, 30000); // Increased from 10s to 30s
 
     return () => clearInterval(interval);
-  }, [address, contractsDeployed, isLoading]);
+  }, [address, contractsDeployed]);
 
   const loadContractData = async () => {
     if (!address) return;
@@ -210,6 +213,14 @@ export default function TradingInterface() {
       const { bvixBalance, evixBalance, usdcBalance } = balances;
 
       console.log("📊 Contract data loaded:", { bvixBalance, evixBalance, usdcBalance, oraclePrice, evixPrice, ratio });
+      
+      // Log if there's mock data interfering
+      const mockBalances = JSON.parse(localStorage.getItem('mockBalances') || '{}');
+      if (Object.keys(mockBalances).length > 0) {
+        console.warn("⚠️ Mock balances detected:", mockBalances);
+        console.log("🧹 Clearing mock balances...");
+        localStorage.removeItem('mockBalances');
+      }
 
       setCollateralRatio(ratio);
 
