@@ -144,14 +144,14 @@ export function useLiquidation() {
         ? await getBVIXContract(signer)
         : await getEVIXContract(signer);
         
-      const vaultContract = vault.tokenType === 'BVIX'
-        ? new ethers.Contract(BVIX_VAULT_ADDRESS, mintRedeemV6ABI, signer)
-        : new ethers.Contract(EVIX_VAULT_ADDRESS, evixMintRedeemV6ABI, signer);
-
       // Get the exact debt amount from the vault contract to avoid rounding errors
       const vaultContract = vault.tokenType === 'BVIX'
         ? new ethers.Contract(BVIX_VAULT_ADDRESS, mintRedeemV6ABI, provider)
         : new ethers.Contract(EVIX_VAULT_ADDRESS, evixMintRedeemV6ABI, provider);
+        
+      const signerVaultContract = vault.tokenType === 'BVIX'
+        ? new ethers.Contract(BVIX_VAULT_ADDRESS, mintRedeemV6ABI, signer)
+        : new ethers.Contract(EVIX_VAULT_ADDRESS, evixMintRedeemV6ABI, signer);
       
       const vaultPosition = await vaultContract.positions(vault.owner);
       const exactDebtWei = vaultPosition.debt; // Use exact debt amount from contract
@@ -177,8 +177,8 @@ export function useLiquidation() {
       
       // Burn liquidator's tokens first using exact debt amount (this reduces their balance)
       const burnTx = vault.tokenType === 'BVIX'
-        ? await vaultContract.redeem(exactDebtWei) // Redeem = burn tokens, get USDC
-        : await vaultContract.redeem(exactDebtWei);
+        ? await signerVaultContract.redeem(exactDebtWei) // Redeem = burn tokens, get USDC
+        : await signerVaultContract.redeem(exactDebtWei);
       
       const receipt = await burnTx.wait();
       
