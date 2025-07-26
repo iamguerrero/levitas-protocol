@@ -62,14 +62,11 @@ export const BVIX_ADDRESS = "0x2E3bef50887aD2A30069c79D19Bb91085351C92a"; // Fre
 export const BVIX_MINT_REDEEM_V6_ADDRESS = '0x65Bec0Ab96ab751Fd0b1D9c907342d9A61FB1117'; // BVIX V6
 export const EVIX_MINT_REDEEM_V6_ADDRESS = '0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf'; // EVIX V6
 
-// Legacy V5 addresses (for backward compatibility)
-export const MINT_REDEEM_ADDRESS = '0x4d0ddFBCBa76f2e72B0Fef2fdDcaE9ddd6922397'; // V5 with faucet USDC
-export const EVIX_MINT_REDEEM_ADDRESS = "0xb187c5Ff48D69BB0b477dAf30Eec779E0D07771D"; // EVIX V5 with faucet USDC
-
-export const EVIX_ADDRESS = "0x7066700CAf442501B308fAe34d5919091e1b2380"; // Fresh EVIX token
+// Token and Oracle addresses
+export const EVIX_ADDRESS = "0x7066700CAf442501B308fAe34d5919091e1b2380"; // EVIX token
 export const ORACLE_ADDRESS = "0x85485dD6cFaF5220150c413309C61a8EA24d24FE";
 export const MOCK_USDC_ADDRESS = "0x9CC37B36FDd8CF5c0297BE15b75663Bf2a193297"; // MockUSDC with public faucet
-export const EVIX_ORACLE_ADDRESS = "0xCd7441A771a7F84E58d98E598B7Ff23A3688094F";
+export const EVIX_ORACLE_ADDRESS = "0xBd6E9809B9608eCAc3610cA65327735CC3c08104"; // Updated EVIX Oracle
 
 // Contract factory functions
 export const getBVIXContract = async (providerOrSigner: any) => {
@@ -673,7 +670,7 @@ export async function getContractDebugInfo(): Promise<any> {
         usdcContract.balanceOf(address),
         bvixContract.balanceOf(address),
         oracleContract.getPrice(),
-        usdcContract.allowance(address, MINT_REDEEM_ADDRESS),
+        usdcContract.allowance(address, BVIX_MINT_REDEEM_V6_ADDRESS),
       ]);
 
     return {
@@ -686,7 +683,7 @@ export async function getContractDebugInfo(): Promise<any> {
         usdc: MOCK_USDC_ADDRESS,
         bvix: BVIX_ADDRESS,
         oracle: ORACLE_ADDRESS,
-        mintRedeem: MINT_REDEEM_ADDRESS,
+        mintRedeem: BVIX_MINT_REDEEM_V6_ADDRESS,
       },
     };
   } catch (error) {
@@ -708,7 +705,7 @@ export const getCollateralRatio = async (): Promise<number> => {
 
     // 2️⃣ read chain state in parallel
     const [rawVaultUSDC, rawSupply, price] = await Promise.all([
-      usdc.balanceOf(MINT_REDEEM_ADDRESS), // 6-decimals
+      usdc.balanceOf(BVIX_MINT_REDEEM_V6_ADDRESS), // 6-decimals
       bvix.totalSupply(),                  // 18-decimals
       getOraclePrice()                     // plain string like "42.15"
     ]);
