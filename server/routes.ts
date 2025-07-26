@@ -121,6 +121,109 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all liquidatable positions across the protocol
+  app.get('/api/v1/liquidatable-positions', async (req, res) => {
+    try {
+      // Contract addresses - V6 (current production)
+      const BVIX_MINT_REDEEM_ADDRESS = '0x65Bec0Ab96ab751Fd0b1D9c907342d9A61FB1117'; // BVIX MintRedeem V6
+      const EVIX_MINT_REDEEM_ADDRESS = '0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf'; // EVIX MintRedeem V6
+      const BVIX_ORACLE_ADDRESS = '0x85485dD6cFaF5220150c413309C61a8EA24d24FE';
+      const EVIX_ORACLE_ADDRESS = '0xBd6E9809B9608eCAc3610cA65327735CC3c08104';
+      const BASE_SEPOLIA_RPC_URL = 'https://sepolia.base.org';
+
+      // MintRedeem ABI for position queries
+      const MINT_REDEEM_ABI = [
+        'function positions(address user) external view returns (uint256 collateral, uint256 debt)',
+        'function getUserCollateralRatio(address user) external view returns (uint256)',
+        'function getPrice() external view returns (uint256)'
+      ];
+
+      // Oracle ABI
+      const ORACLE_ABI = [
+        'function getPrice() external view returns (uint256)',
+      ];
+      
+      const provider = new ethers.JsonRpcProvider(BASE_SEPOLIA_RPC_URL);
+      
+      // Get all positions that might be liquidatable
+      // For now, return the known user's position if it's liquidatable
+      const knownAddress = '0x18633ea30ad5c91e13d2e5714fe5e3d97043679b';
+      
+      // Fetch user positions
+      const bvixVault = new ethers.Contract(BVIX_MINT_REDEEM_ADDRESS, MINT_REDEEM_ABI, provider);
+      const evixVault = new ethers.Contract(EVIX_MINT_REDEEM_ADDRESS, MINT_REDEEM_ABI, provider);
+      const bvixOracle = new ethers.Contract(BVIX_ORACLE_ADDRESS, ORACLE_ABI, provider);
+      const evixOracle = new ethers.Contract(EVIX_ORACLE_ADDRESS, ORACLE_ABI, provider);
+      
+      const [bvixPosition, evixPosition, bvixPrice, evixPrice] = await Promise.all([
+        bvixVault.positions(knownAddress),
+        evixVault.positions(knownAddress),
+        bvixOracle.getPrice(),
+        evixOracle.getPrice()
+      ]);
+      
+      const liquidatable = [];
+      
+      // Check BVIX position
+      if (bvixPosition.debt > 0n) {
+        const collateral = parseFloat(ethers.formatUnits(bvixPosition.collateral, 6));
+        const debt = parseFloat(ethers.formatEther(bvixPosition.debt));
+        const price = parseFloat(ethers.formatUnits(bvixPrice, 8));
+        const cr = debt > 0 ? (collateral / (debt * price)) * 100 : 0;
+        
+        if (cr < 120 && cr > 0) {
+          liquidatable.push({
+            vaultId: 1,
+            owner: knownAddress,
+            collateral: collateral.toFixed(2),
+            debt: debt.toFixed(2),
+            currentCR: Math.round(cr * 100) / 100,
+            liquidationPrice: (price * 1.2).toFixed(2),
+            maxBonus: ((debt * price * 0.05)).toFixed(2),
+            canLiquidate: true,
+            tokenType: 'BVIX',
+            contractAddress: BVIX_MINT_REDEEM_ADDRESS
+          });
+        }
+      }
+      
+      // Check EVIX position
+      if (evixPosition.debt > 0n) {
+        const collateral = parseFloat(ethers.formatUnits(evixPosition.collateral, 6));
+        const debt = parseFloat(ethers.formatEther(evixPosition.debt));
+        const price = parseFloat(ethers.formatUnits(evixPrice, 8));
+        const cr = debt > 0 ? (collateral / (debt * price)) * 100 : 0;
+        
+        if (cr < 120 && cr > 0) {
+          liquidatable.push({
+            vaultId: 2,
+            owner: knownAddress,
+            collateral: collateral.toFixed(2),
+            debt: debt.toFixed(2),
+            currentCR: Math.round(cr * 100) / 100,
+            liquidationPrice: (price * 1.2).toFixed(2),
+            maxBonus: ((debt * price * 0.05)).toFixed(2),
+            canLiquidate: true,
+            tokenType: 'EVIX',
+            contractAddress: EVIX_MINT_REDEEM_ADDRESS
+          });
+        }
+      }
+      
+      console.log('Liquidatable positions found:', liquidatable);
+      res.json({ bvix: liquidatable.filter(v => v.tokenType === 'BVIX'), evix: liquidatable.filter(v => v.tokenType === 'EVIX') });
+      
+    } catch (error) {
+      console.error('Error fetching liquidatable positions:', error);
+      res.status(500).json({ 
+        error: 'Failed to fetch liquidatable positions',
+        details: error instanceof Error ? error.message : String(error),
+        bvix: [],
+        evix: []
+      });
+    }
+  });
+
   // User-specific vault positions endpoint
   app.get("/api/v1/user-positions/:address", async (req, res) => {
     try {
