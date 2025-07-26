@@ -121,6 +121,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User-specific vault positions endpoint
+  app.get("/api/v1/user-positions/:address", async (req, res) => {
+    try {
+      const userAddress = req.params.address;
+      
+      // Contract addresses - V6 (current production)
+      const BVIX_MINT_REDEEM_ADDRESS = '0x65Bec0Ab96ab751Fd0b1D9c907342d9A61FB1117'; // BVIX MintRedeem V6
+      const EVIX_MINT_REDEEM_ADDRESS = '0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf'; // EVIX MintRedeem V6
+      const BVIX_ORACLE_ADDRESS = '0x85485dD6cFaF5220150c413309C61a8EA24d24FE';
+      const EVIX_ORACLE_ADDRESS = '0xBd6E9809B9608eCAc3610cA65327735CC3c08104';
+      const BASE_SEPOLIA_RPC_URL = 'https://sepolia.base.org';
+
+      // MintRedeem ABI for position queries
+      const MINT_REDEEM_ABI = [
+        'function positions(address user) external view returns (uint256 collateral, uint256 debt)',
+        'function getUserCollateralRatio(address user) external view returns (uint256)',
+        'function getPrice() external view returns (uint256)'
+      ];
+
+      // Oracle ABI
+      const ORACLE_ABI = [
+        'function getPrice() external view returns (uint256)',
+      ];
+
+      // Initialize provider
+      const provider = new ethers.JsonRpcProvider(BASE_SEPOLIA_RPC_URL);
+      
+      // Initialize contracts
+      const bvixVaultContract = new ethers.Contract(BVIX_MINT_REDEEM_ADDRESS, MINT_REDEEM_ABI, provider);
+      const evixVaultContract = new ethers.Contract(EVIX_MINT_REDEEM_ADDRESS, MINT_REDEEM_ABI, provider);
+      const bvixOracleContract = new ethers.Contract(BVIX_ORACLE_ADDRESS, ORACLE_ABI, provider);
+      const evixOracleContract = new ethers.Contract(EVIX_ORACLE_ADDRESS, ORACLE_ABI, provider);
+
+      // Fetch user positions and prices in parallel
+      const [bvixPosition, evixPosition, bvixPrice, evixPrice] = await Promise.all([
+        bvixVaultContract.positions(userAddress),
+        evixVaultContract.positions(userAddress),
+        bvixOracleContract.getPrice(),
+        evixOracleContract.getPrice()
+      ]);
+
+      // Format BVIX position
+      const bvixCollateral = ethers.formatUnits(bvixPosition.collateral, 6); // USDC has 6 decimals
+      const bvixDebt = ethers.formatEther(bvixPosition.debt); // Tokens have 18 decimals
+      const bvixPriceFormatted = parseFloat(ethers.formatUnits(bvixPrice, 8));
+      
+      // Format EVIX position
+      const evixCollateral = ethers.formatUnits(evixPosition.collateral, 6);
+      const evixDebt = ethers.formatEther(evixPosition.debt);
+      const evixPriceFormatted = parseFloat(ethers.formatUnits(evixPrice, 8));
+
+      // Calculate CRs
+      let bvixCR = 0;
+      let evixCR = 0;
+      
+      if (parseFloat(bvixDebt) > 0) {
+        const bvixDebtValue = parseFloat(bvixDebt) * bvixPriceFormatted;
+        bvixCR = (parseFloat(bvixCollateral) / bvixDebtValue) * 100;
+      }
+      
+      if (parseFloat(evixDebt) > 0) {
+        const evixDebtValue = parseFloat(evixDebt) * evixPriceFormatted;
+        evixCR = (parseFloat(evixCollateral) / evixDebtValue) * 100;
+      }
+
+      res.json({
+        bvix: {
+          collateral: bvixCollateral,
+          debt: bvixDebt,
+          cr: Math.round(bvixCR * 100) / 100
+        },
+        evix: {
+          collateral: evixCollateral,
+          debt: evixDebt,
+          cr: Math.round(evixCR * 100) / 100
+        },
+        prices: {
+          bvix: bvixPriceFormatted,
+          evix: evixPriceFormatted
+        }
+      });
+      
+    } catch (error) {
+      console.error('Error fetching user positions:', error);
+      res.status(500).json({ 
+        error: 'Failed to fetch user positions',
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
