@@ -65,10 +65,12 @@ export function useUserPositions() {
 
   // No refresh trigger needed - we only use real blockchain data
 
-  const { data: positions, isLoading } = useQuery({
+  const { data: positions, isLoading, error } = useQuery({
     queryKey: ['userPositions', address],
     queryFn: async () => {
       if (!address) return null;
+      
+      try {
 
       // Get positions and prices in parallel for better performance
       const provider = getProvider();
@@ -150,11 +152,20 @@ export function useUserPositions() {
       
       console.log('🔍 Final positions result:', result);
       return result;
+      } catch (error) {
+        console.error('🔍 Error in useUserPositions queryFn:', error);
+        throw error;
+      }
     },
     enabled: isConnected && !!address,
     refetchInterval: 10000, // Refresh every 10 seconds
     staleTime: 5000 // Consider data stale after 5 seconds for faster updates
   });
+
+  // Log any query errors
+  if (error) {
+    console.error('🔍 useUserPositions query error:', error);
+  }
 
   return {
     data: positions,
