@@ -36,7 +36,7 @@ async function getUserPosition(
     let cr = 0;
     try {
       // Only get CR if there's actual debt to avoid divide-by-zero
-      if (position.debt && position.debt > 0n) {
+      if (position.debt && position.debt > BigInt(0)) {
         const crRatio = await contract.getUserCollateralRatio(userAddress);
         cr = Number(crRatio);
       }
@@ -90,24 +90,39 @@ export function useUserPositions() {
       const liquidatedVaults = JSON.parse(localStorage.getItem('liquidatedVaults') || '[]');
       console.log('📦 Liquidated vaults in localStorage:', liquidatedVaults);
       
-      // Check if specific vaults are liquidated
+      // Check if specific vaults are liquidated - be very specific about vault IDs
       const isBVIXLiquidated = liquidatedVaults.some((lv: any) => 
-        lv.tokenType === 'BVIX'
+        lv.tokenType === 'BVIX' && lv.userAddress === address
       );
       const isEVIXLiquidated = liquidatedVaults.some((lv: any) => 
-        lv.vaultId === 101 && lv.tokenType === 'EVIX'
+        lv.vaultId === 101 && lv.tokenType === 'EVIX' && lv.userAddress === address
       );
-      console.log('❓ Liquidation status:', { isBVIXLiquidated, isEVIXLiquidated });
+      console.log('❓ Liquidation status:', { isBVIXLiquidated, isEVIXLiquidated, userAddress: address });
+      
+      // DEBUG: Let's see what the raw blockchain data shows
+      console.log('🔧 Raw blockchain fetch about to start for contracts:', {
+        bvixContract: BVIX_VAULT_ADDRESS,
+        evixContract: EVIX_VAULT_ADDRESS,
+        userAddress: address
+      });
 
       const [rawBvixPosition, rawEvixPosition, bvixPrice, evixPrice] = await Promise.all([
         getUserPosition(BVIX_VAULT_ADDRESS, address, mintRedeemV6ABI),
         getUserPosition(EVIX_VAULT_ADDRESS, address, evixMintRedeemV6ABI),
-        bvixContract.getPrice().catch(() => 0n),
-        evixContract.getPrice().catch(() => 0n)
+        bvixContract.getPrice().catch(() => BigInt(0)),
+        evixContract.getPrice().catch(() => BigInt(0))
       ]);
+      
+      console.log('🔧 RAW BLOCKCHAIN DATA:', {
+        rawBvixPosition,
+        rawEvixPosition,
+        bvixPrice: bvixPrice.toString(),
+        evixPrice: evixPrice.toString()
+      });
 
+      // TEMPORARY: Disable BVIX liquidation override for debugging
       // Override positions only if their specific vault was liquidated
-      const bvixPosition = isBVIXLiquidated ? { collateral: "0", debt: "0", cr: 0 } : rawBvixPosition;
+      const bvixPosition = false ? { collateral: "0", debt: "0", cr: 0 } : rawBvixPosition; // Temporarily disabled
       const evixPosition = isEVIXLiquidated ? { collateral: "0", debt: "0", cr: 0 } : rawEvixPosition;
       
       console.log('🔍 Vault-specific liquidation check:', { 
@@ -125,7 +140,7 @@ export function useUserPositions() {
 
       try {
         // For BVIX: CR = (collateral) / (debt * price) * 100 - only if not liquidated
-        if (!isBVIXLiquidated && Number(bvixPosition.debt) > 0 && bvixPrice > 0n) {
+        if (!isBVIXLiquidated && Number(bvixPosition.debt) > 0 && bvixPrice > BigInt(0)) {
           const bvixPriceFormatted = Number(bvixPrice) / 1e8;
           const debtValueInUSDC = Number(bvixPosition.debt) * bvixPriceFormatted;
           bvixCR = Math.floor((Number(bvixPosition.collateral) / debtValueInUSDC) * 100);
@@ -139,7 +154,7 @@ export function useUserPositions() {
         }
 
         // For EVIX: CR = (collateral) / (debt * price) * 100 - only if not liquidated
-        if (!isEVIXLiquidated && Number(evixPosition.debt) > 0 && evixPrice > 0n) {
+        if (!isEVIXLiquidated && Number(evixPosition.debt) > 0 && evixPrice > BigInt(0)) {
           const evixPriceFormatted = Number(evixPrice) / 1e8;
           const debtValueInUSDC = Number(evixPosition.debt) * evixPriceFormatted;
           evixCR = Math.floor((Number(evixPosition.collateral) / debtValueInUSDC) * 100);
