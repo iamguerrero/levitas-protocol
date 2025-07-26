@@ -6,7 +6,7 @@ This project is a decentralized finance (DeFi) application called Levitas Financ
 
 ## Recent Changes (January 2025)
 
-✓ **SPRINT 2.2: ADVANCED LIQUIDATION FEATURES** - Implemented comprehensive liquidation system with 5% liquidator bonuses, real-time collateral ratio monitoring, and permissionless liquidation support
+✅ **SPRINT 2.2: ADVANCED LIQUIDATION FEATURES COMPLETE** - Implemented comprehensive liquidation system for both BVIX and EVIX tokens with 5% liquidator bonuses, real-time collateral ratio monitoring, and permissionless liquidation support
 ✓ **LIQUIDATION MECHANICS FIXED** - Corrected liquidation to pay debt value + 5% bonus (not full collateral), matching DeFi whitepaper standards
 ✓ **CONFIRMATION DIALOG ADDED** - Created LiquidationConfirmDialog component showing transaction details before execution
 ✓ **VAULT REMOVAL ON LIQUIDATION** - Liquidated vaults now properly disappear from opportunities list
@@ -30,7 +30,7 @@ This project is a decentralized finance (DeFi) application called Levitas Financ
 ✓ **VAULT HEALTH CONSISTENCY FIXED** - Vault health now shows consistent CR% (149%) matching vault summary using vault stats API instead of error-prone position CR
 ✓ **LIQUIDATION OPPORTUNITIES UPDATED** - Now shows actual user's EVIX vault at 119% CR as liquidatable opportunity with proper 5% bonus calculation
 ✓ **VAULT SUMMARY FIXED TO USE ONLY ACTIVE POSITIONS** - Corrected vault summary CR calculation to only count active vaults (positions with collateral > 0), not personal wallet balances. Personal EVIX/BVIX tokens are not protocol debt
-✓ **REAL LIQUIDATION IMPLEMENTATION** - Created proper liquidation logic that actually interacts with smart contracts, updates wallet balances (decreases EVIX/BVIX, increases USDC), and invalidates caches
+✅ **REAL LIQUIDATION IMPLEMENTATION** - Created proper liquidation logic that actually interacts with smart contracts for both BVIX and EVIX tokens, updates wallet balances (decreases EVIX/BVIX, increases USDC), removes liquidated vaults from opportunities, stores transaction history, and invalidates caches
 
 ✓ **V5 FINAL CONTRACTS WITH PROPER OWNERSHIP** - Deployed fresh tokens and V5 contracts: Fresh BVIX (0xa60289981b67139fb7a9F3d31dD2D2BaA414A263), Fresh EVIX (0x4dEaB86baa7CBDb7859665a7FE9766f22fB799C1), BVIX MintRedeem (0xa0133C6380bf9618e97Ab9a855aF2035e9498829), EVIX MintRedeem (0x667e594bD7B994c492cd973C805CEdd971a5F163)
 ✓ **TRUE COLLATERAL RATIO ENFORCEMENT** - V5 contracts implement mintWithCollateralRatio(amount, targetCR) where users spend full USDC but receive proportional tokens based on selected CR

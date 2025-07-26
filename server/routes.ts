@@ -173,7 +173,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const price = parseFloat(ethers.formatUnits(bvixPrice, 8));
         const cr = debt > 0 ? (collateral / (debt * price)) * 100 : 0;
         
-        if (cr < 120 && cr > 0) {
+        // Check if this vault has been liquidated
+        const liquidationKey = `liquidated_bvix_${knownAddress}`;
+        global.liquidatedVaults = global.liquidatedVaults || {};
+        const isLiquidated = !!global.liquidatedVaults[liquidationKey];
+        
+        if (cr <= 120.1 && cr > 0 && !isLiquidated) { // Allow small floating point precision, exclude liquidated
           liquidatable.push({
             vaultId: 1,
             owner: knownAddress,
@@ -273,9 +278,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         evixOracleContract.getPrice()
       ]);
 
-      // Format BVIX position
-      const bvixCollateral = ethers.formatUnits(bvixPosition.collateral, 6); // USDC has 6 decimals
-      const bvixDebt = ethers.formatEther(bvixPosition.debt); // Tokens have 18 decimals
+      // Check if BVIX vault was liquidated and format position accordingly
+      const bvixLiquidationKey = `liquidated_bvix_${userAddress}`;
+      global.liquidatedVaults = global.liquidatedVaults || {};
+      const bvixLiquidated = !!global.liquidatedVaults[bvixLiquidationKey];
+      
+      const bvixCollateral = bvixLiquidated ? "0" : ethers.formatUnits(bvixPosition.collateral, 6); // USDC has 6 decimals
+      const bvixDebt = bvixLiquidated ? "0" : ethers.formatEther(bvixPosition.debt); // Tokens have 18 decimals
       const bvixPriceFormatted = parseFloat(ethers.formatUnits(bvixPrice, 8));
       
       // Check if EVIX vault was liquidated and format position accordingly
@@ -291,7 +300,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let bvixCR = 0;
       let evixCR = 0;
       
-      if (parseFloat(bvixDebt) > 0) {
+      if (parseFloat(bvixDebt) > 0 && !bvixLiquidated) {
         const bvixDebtValue = parseFloat(bvixDebt) * bvixPriceFormatted;
         bvixCR = (parseFloat(bvixCollateral) / bvixDebtValue) * 100;
       }
