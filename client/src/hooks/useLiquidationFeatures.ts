@@ -40,8 +40,32 @@ export function useLiquidatableVaults() {
   return useQuery({
     queryKey: ['liquidatable-vaults'],
     queryFn: async () => {
-      // Return empty array - no mock vaults, only real blockchain data
-      return [];
+      try {
+        // Fetch all user positions from API to find liquidatable ones
+        const response = await fetch('/api/v1/liquidatable-positions');
+        if (!response.ok) {
+          console.error('Failed to fetch liquidatable positions');
+          return [];
+        }
+        const data = await response.json();
+        
+        // Filter positions that are actually liquidatable (CR < 120%)
+        const liquidatable = [];
+        
+        if (data.bvix && data.bvix.length > 0) {
+          liquidatable.push(...data.bvix.filter((v: any) => v.currentCR < 120));
+        }
+        
+        if (data.evix && data.evix.length > 0) {
+          liquidatable.push(...data.evix.filter((v: any) => v.currentCR < 120));
+        }
+        
+        console.log('Liquidatable vaults found:', liquidatable);
+        return liquidatable;
+      } catch (error) {
+        console.error('Error fetching liquidatable vaults:', error);
+        return [];
+      }
     },
     refetchInterval: 30000, // Refresh every 30 seconds
   });
@@ -263,56 +287,67 @@ export function usePermissionlessLiquidation() {
 
 // Hook for vault health monitoring
 export function useVaultHealth(address: string | null) {
-  const { positions } = useUserPositions();
-  const { vaultStats } = useVault();
+  const { data: positions, isLoading: positionsLoading } = useUserPositions();
 
   const health = useMemo(() => {
-    // Use vault stats API for accurate CR calculation
-    if (vaultStats?.cr) {
-      const vaultCR = parseFloat(vaultStats.cr);
-      const avgHealthScore = Math.min(100, (vaultCR / 150) * 100);
-      
-      const positionsList = [];
-      
-      // Add individual position info if available
-      if (positions?.bvix && parseFloat(positions.bvix.collateral) > 0) {
-        positionsList.push({
-          token: 'BVIX',
-          currentCR: positions.bvix.cr || vaultCR, // Fallback to vault CR if individual CR is 0
-          healthScore: Math.min(100, (vaultCR / 150) * 100),
-          isAtRisk: vaultCR < 130,
-          liquidationPrice: 45 * 1.2 // Approximate liquidation price
-        });
-      }
-      
-      if (positions?.evix && parseFloat(positions.evix.collateral) > 0) {
-        positionsList.push({
-          token: 'EVIX',
-          currentCR: positions.evix.cr,
-          healthScore: Math.min(100, (positions.evix.cr / 150) * 100),
-          isAtRisk: positions.evix.cr < 130,
-          liquidationPrice: 38 * 1.2
-        });
-      }
-      
+    if (!positions) {
       return {
-        avgHealthScore,
-        isHealthy: vaultCR >= 130,
-        isAtRisk: vaultCR < 120,
-        positions: positionsList
+        avgHealthScore: 0,
+        isHealthy: true,
+        isAtRisk: false,
+        positions: []
       };
     }
     
-    // Fallback if vault stats not available
+    const positionsList = [];
+    let totalCollateral = 0;
+    let totalDebtValue = 0;
+    
+    // Add BVIX position info if available
+    if (positions?.bvix && parseFloat(positions.bvix.collateral) > 0) {
+      const bvixCR = positions.bvix.cr || 0;
+      positionsList.push({
+        token: 'BVIX',
+        currentCR: bvixCR,
+        healthScore: Math.min(100, (bvixCR / 150) * 100),
+        isAtRisk: bvixCR < 130,
+        liquidationPrice: 45 * 1.2 // Approximate liquidation price
+      });
+      
+      totalCollateral += parseFloat(positions.bvix.collateral);
+      const bvixDebtValue = parseFloat(positions.bvix.debt) * (positions.prices?.bvix || 45);
+      totalDebtValue += bvixDebtValue;
+    }
+    
+    // Add EVIX position info if available
+    if (positions?.evix && parseFloat(positions.evix.collateral) > 0) {
+      const evixCR = positions.evix.cr || 0;
+      positionsList.push({
+        token: 'EVIX',
+        currentCR: evixCR,
+        healthScore: Math.min(100, (evixCR / 150) * 100),
+        isAtRisk: evixCR < 130,
+        liquidationPrice: 38 * 1.2
+      });
+      
+      totalCollateral += parseFloat(positions.evix.collateral);
+      const evixDebtValue = parseFloat(positions.evix.debt) * (positions.prices?.evix || 38);
+      totalDebtValue += evixDebtValue;
+    }
+    
+    // Calculate overall health
+    const overallCR = totalDebtValue > 0 ? (totalCollateral / totalDebtValue) * 100 : 0;
+    const avgHealthScore = Math.min(100, (overallCR / 150) * 100);
+    
     return {
-      avgHealthScore: 0,
-      isHealthy: true,
-      isAtRisk: false,
-      positions: []
+      avgHealthScore,
+      isHealthy: overallCR >= 130,
+      isAtRisk: overallCR < 120,
+      positions: positionsList
     };
-  }, [positions, vaultStats]);
+  }, [positions]);
 
-  return { health, isLoading: !vaultStats };
+  return { health, isLoading: positionsLoading };
 }
 
 // Hook to get liquidation history
