@@ -23,7 +23,8 @@ import {
 import { useWallet } from '@/hooks/use-wallet';
 import { LiquidationConfirmDialog } from './LiquidationConfirmDialog';
 import { useQuery } from '@tanstack/react-query';
-import { getBVIXBalance, getEVIXBalance } from '@/lib/web3';
+import { getBVIXBalance, getEVIXBalance, formatPrice } from '@/lib/web3';
+import { useRealTimeOracle } from '@/hooks/useRealTimeOracle';
 
 export default function LiquidationOpportunities() {
   const { address } = useWallet();
@@ -41,6 +42,9 @@ export default function LiquidationOpportunities() {
   const permissionless = permissionlessQuery.data;
   
   const { health } = useVaultHealth(address);
+  
+  // Get real-time oracle prices for accurate CR calculation
+  const { bvixPrice: realtimeBvixPrice, evixPrice: realtimeEvixPrice } = useRealTimeOracle();
   
   // Get vault stats and contract data for liquidation info cards
   const { data: vaultStats } = useQuery({
@@ -109,7 +113,7 @@ export default function LiquidationOpportunities() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Liquidation Center</h1>
-          <p className="text-gray-500 mt-1">Monitor and execute liquidations</p>
+          <p className="text-gray-500 mt-1">Earn 5% instantly to protect the protocol</p>
         </div>
         {permissionless?.anyPermissionless && (
           <Badge variant="secondary" className="flex items-center gap-1">
@@ -157,7 +161,15 @@ export default function LiquidationOpportunities() {
               <div className="flex justify-between items-center">
                 <span className="text-xs text-gray-500">Your Vault</span>
                 <span className="text-sm font-medium">
-                  {vaultStats?.bvixVaultCR && vaultStats.bvixVaultCR > 0 ? `${vaultStats.bvixVaultCR.toFixed(1)}% CR` : 'No Vault'}
+                  {(() => {
+                    // Calculate CR using same logic as Active Position card
+                    const collateral = parseFloat(vaultStats?.bvixVaultUsdc || "0");
+                    const debt = parseFloat(walletBalances.bvixBalance);
+                    const currentPrice = parseFloat(realtimeBvixPrice || vaultStats?.price || "45.0");
+                    const correctCR = debt > 0 ? (collateral / (debt * currentPrice)) * 100 : 0;
+                    
+                    return correctCR > 0 ? `${correctCR.toFixed(1)}% CR` : 'No Vault';
+                  })()}
                 </span>
               </div>
               <div className="flex justify-between items-center">
@@ -168,20 +180,33 @@ export default function LiquidationOpportunities() {
               </div>
               <div className="mt-2 pt-2 border-t border-gray-100">
                 <div className="flex items-center gap-1">
-                  {vaultStats?.bvixVaultCR && vaultStats.bvixVaultCR > 150 ? (
-                    <Shield className="h-3 w-3 text-green-500" />
-                  ) : vaultStats?.bvixVaultCR && vaultStats.bvixVaultCR > 120 ? (
-                    <AlertTriangle className="h-3 w-3 text-yellow-500" />
-                  ) : (
-                    <TrendingDown className="h-3 w-3 text-red-500" />
-                  )}
-                  <span className="text-xs">
-                    {vaultStats?.bvixVaultCR && vaultStats.bvixVaultCR > 150 
-                      ? 'Safe to liquidate' 
-                      : vaultStats?.bvixVaultCR && vaultStats.bvixVaultCR > 120
-                      ? 'Moderate risk'
-                      : 'High risk - avoid liquidating'}
-                  </span>
+                  {(() => {
+                    // Calculate CR for safety assessment
+                    const collateral = parseFloat(vaultStats?.bvixVaultUsdc || "0");
+                    const debt = parseFloat(walletBalances.bvixBalance);
+                    const currentPrice = parseFloat(realtimeBvixPrice || vaultStats?.price || "45.0");
+                    const correctCR = debt > 0 ? (collateral / (debt * currentPrice)) * 100 : 0;
+                    
+                    return (
+                      <>
+                        {correctCR > 150 ? (
+                          <Shield className="h-3 w-3 text-green-500" />
+                        ) : correctCR > 120 ? (
+                          <AlertTriangle className="h-3 w-3 text-yellow-500" />
+                        ) : (
+                          <TrendingDown className="h-3 w-3 text-red-500" />
+                        )}
+                        <span className="text-xs">
+                          {correctCR > 150 
+                            ? 'Safe to liquidate' 
+                            : correctCR > 120
+                            ? 'Moderate risk'
+                            : 'High risk - avoid liquidating'}
+                        </span>
+                      </>
+                    );
+                  })()}
+                
                 </div>
               </div>
             </div>
