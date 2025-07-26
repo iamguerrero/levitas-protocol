@@ -979,8 +979,6 @@ export default function TradingInterface() {
                   bvixPosition: userPositions?.bvix,
                   evixPosition: userPositions?.evix,
                   vaultStats,
-                  isConnected,
-                  address,
                   hasPositions: userPositions !== null && userPositions !== undefined
                 });
 
