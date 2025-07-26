@@ -62,22 +62,10 @@ async function getUserPosition(
 export function useUserPositions() {
   const { address, isConnected } = useWallet();
 
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-
-  // Listen for liquidation events
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'liquidatedVaults') {
-        setRefreshTrigger(prev => prev + 1);
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
+  // No refresh trigger needed - we only use real blockchain data
 
   const { data: positions, isLoading } = useQuery({
-    queryKey: ['userPositions', address, refreshTrigger],
+    queryKey: ['userPositions', address],
     queryFn: async () => {
       if (!address) return null;
 
@@ -86,18 +74,9 @@ export function useUserPositions() {
       const bvixContract = new Contract(BVIX_VAULT_ADDRESS, mintRedeemV6ABI, provider);
       const evixContract = new Contract(EVIX_VAULT_ADDRESS, evixMintRedeemV6ABI, provider);
 
-      // Check for liquidated vaults - check both BVIX and EVIX separately
-      const liquidatedVaults = JSON.parse(localStorage.getItem('liquidatedVaults') || '[]');
-      console.log('📦 Liquidated vaults in localStorage:', liquidatedVaults);
-      
-      // Check if specific vaults are liquidated - be very specific about vault IDs
-      const isBVIXLiquidated = liquidatedVaults.some((lv: any) => 
-        lv.tokenType === 'BVIX' && lv.userAddress === address
-      );
-      const isEVIXLiquidated = liquidatedVaults.some((lv: any) => 
-        lv.vaultId === 101 && lv.tokenType === 'EVIX' && lv.userAddress === address
-      );
-      console.log('❓ Liquidation status:', { isBVIXLiquidated, isEVIXLiquidated, userAddress: address });
+      // Don't check for liquidated vaults - only use real blockchain data
+      const isBVIXLiquidated = false;
+      const isEVIXLiquidated = false;
       
       // DEBUG: Let's see what the raw blockchain data shows
       console.log('🔧 Raw blockchain fetch about to start for contracts:', {
@@ -120,10 +99,9 @@ export function useUserPositions() {
         evixPrice: evixPrice.toString()
       });
 
-      // TEMPORARY: Disable BVIX liquidation override for debugging
-      // Override positions only if their specific vault was liquidated
-      const bvixPosition = false ? { collateral: "0", debt: "0", cr: 0 } : rawBvixPosition; // Temporarily disabled
-      const evixPosition = isEVIXLiquidated ? { collateral: "0", debt: "0", cr: 0 } : rawEvixPosition;
+      // Always use raw blockchain positions - no overrides
+      const bvixPosition = rawBvixPosition;
+      const evixPosition = rawEvixPosition;
       
       console.log('🔍 Vault-specific liquidation check:', { 
         isBVIXLiquidated, 
