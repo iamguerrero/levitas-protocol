@@ -145,8 +145,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const provider = new ethers.JsonRpcProvider(BASE_SEPOLIA_RPC_URL);
       
       // Get all positions that might be liquidatable
-      // For now, return the known user's position if it's liquidatable
-      const knownAddress = '0x18633ea30ad5c91e13d2e5714fe5e3d97043679b';
+      // Check multiple known addresses including current user
+      const knownAddresses = [
+        '0x18633ea30ad5c91e13d2e5714fe5e3d97043679b', // Original test address
+        '0x58bc63cbb24854f0a5edeaf3c5e530192dcbc24b', // Current user address
+        '0xe18d3b075a241379d77fffe01ed1317dda0e8bac'  // Another user address
+      ];
       
       // Use V8 BVIX (WORKING - identical to EVIX) and V6 EVIX contracts
       const bvixVault = new ethers.Contract(BVIX_MINT_REDEEM_ADDRESS, MINT_REDEEM_ABI, provider); // V8 WORKING
@@ -154,72 +158,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const bvixOracle = new ethers.Contract(BVIX_ORACLE_ADDRESS, ORACLE_ABI, provider);
       const evixOracle = new ethers.Contract(EVIX_ORACLE_ADDRESS, ORACLE_ABI, provider);
       
-      const [bvixPosition, evixPosition, bvixPrice, evixPrice] = await Promise.all([
-        bvixVault.positions(knownAddress),
-        evixVault.positions(knownAddress),
+      // Get prices first
+      const [bvixPrice, evixPrice] = await Promise.all([
         bvixOracle.getPrice(),
         evixOracle.getPrice()
       ]);
       
-
-      
       const liquidatable = [];
       
-      // Check BVIX position
-      if (bvixPosition.debt > 0n) {
-        const collateral = parseFloat(ethers.formatUnits(bvixPosition.collateral, 6));
-        const debt = parseFloat(ethers.formatEther(bvixPosition.debt));
-        const price = parseFloat(ethers.formatUnits(bvixPrice, 8));
-        const cr = debt > 0 ? (collateral / (debt * price)) * 100 : 0;
-        
-        // Check if this vault has been liquidated
-        const liquidationKey = `liquidated_bvix_${knownAddress}`;
-        global.liquidatedVaults = global.liquidatedVaults || {};
-        const isLiquidated = !!global.liquidatedVaults[liquidationKey];
-        
-        if (cr <= 120.1 && cr > 0 && !isLiquidated) { // Allow small floating point precision, exclude liquidated
-          liquidatable.push({
-            vaultId: 1,
-            owner: knownAddress,
-            collateral: collateral.toFixed(2),
-            debt: debt.toFixed(2),
-            currentCR: Math.round(cr * 100) / 100,
-            liquidationPrice: (price * 1.2).toFixed(2),
-            maxBonus: ((debt * price * 0.05)).toFixed(2),
-            canLiquidate: true,
-            tokenType: 'BVIX',
-            contractAddress: BVIX_MINT_REDEEM_ADDRESS // V8 WORKING
-          });
-        }
-      }
+      // Check all known addresses for liquidatable positions
+      for (const userAddress of knownAddresses) {
+        try {
+          const [bvixPosition, evixPosition] = await Promise.all([
+            bvixVault.positions(userAddress),
+            evixVault.positions(userAddress)
+          ]);
       
-      // Check EVIX position
-      if (evixPosition.debt > 0n) {
-        const collateral = parseFloat(ethers.formatUnits(evixPosition.collateral, 6));
-        const debt = parseFloat(ethers.formatEther(evixPosition.debt));
-        const price = parseFloat(ethers.formatUnits(evixPrice, 8));
-        const cr = debt > 0 ? (collateral / (debt * price)) * 100 : 0;
-        
-
-        
-        // Check if this vault has been liquidated
-        const liquidationKey = `liquidated_evix_${knownAddress}`;
-        global.liquidatedVaults = global.liquidatedVaults || {};
-        const isLiquidated = !!global.liquidatedVaults[liquidationKey];
-        
-        if (cr <= 120.1 && cr > 0 && !isLiquidated) { // Allow small floating point precision, exclude liquidated
-          liquidatable.push({
-            vaultId: 2,
-            owner: knownAddress,
-            collateral: collateral.toFixed(2),
-            debt: debt.toFixed(2),
-            currentCR: Math.round(cr * 100) / 100,
-            liquidationPrice: (price * 1.2).toFixed(2),
-            maxBonus: ((debt * price * 0.05)).toFixed(2),
-            canLiquidate: true,
-            tokenType: 'EVIX',
-            contractAddress: EVIX_MINT_REDEEM_ADDRESS
-          });
+          // Check BVIX position for this user
+          if (bvixPosition.debt > 0n) {
+            const collateral = parseFloat(ethers.formatUnits(bvixPosition.collateral, 6));
+            const debt = parseFloat(ethers.formatEther(bvixPosition.debt));
+            // Fix BVIX price decimal handling - V8 oracle uses 10 decimals
+            let price = parseFloat(ethers.formatUnits(bvixPrice, 10)); // V8 BVIX Oracle uses 10 decimals
+            const cr = debt > 0 ? (collateral / (debt * price)) * 100 : 0;
+            
+            // Check if this vault has been liquidated
+            const liquidationKey = `liquidated_bvix_${userAddress}`;
+            global.liquidatedVaults = global.liquidatedVaults || {};
+            const isLiquidated = !!global.liquidatedVaults[liquidationKey];
+            
+            console.log(`🔍 BVIX Position Check for ${userAddress}:`, {
+              collateral,
+              debt,
+              price,
+              cr: cr.toFixed(2),
+              isLiquidatable: cr <= 120.1 && cr > 0 && !isLiquidated
+            });
+            
+            if (cr <= 120.1 && cr > 0 && !isLiquidated) { // Allow small floating point precision, exclude liquidated
+              liquidatable.push({
+                vaultId: liquidatable.length + 1,
+                owner: userAddress,
+                collateral: collateral.toFixed(2),
+                debt: debt.toFixed(2),
+                currentCR: Math.round(cr * 100) / 100,
+                liquidationPrice: (price * 1.2).toFixed(2),
+                maxBonus: ((debt * price * 0.05)).toFixed(2),
+                canLiquidate: true,
+                tokenType: 'BVIX',
+                contractAddress: BVIX_MINT_REDEEM_ADDRESS // V8 WORKING
+              });
+            }
+          }
+          
+          // Check EVIX position for this user
+          if (evixPosition.debt > 0n) {
+            const collateral = parseFloat(ethers.formatUnits(evixPosition.collateral, 6));
+            const debt = parseFloat(ethers.formatEther(evixPosition.debt));
+            const price = parseFloat(ethers.formatUnits(evixPrice, 8));
+            const cr = debt > 0 ? (collateral / (debt * price)) * 100 : 0;
+            
+            // Check if this vault has been liquidated
+            const liquidationKey = `liquidated_evix_${userAddress}`;
+            global.liquidatedVaults = global.liquidatedVaults || {};
+            const isLiquidated = !!global.liquidatedVaults[liquidationKey];
+            
+            console.log(`🔍 EVIX Position Check for ${userAddress}:`, {
+              collateral,
+              debt,
+              price,
+              cr: cr.toFixed(2),
+              isLiquidatable: cr <= 120.1 && cr > 0 && !isLiquidated
+            });
+            
+            if (cr <= 120.1 && cr > 0 && !isLiquidated) { // Allow small floating point precision, exclude liquidated
+              liquidatable.push({
+                vaultId: liquidatable.length + 1,
+                owner: userAddress,
+                collateral: collateral.toFixed(2),
+                debt: debt.toFixed(2),
+                currentCR: Math.round(cr * 100) / 100,
+                liquidationPrice: (price * 1.2).toFixed(2),
+                maxBonus: ((debt * price * 0.05)).toFixed(2),
+                canLiquidate: true,
+                tokenType: 'EVIX',
+                contractAddress: EVIX_MINT_REDEEM_ADDRESS
+              });
+            }
+          }
+        } catch (error) {
+          console.error(`Error checking positions for ${userAddress}:`, error);
         }
       }
       
@@ -284,7 +312,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const bvixCollateral = bvixLiquidated ? "0" : ethers.formatUnits(bvixPosition.collateral, 6); // USDC has 6 decimals
       const bvixDebt = bvixLiquidated ? "0" : ethers.formatEther(bvixPosition.debt); // Tokens have 18 decimals
-      const bvixPriceFormatted = parseFloat(ethers.formatUnits(bvixPrice, 8));
+      // Fix BVIX price decimal handling - V8 oracle uses 10 decimals
+      const bvixPriceFormatted = parseFloat(ethers.formatUnits(bvixPrice, 10)); // V8 BVIX Oracle uses 10 decimals
       
       // Check if EVIX vault was liquidated and format position accordingly
       const evixLiquidationKey = `liquidated_evix_${userAddress}`;
@@ -302,11 +331,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (parseFloat(bvixDebt) > 0 && !bvixLiquidated) {
         const bvixDebtValue = parseFloat(bvixDebt) * bvixPriceFormatted;
         bvixCR = (parseFloat(bvixCollateral) / bvixDebtValue) * 100;
+        
+        console.log(`📊 BVIX CR Calculation for ${userAddress}:`, {
+          collateral: parseFloat(bvixCollateral),
+          debt: parseFloat(bvixDebt),
+          price: bvixPriceFormatted,
+          debtValue: bvixDebtValue,
+          cr: bvixCR.toFixed(2)
+        });
       }
       
       if (parseFloat(evixDebt) > 0 && !evixLiquidated) {
         const evixDebtValue = parseFloat(evixDebt) * evixPriceFormatted;
         evixCR = (parseFloat(evixCollateral) / evixDebtValue) * 100;
+        
+        console.log(`📊 EVIX CR Calculation for ${userAddress}:`, {
+          collateral: parseFloat(evixCollateral),
+          debt: parseFloat(evixDebt),
+          price: evixPriceFormatted,
+          debtValue: evixDebtValue,
+          cr: evixCR.toFixed(2)
+        });
       }
 
       res.json({
