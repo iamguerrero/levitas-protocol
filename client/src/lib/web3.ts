@@ -123,10 +123,7 @@ export const getEVIXOracleContract = async (providerOrSigner: any) => {
 };
 
 export const getEVIXMintRedeemContract = async (providerOrSigner: any) => {
-  const chainId = (await getCurrentChainId()).toString();
-  const addresses = ADDRESSES[chainId];
-  if (!addresses) throw new Error("Unsupported network");
-  return new ethers.Contract(addresses.evixMintRedeem, EVIXMintRedeem_ABI, providerOrSigner);
+  return new ethers.Contract(EVIX_MINT_REDEEM_V6_ADDRESS, EVIXMintRedeem_ABI, providerOrSigner);
 };
 
 export const getEVIXMintRedeemContractV6 = (providerOrSigner: any) =>
@@ -249,9 +246,9 @@ export async function getAllBalances(address: string): Promise<{
   try {
     const provider = getProvider();
     
-    // Initialize all contracts in parallel
+    // Initialize all contracts - use V7 for BVIX (fixed decimals), V6 for EVIX
     const [bvixContract, evixContract, usdcContract] = await Promise.all([
-      getBVIXContract(provider),
+      new ethers.Contract(BVIX_TOKEN_V7_ADDRESS, BVIXToken_ABI, provider), // V7 FIXED
       getEVIXContract(provider),
       getUSDCContract(provider)
     ]);
@@ -287,7 +284,7 @@ export async function getAllBalances(address: string): Promise<{
 export async function getBVIXBalance(address: string): Promise<string> {
   try {
     const provider = getProvider();
-    const bvixContract = await getBVIXContract(provider);
+    const bvixContract = new ethers.Contract(BVIX_TOKEN_V7_ADDRESS, BVIXToken_ABI, provider); // V7 FIXED
     const balance = await bvixContract.balanceOf(address);
     return ethers.formatEther(balance);
   } catch (error) {
@@ -455,7 +452,7 @@ export async function mintBVIX(
   
   const signer = await getSigner();
   const address = await signer.getAddress();
-  const mintRedeemContract = await getMintRedeemContract(signer);
+  const mintRedeemContract = new ethers.Contract(BVIX_MINT_REDEEM_V7_ADDRESS, MintRedeem_ABI.abi, signer); // V7 FIXED
   const usdcContract = await getUSDCContract(signer);
 
   const usdcAmountWei = ethers.parseUnits(usdcAmount, 6); // USDC has 6 decimals
