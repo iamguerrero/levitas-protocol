@@ -178,8 +178,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (bvixPosition.debt > 0n) {
             const collateral = parseFloat(ethers.formatUnits(bvixPosition.collateral, 6));
             const debt = parseFloat(ethers.formatEther(bvixPosition.debt));
-            // Fix BVIX price decimal handling - V8 oracle uses 10 decimals
-            let price = parseFloat(ethers.formatUnits(bvixPrice, 10)); // V8 BVIX Oracle uses 10 decimals
+            // V8 BVIX Oracle uses 18 decimals - raw: 42150000000000000000 -> 42.15
+            let price = parseFloat(ethers.formatUnits(bvixPrice, 18));
             const cr = debt > 0 ? (collateral / (debt * price)) * 100 : 0;
             
             // Check if this vault has been liquidated
@@ -312,8 +312,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const bvixCollateral = bvixLiquidated ? "0" : ethers.formatUnits(bvixPosition.collateral, 6); // USDC has 6 decimals
       const bvixDebt = bvixLiquidated ? "0" : ethers.formatEther(bvixPosition.debt); // Tokens have 18 decimals
-      // Fix BVIX price decimal handling - V8 oracle uses 10 decimals
-      const bvixPriceFormatted = parseFloat(ethers.formatUnits(bvixPrice, 10)); // V8 BVIX Oracle uses 10 decimals
+      // V8 BVIX Oracle uses 18 decimals - raw: 42150000000000000000 -> 42.15
+      const bvixPriceFormatted = parseFloat(ethers.formatUnits(bvixPrice, 18));
       
       // Check if EVIX vault was liquidated and format position accordingly
       const evixLiquidationKey = `liquidated_evix_${userAddress}`;
