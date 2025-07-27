@@ -3,9 +3,14 @@ export const MOCK_USDC_ADDRESS = '0x9CC37B36FDd8CF5c0297BE15b75663Bf2a193297';
 export const BVIX_ADDRESS = '0x2E3bef50887aD2A30069c79D19Bb91085351C92a'; // BVIX token V6
 export const EVIX_ADDRESS = '0x7066700CAf442501B308fAe34d5919091e1b2380'; // EVIX token V6
 
-// V6 Contract addresses (current production)
+// V6 Contract addresses 
 export const MINT_REDEEM_ADDRESS = '0x65Bec0Ab96ab751Fd0b1D9c907342d9A61FB1117';
 export const EVIX_MINT_REDEEM_ADDRESS = '0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf';
+
+// V7 Contract addresses (FIXED decimal precision - current production for BVIX)
+export const BVIX_MINT_REDEEM_V7_ADDRESS = '0x4c271CffdBf8DcdC21D4Cb80feEc425E00309175';
+export const BVIX_TOKEN_V7_ADDRESS = '0xdcCCCC3A977cC0166788265eD4B683D41f3AED09';
+export const BVIX_VAULT_ADDRESS = '0x4c271CffdBf8DcdC21D4Cb80feEc425E00309175';
 
 // V8 Contract addresses (with advanced liquidation features)
 export const MINT_REDEEM_V8_ADDRESS = '0x0000000000000000000000000000000000000000'; // To be deployed
