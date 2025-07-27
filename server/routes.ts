@@ -28,7 +28,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Minimal ERC20 ABI for balance and supply queries
       const ERC20_ABI = [
         'function balanceOf(address account) external view returns (uint256)',
-        'function totalSupply() external view returns (uint256)',
+        // 'function totalSupply() external view returns (uint256)', // Removed - individual vault mode
       ];
 
       // Oracle ABI for price queries - BVIX uses uint256, EVIX uses int256, but we can cast
@@ -49,7 +49,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const [bvixVaultUsdcBalance, evixVaultUsdcBalance, bvixTotalSupply, bvixPrice] = await Promise.all([
         usdcContract.balanceOf(MINT_REDEEM_ADDRESS),
         usdcContract.balanceOf(EVIX_MINT_REDEEM_ADDRESS),
-        bvixContract.totalSupply(),
+        Promise.resolve(BigInt(0)), // Don't use totalSupply for individual vaults
         bvixOracleContract.getPrice()
       ]);
       
@@ -57,27 +57,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const bvixUsdcValue = ethers.formatUnits(bvixVaultUsdcBalance, 6);
       const evixUsdcValue = ethers.formatUnits(evixVaultUsdcBalance, 6);
       const totalUsdcValue = (parseFloat(bvixUsdcValue) + parseFloat(evixUsdcValue)).toString();
-      const bvixSupply = ethers.formatEther(bvixTotalSupply); // BVIX has 18 decimals
+      const bvixSupply = "0.0"; // Individual vault mode - no total supply
       const price = ethers.formatUnits(bvixPrice, 8); // Oracle returns 8-decimal format on Base Sepolia
       
-      // Calculate protocol-wide collateral ratio (total USDC vs total token value)
-      // This should be the standard practice for protocol health
+      // Individual vault calculations only - NO PROTOCOL-WIDE LOGIC
       const totalUsdcFloat = parseFloat(totalUsdcValue);
       const bvixFloat = parseFloat(bvixSupply);
       const priceFloat = parseFloat(price);
       
-      // Add EVIX data for complete protocol-wide collateral ratio
+      // Add EVIX data for individual vault calculations
       const evixContract = new ethers.Contract(EVIX_ADDRESS, ERC20_ABI, provider);
       
       console.log('Debug: Using EVIX contract address:', EVIX_ADDRESS);
       console.log('Debug: Using EVIX vault address:', EVIX_MINT_REDEEM_ADDRESS);
       
       const [evixTotalSupply, evixPrice] = await Promise.all([
-        evixContract.totalSupply(),
+        Promise.resolve(BigInt(0)), // Don't use totalSupply for individual vaults
         evixOracleContract.getPrice()
       ]);
       
-      const evixSupply = ethers.formatEther(evixTotalSupply);
+      const evixSupply = "0.0"; // Individual vault mode - no total supply
       // When fetching evixPrice, handle int256
       // Change: const evixPriceFormatted = ethers.formatUnits(evixPrice, 8);
       // To handle potential negative, but since prices are positive:
@@ -87,19 +86,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const evixValueInUsd = parseFloat(evixSupply) * parseFloat(evixPriceFormatted);
       const totalTokenValueInUsd = bvixValueInUsd + evixValueInUsd;
       
-      // Calculate protocol-wide collateral ratio (correct math)
-      // Total USDC in all vaults / Total value of all tokens
-      const protocolWideCR = totalTokenValueInUsd > 0 ? (totalUsdcFloat / totalTokenValueInUsd) * 100 : 0;
+      // Calculate individual vault CRs only - NO PROTOCOL-WIDE CR
+      const individualCR = totalTokenValueInUsd > 0 ? (totalUsdcFloat / totalTokenValueInUsd) * 100 : 0;
       
       // Also calculate individual vault CRs for debugging
       const bvixVaultCR = bvixValueInUsd > 0 ? (parseFloat(bvixUsdcValue) / bvixValueInUsd) * 100 : 0;
       const evixVaultCR = evixValueInUsd > 0 ? (parseFloat(evixUsdcValue) / evixValueInUsd) * 100 : 0;
       
       res.json({
-        usdc: totalUsdcValue, // Total USDC across all vaults (protocol-wide view)
+        usdc: totalUsdcValue, // Individual vault USDC
         bvix: bvixSupply,
         evix: evixSupply,
-        cr: Math.round(protocolWideCR * 100) / 100, // Protocol-wide CR (what user expects)
+        cr: Math.round(individualCR * 100) / 100, // Individual vault CR only
         price: price,
         evixPrice: evixPriceFormatted,
         usdcValue: parseFloat(totalUsdcValue),
@@ -121,10 +119,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get all liquidatable positions across the protocol
+  // Get all liquidatable positions across individual vaults
   app.get('/api/v1/liquidatable-positions', async (req, res) => {
     try {
-      // Contract addresses - V6 (current production)
+      // Contract addresses - V7 BVIX, V6 EVIX (INDIVIDUAL VAULT STYLE)
       const BVIX_MINT_REDEEM_ADDRESS = '0x4c271CffdBf8DcdC21D4Cb80feEc425E00309175'; // BVIX MintRedeem V7 (FIXED)
       const EVIX_MINT_REDEEM_ADDRESS = '0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf'; // EVIX MintRedeem V6
       const BVIX_ORACLE_ADDRESS = '0x85485dD6cFaF5220150c413309C61a8EA24d24FE';
