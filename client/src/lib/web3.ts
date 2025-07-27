@@ -694,7 +694,7 @@ export async function getContractDebugInfo(): Promise<any> {
         usdcContract.balanceOf(address),
         bvixContract.balanceOf(address),
         oracleContract.getPrice(),
-        usdcContract.allowance(address, BVIX_MINT_REDEEM_V6_ADDRESS),
+        usdcContract.allowance(address, BVIX_MINT_REDEEM_V7_ADDRESS),
       ]);
 
     return {
@@ -707,7 +707,7 @@ export async function getContractDebugInfo(): Promise<any> {
         usdc: MOCK_USDC_ADDRESS,
         bvix: BVIX_ADDRESS,
         oracle: ORACLE_ADDRESS,
-        mintRedeem: BVIX_MINT_REDEEM_V6_ADDRESS,
+        mintRedeem: BVIX_MINT_REDEEM_V7_ADDRESS,
       },
     };
   } catch (error) {
@@ -755,7 +755,7 @@ export async function getUserPosition(user: string) {
     const contract = await getMintRedeemContract(provider);
     
     console.log('🔍 Getting BVIX position for user:', user);
-    console.log('🔍 Using V6 contract address:', BVIX_MINT_REDEEM_V6_ADDRESS);
+    console.log('🔍 Using V7 contract address:', BVIX_MINT_REDEEM_V7_ADDRESS);
     
     // Get user's position from V6 contract using positions(address) function
     const position = await contract.positions(user);
