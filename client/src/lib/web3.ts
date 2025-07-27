@@ -56,15 +56,11 @@ export const BASE_SEPOLIA_CHAIN_ID = "0x14a34";
 export const BASE_SEPOLIA_RPC_URL = "https://sepolia.base.org";
 
 // Contract addresses - V6 with position tracking and surplus refunding
-export const BVIX_ADDRESS = "0x2E3bef50887aD2A30069c79D19Bb91085351C92a"; // Fresh BVIX token
+export const BVIX_ADDRESS = "0xdcCCCC3A977cC0166788265eD4B683D41f3AED09"; // V7 BVIX TOKEN (FIXED)
 
-// V6 contract addresses (buggy decimal precision)
-export const BVIX_MINT_REDEEM_V6_ADDRESS = '0x65Bec0Ab96ab751Fd0b1D9c907342d9A61FB1117'; // BVIX V6 (BUGGY)
-export const EVIX_MINT_REDEEM_V6_ADDRESS = '0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf'; // EVIX V6
-
-// V7 contract addresses (FIXED decimal precision - current production)
+// V7 contract addresses (fixed decimal precision - current production)
 export const BVIX_MINT_REDEEM_V7_ADDRESS = '0x4c271CffdBf8DcdC21D4Cb80feEc425E00309175'; // BVIX V7 (FIXED)
-export const BVIX_TOKEN_V7_ADDRESS = '0xdcCCCC3A977cC0166788265eD4B683D41f3AED09'; // BVIX V7 Token (FIXED)
+export const EVIX_MINT_REDEEM_V6_ADDRESS = '0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf'; // EVIX V6
 
 // Token and Oracle addresses
 export const EVIX_ADDRESS = "0x7066700CAf442501B308fAe34d5919091e1b2380"; // EVIX token
@@ -75,7 +71,7 @@ export const EVIX_ORACLE_ADDRESS = "0xBd6E9809B9608eCAc3610cA65327735CC3c08104";
 // Contract factory functions - UPDATED to use V7 for BVIX
 export const getBVIXContract = async (providerOrSigner: any) => {
   // FORCE V7 CONTRACT - ignore old addresses
-  return new ethers.Contract(BVIX_TOKEN_V7_ADDRESS, BVIX_ABI, providerOrSigner);
+  return new ethers.Contract(BVIX_ADDRESS, BVIX_ABI, providerOrSigner);
 };
 
 export const getEVIXContract = async (providerOrSigner: any) => {
@@ -473,7 +469,7 @@ export async function mintBVIX(
   // Check current allowance
   const currentAllowance = await usdcContract.allowance(
     address,
-    BVIX_MINT_REDEEM_V6_ADDRESS,
+    BVIX_MINT_REDEEM_V7_ADDRESS,
   );
   console.log("Current allowance:", ethers.formatUnits(currentAllowance, 6));
 
@@ -704,8 +700,8 @@ export const getCollateralRatio = async (): Promise<number> => {
 
     // 2️⃣ read chain state in parallel
     const [rawVaultUSDC, rawSupply, price] = await Promise.all([
-      usdc.balanceOf(BVIX_MINT_REDEEM_V6_ADDRESS), // 6-decimals
-      bvix.totalSupply(),                  // 18-decimals
+      usdc.balanceOf(BVIX_MINT_REDEEM_V7_ADDRESS), // 6-decimals
+      Promise.resolve(BigInt(0)),          // Individual vault mode - no total supply
       getOraclePrice()                     // plain string like "42.15"
     ]);
 
