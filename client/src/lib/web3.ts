@@ -246,6 +246,15 @@ export async function getAllBalances(address: string): Promise<{
       getUSDCContract(provider)
     ]);
     
+    // Debug contract addresses
+    console.log("🔍 getAllBalances Debug:", {
+      bvixContractAddress: await bvixContract.getAddress(),
+      evixContractAddress: await evixContract.getAddress(),
+      usdcContractAddress: await usdcContract.getAddress(),
+      expectedBVIX: BVIX_ADDRESS,
+      userAddress: address
+    });
+    
     // Fetch all balances in parallel
     const [bvixBalance, evixBalance, usdcBalance] = await Promise.all([
       bvixContract.balanceOf(address),
@@ -259,6 +268,15 @@ export async function getAllBalances(address: string): Promise<{
       evixBalance: ethers.formatEther(evixBalance),
       usdcBalance: ethers.formatUnits(usdcBalance, 6)
     };
+    
+    console.log("🔍 getAllBalances Result:", {
+      bvixRaw: bvixBalance.toString(),
+      bvixFormatted: result.bvixBalance,
+      evixRaw: evixBalance.toString(),
+      evixFormatted: result.evixBalance,
+      usdcRaw: usdcBalance.toString(),
+      usdcFormatted: result.usdcBalance
+    });
     
     // Don't use mock balances in getAllBalances - keep it clean
     // Mock balances should only be used in specific liquidation contexts
@@ -278,8 +296,19 @@ export async function getBVIXBalance(address: string): Promise<string> {
   try {
     const provider = getProvider();
     const bvixContract = await getBVIXContract(provider); // Use getBVIXContract to get correct token address
+    console.log("🔍 BVIX Balance Check:", {
+      address,
+      contractAddress: await bvixContract.getAddress(),
+      expectedV7: BVIX_ADDRESS
+    });
     const balance = await bvixContract.balanceOf(address);
-    return ethers.formatEther(balance);
+    const formatted = ethers.formatEther(balance);
+    console.log("🔍 BVIX Balance Result:", {
+      raw: balance.toString(),
+      formatted,
+      isV7: await bvixContract.getAddress() === BVIX_ADDRESS
+    });
+    return formatted;
   } catch (error) {
     console.error("Error getting BVIX balance:", error);
     return "0.0";
