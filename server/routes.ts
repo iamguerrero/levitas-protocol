@@ -91,22 +91,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Also calculate individual vault CRs for debugging
       const bvixVaultCR = bvixValueInUsd > 0 ? (parseFloat(bvixUsdcValue) / bvixValueInUsd) * 100 : 0;
-      // For individual vault CR, we need to use the actual position data, not protocol-wide vault balance
-      const evixVaultCR = 150.13; // From user position API: 997 USDC / 17.5 EVIX @ $37.98 = 150%
+      // Calculate EVIX vault CR from actual position data (if exists)
+      const evixVaultCR = evixValueInUsd > 0 ? (parseFloat(evixUsdcValue) / evixValueInUsd) * 100 : 0;
       
       res.json({
-        usdc: "997.0", // INDIVIDUAL EVIX VAULT USDC FROM POSITION (not protocol-wide balance)
+        usdc: evixUsdcValue, // INDIVIDUAL EVIX VAULT USDC FROM POSITION
         bvix: bvixSupply,
         evix: evixSupply,
         cr: Math.round(evixVaultCR * 100) / 100, // INDIVIDUAL EVIX VAULT CR ONLY
         price: price,
         evixPrice: evixPriceFormatted,
-        usdcValue: 997.0, // INDIVIDUAL EVIX VAULT USDC FROM POSITION
+        usdcValue: parseFloat(evixUsdcValue), // INDIVIDUAL EVIX VAULT USDC FROM POSITION
         bvixValueInUsd: 0, // No active BVIX position
         evixValueInUsd: evixValueInUsd,
         totalTokenValueInUsd: evixValueInUsd, // Only EVIX value
         bvixVaultUsdc: "0.0", // No active BVIX position
-        evixVaultUsdc: "997.0", // INDIVIDUAL EVIX VAULT USDC FROM POSITION
+        evixVaultUsdc: evixUsdcValue, // INDIVIDUAL EVIX VAULT USDC FROM POSITION
         bvixVaultCR: 0, // No active BVIX position
         evixVaultCR: Math.round(evixVaultCR * 100) / 100
       });
