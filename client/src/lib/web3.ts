@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 import BVIX_ABI from "../contracts/BVIXToken.abi.json";
 import EVIX_ABI from "../contracts/EVIXToken.abi.json";
 import Oracle_ABI from "../contracts/MockOracle.abi.json";
-import MintRedeem_ABI from "../contracts/MintRedeemV6.abi.json";
+import MintRedeem_ABI from "../contracts/MintRedeemV7.abi.json";
 import USDC_ABI from "../contracts/MockUSDC.abi.json";
 import EVIXOracle_ABI from "../contracts/EVIXOracle.abi.json";
 import EVIXMintRedeem_ABI from "../contracts/EVIXMintRedeemV6.abi.json";
@@ -58,9 +58,12 @@ export const BASE_SEPOLIA_RPC_URL = "https://sepolia.base.org";
 // Contract addresses - V6 with position tracking and surplus refunding
 export const BVIX_ADDRESS = "0x2E3bef50887aD2A30069c79D19Bb91085351C92a"; // Fresh BVIX token
 
-// V6 contract addresses deployed to Base Sepolia
-export const BVIX_MINT_REDEEM_V6_ADDRESS = '0x65Bec0Ab96ab751Fd0b1D9c907342d9A61FB1117'; // BVIX V6
+// V6 contract addresses (buggy decimal precision)
+export const BVIX_MINT_REDEEM_V6_ADDRESS = '0x65Bec0Ab96ab751Fd0b1D9c907342d9A61FB1117'; // BVIX V6 (BUGGY)
 export const EVIX_MINT_REDEEM_V6_ADDRESS = '0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf'; // EVIX V6
+
+// V7 contract addresses (FIXED decimal precision - current production)
+export const BVIX_MINT_REDEEM_V7_ADDRESS = '0x4c271CffdBf8DcdC21D4Cb80feEc425E00309175'; // BVIX V7 (FIXED)
 
 // Token and Oracle addresses
 export const EVIX_ADDRESS = "0x7066700CAf442501B308fAe34d5919091e1b2380"; // EVIX token
@@ -460,7 +463,7 @@ export async function mintBVIX(
   console.log("🔍 Checking balances and allowances...");
   console.log("User address:", address);
   console.log("USDC contract:", MOCK_USDC_ADDRESS);
-      console.log("MintRedeem V6 contract:", BVIX_MINT_REDEEM_V6_ADDRESS);
+      console.log("MintRedeem V7 contract (FIXED):", BVIX_MINT_REDEEM_V7_ADDRESS);
 
   // Check USDC balance first
   const usdcBalance = await usdcContract.balanceOf(address);
@@ -484,7 +487,7 @@ export async function mintBVIX(
   if (currentAllowance < usdcAmountWei) {
     console.log("🔄 Approving USDC spending...");
     const approveTx = await usdcContract.approve(
-      BVIX_MINT_REDEEM_V6_ADDRESS,
+      BVIX_MINT_REDEEM_V7_ADDRESS,
       usdcAmountWei,
     );
     await approveTx.wait();
@@ -493,16 +496,18 @@ export async function mintBVIX(
     console.log("✅ Sufficient allowance already exists");
   }
 
-  // Use V6 collateral-aware mint function
-  console.log(`🎯 Using V6 mintWithCollateralRatio: ${usdcAmount} USDC at ${targetCR}% CR`);
-  console.log(`💰 Expected token value: $${(parseFloat(usdcAmount) / (targetCR / 100)).toFixed(2)}`);
+  // Use V7 collateral-aware mint function with FIXED decimals
+  console.log(`🎯 Using V7 mintWithCollateralRatio (FIXED): ${usdcAmount} USDC at ${targetCR}% CR`);
+  const expectedTokenValue = parseFloat(usdcAmount) / (targetCR / 100);
+  const expectedTokens = expectedTokenValue / 45; // Assuming $45 BVIX price
+  console.log(`💰 Expected token value: $${expectedTokenValue.toFixed(2)} = ${expectedTokens.toFixed(4)} BVIX`);
   
   const mintTx = await mintRedeemContract.mintWithCollateralRatio(usdcAmountWei, targetCR);
   console.log("📄 Transaction hash:", mintTx.hash);
   
   // Wait for transaction confirmation
   await mintTx.wait();
-  console.log("✅ V6 Mint transaction confirmed with proper CR enforcement!");
+  console.log("✅ V7 Mint transaction confirmed with FIXED decimal precision!");
   
   return mintTx;
 }

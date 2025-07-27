@@ -149,8 +149,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // For now, return the known user's position if it's liquidatable
       const knownAddress = '0x18633ea30ad5c91e13d2e5714fe5e3d97043679b';
       
-      // Fetch user positions
-      const bvixVault = new ethers.Contract(BVIX_MINT_REDEEM_ADDRESS, MINT_REDEEM_ABI, provider);
+      // Fetch user positions (V7 BVIX with fixed decimals, V6 EVIX)
+      const bvixVault = new ethers.Contract('0x4c271CffdBf8DcdC21D4Cb80feEc425E00309175', MINT_REDEEM_ABI, provider); // V7 FIXED
       const evixVault = new ethers.Contract(EVIX_MINT_REDEEM_ADDRESS, MINT_REDEEM_ABI, provider);
       const bvixOracle = new ethers.Contract(BVIX_ORACLE_ADDRESS, ORACLE_ABI, provider);
       const evixOracle = new ethers.Contract(EVIX_ORACLE_ADDRESS, ORACLE_ABI, provider);
@@ -189,7 +189,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             maxBonus: ((debt * price * 0.05)).toFixed(2),
             canLiquidate: true,
             tokenType: 'BVIX',
-            contractAddress: BVIX_MINT_REDEEM_ADDRESS
+            contractAddress: '0x4c271CffdBf8DcdC21D4Cb80feEc425E00309175' // V7 FIXED
           });
         }
       }
