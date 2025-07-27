@@ -6,6 +6,7 @@ This project is a decentralized finance (DeFi) application called Levitas Financ
 
 ## Recent Changes (January 2025)
 
+✅ **V7 BVIX INTEGRATION COMPLETE** - Successfully deployed and integrated V7 BVIX contracts with fixed decimal precision, eliminating all old V6 contract references throughout frontend, backend, and constants
 ✅ **SPRINT 2.2: ADVANCED LIQUIDATION FEATURES COMPLETE** - Implemented comprehensive liquidation system for both BVIX and EVIX tokens with 5% liquidator bonuses, real-time collateral ratio monitoring, and permissionless liquidation support
 ✓ **LIQUIDATION MECHANICS FIXED** - Corrected liquidation to pay debt value + 5% bonus (not full collateral), matching DeFi whitepaper standards
 ✓ **CONFIRMATION DIALOG ADDED** - Created LiquidationConfirmDialog component showing transaction details before execution
@@ -45,7 +46,7 @@ This project is a decentralized finance (DeFi) application called Levitas Financ
 ✓ **VAULT-SPECIFIC CR TRACKING** - Fixed CR calculation to show individual BVIX vault CR instead of confusing protocol-wide combined CR  
 ✓ **PROTOCOL-WIDE CR RESTORED** - Reverted to correct protocol-wide CR calculation per user feedback
 🔧 **EVIX MINTING BUG IDENTIFIED** - EVIX mint creates almost no tokens despite spending USDC, causing incorrect CR behavior
-✅ **COMPLETE PROTOCOL WITH FAUCET** - Deployed final contracts with MockUSDC faucet: MockUSDC (0x9CC37B36FDd8CF5c0297BE15b75663Bf2a193297), BVIX (0xdcCCCC3A977cC0166788265eD4B683D41f3AED09), BVIX MintRedeem (0x4d0ddFBCBa76f2e72B0Fef2fdDcaE9ddd6922397), EVIX (0x089C132BC246bF2060F40B0608Cb14b2A0cC9127), EVIX MintRedeem (0xb187c5Ff48D69BB0b477dAf30Eec779E0D07771D). Users can now get test USDC via faucet button.
+✅ **V7 PRODUCTION CONTRACTS** - Current production addresses: BVIX Token V7 (0xdcCCCC3A977cC0166788265eD4B683D41f3AED09), BVIX MintRedeem V7 (0x4c271CffdBf8DcdC21D4Cb80feEc425E00309175), EVIX Token V6 (0x7066700CAf442501B308fAe34d5919091e1b2380), EVIX MintRedeem V6 (0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf), MockUSDC (0x9CC37B36FDd8CF5c0297BE15b75663Bf2a193297)
 ✓ **Vault Health Real-Time Updates** - Updated vault stats API to use V4 contracts and reduced refresh interval to 5 seconds for faster updates
 ✓ **Post-Transaction Cache Invalidation** - Added automatic vault cache refresh after BVIX transactions for immediate collateral ratio updates (EVIX transactions don't affect BVIX vault)
 ✓ **Comprehensive Debug Logging** - Added detailed console logging for mint process troubleshooting
