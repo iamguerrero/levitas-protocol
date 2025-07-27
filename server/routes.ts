@@ -15,8 +15,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Contract addresses - V6 (current production)
       const MOCK_USDC_ADDRESS = '0x9CC37B36FDd8CF5c0297BE15b75663Bf2a193297'; // MockUSDC with public faucet
-      const BVIX_ADDRESS = '0x2E3bef50887aD2A30069c79D19Bb91085351C92a'; // BVIX token V6
-      const MINT_REDEEM_ADDRESS = '0x65Bec0Ab96ab751Fd0b1D9c907342d9A61FB1117'; // BVIX MintRedeem V6
+      const BVIX_ADDRESS = '0xdcCCCC3A977cC0166788265eD4B683D41f3AED09'; // BVIX token V7 (FIXED)
+      const MINT_REDEEM_ADDRESS = '0x4c271CffdBf8DcdC21D4Cb80feEc425E00309175'; // BVIX MintRedeem V7 (FIXED)
       // Oracle addresses
       const BVIX_ORACLE_ADDRESS = '0x85485dD6cFaF5220150c413309C61a8EA24d24FE';
       const EVIX_ORACLE_ADDRESS = '0xBd6E9809B9608eCAc3610cA65327735CC3c08104'; // Updated EVIX Oracle
@@ -41,7 +41,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Initialize contracts
       const usdcContract = new ethers.Contract(MOCK_USDC_ADDRESS, ERC20_ABI, provider);
-      const bvixContract = new ethers.Contract(BVIX_ADDRESS, ERC20_ABI, provider);
+      const bvixContract = new ethers.Contract('0xdcCCCC3A977cC0166788265eD4B683D41f3AED09', ERC20_ABI, provider); // V7 BVIX TOKEN (FIXED)
       const bvixOracleContract = new ethers.Contract(BVIX_ORACLE_ADDRESS, ORACLE_ABI, provider);
       const evixOracleContract = new ethers.Contract(EVIX_ORACLE_ADDRESS, ORACLE_ABI, provider);
       
@@ -125,7 +125,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/v1/liquidatable-positions', async (req, res) => {
     try {
       // Contract addresses - V6 (current production)
-      const BVIX_MINT_REDEEM_ADDRESS = '0x65Bec0Ab96ab751Fd0b1D9c907342d9A61FB1117'; // BVIX MintRedeem V6
+      const BVIX_MINT_REDEEM_ADDRESS = '0x4c271CffdBf8DcdC21D4Cb80feEc425E00309175'; // BVIX MintRedeem V7 (FIXED)
       const EVIX_MINT_REDEEM_ADDRESS = '0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf'; // EVIX MintRedeem V6
       const BVIX_ORACLE_ADDRESS = '0x85485dD6cFaF5220150c413309C61a8EA24d24FE';
       const EVIX_ORACLE_ADDRESS = '0xBd6E9809B9608eCAc3610cA65327735CC3c08104';

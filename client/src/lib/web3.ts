@@ -33,12 +33,12 @@ export const HEX_CHAIN_IDS = {
 
 export const ADDRESSES: { [key: string]: { bvix: string; evix: string; oracle: string; evixOracle: string; mockUsdc: string; mintRedeem: string; evixMintRedeem: string; } } = {
   '84532': {
-    bvix: "0x2E3bef50887aD2A30069c79D19Bb91085351C92a",
+    bvix: "0xdcCCCC3A977cC0166788265eD4B683D41f3AED09", // V7 BVIX TOKEN (FIXED)
     evix: "0x7066700CAf442501B308fAe34d5919091e1b2380",
     oracle: "0x85485dD6cFaF5220150c413309C61a8EA24d24FE",
     evixOracle: "0xBd6E9809B9608eCAc3610cA65327735CC3c08104",
     mockUsdc: "0x9CC37B36FDd8CF5c0297BE15b75663Bf2a193297",
-    mintRedeem: "0x65Bec0Ab96ab751Fd0b1D9c907342d9A61FB1117",
+    mintRedeem: "0x4c271CffdBf8DcdC21D4Cb80feEc425E00309175", // V7 BVIX MINT/REDEEM (FIXED)
     evixMintRedeem: "0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf"
   },
   '11155111': {
@@ -72,12 +72,10 @@ export const ORACLE_ADDRESS = "0x85485dD6cFaF5220150c413309C61a8EA24d24FE";
 export const MOCK_USDC_ADDRESS = "0x9CC37B36FDd8CF5c0297BE15b75663Bf2a193297"; // MockUSDC with public faucet
 export const EVIX_ORACLE_ADDRESS = "0xBd6E9809B9608eCAc3610cA65327735CC3c08104"; // Updated EVIX Oracle
 
-// Contract factory functions
+// Contract factory functions - UPDATED to use V7 for BVIX
 export const getBVIXContract = async (providerOrSigner: any) => {
-  const chainId = (await getCurrentChainId()).toString();
-  const addresses = ADDRESSES[chainId];
-  if (!addresses) throw new Error("Unsupported network");
-  return new ethers.Contract(addresses.bvix, BVIX_ABI, providerOrSigner);
+  // FORCE V7 CONTRACT - ignore old addresses
+  return new ethers.Contract(BVIX_TOKEN_V7_ADDRESS, BVIX_ABI, providerOrSigner);
 };
 
 export const getEVIXContract = async (providerOrSigner: any) => {
@@ -95,10 +93,8 @@ export const getOracleContract = async (providerOrSigner: any) => {
 };
 
 export const getMintRedeemContract = async (providerOrSigner: any) => {
-  const chainId = (await getCurrentChainId()).toString();
-  const addresses = ADDRESSES[chainId];
-  if (!addresses) throw new Error("Unsupported network");
-  return new ethers.Contract(addresses.mintRedeem, MintRedeem_ABI, providerOrSigner);
+  // FORCE V7 CONTRACT - ignore old addresses  
+  return new ethers.Contract(BVIX_MINT_REDEEM_V7_ADDRESS, MintRedeem_ABI, providerOrSigner);
 };
 
 export const getUSDCContract = async (providerOrSigner: any) => {
