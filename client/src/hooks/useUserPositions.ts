@@ -2,12 +2,12 @@ import { useQuery } from '@tanstack/react-query';
 import { useWallet } from './use-wallet';
 import { getProvider } from '@/lib/web3';
 import { Contract } from 'ethers';
-import mintRedeemV6ABI from '@/contracts/MintRedeemV6.abi.json';
+import mintRedeemV7ABI from '@/contracts/MintRedeemV7.abi.json';
 import evixMintRedeemV6ABI from '@/contracts/EVIXMintRedeemV6.abi.json';
 import { useState, useEffect } from 'react';
 
-// Use the MintRedeem V6 contract addresses (not token addresses!)
-const BVIX_VAULT_ADDRESS = "0x65Bec0Ab96ab751Fd0b1D9c907342d9A61FB1117"; // BVIX MintRedeem V6
+// Use the correct contract addresses - V7 for BVIX, V6 for EVIX
+const BVIX_VAULT_ADDRESS = "0x4c271CffdBf8DcdC21D4Cb80feEc425E00309175"; // BVIX MintRedeem V7 (FIXED)
 const EVIX_VAULT_ADDRESS = "0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf"; // EVIX MintRedeem V6
 
 export interface UserPosition {
@@ -74,7 +74,7 @@ export function useUserPositions() {
 
       // Get positions and prices in parallel for better performance
       const provider = getProvider();
-      const bvixContract = new Contract(BVIX_VAULT_ADDRESS, mintRedeemV6ABI, provider);
+      const bvixContract = new Contract(BVIX_VAULT_ADDRESS, mintRedeemV7ABI, provider);
       const evixContract = new Contract(EVIX_VAULT_ADDRESS, evixMintRedeemV6ABI, provider);
 
       // Don't check for liquidated vaults - only use real blockchain data
@@ -89,7 +89,7 @@ export function useUserPositions() {
       });
 
       const [rawBvixPosition, rawEvixPosition, bvixPrice, evixPrice] = await Promise.all([
-        getUserPosition(BVIX_VAULT_ADDRESS, address, mintRedeemV6ABI),
+        getUserPosition(BVIX_VAULT_ADDRESS, address, mintRedeemV7ABI),
         getUserPosition(EVIX_VAULT_ADDRESS, address, evixMintRedeemV6ABI),
         bvixContract.getPrice().catch(() => BigInt(0)),
         evixContract.getPrice().catch(() => BigInt(0))
