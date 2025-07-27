@@ -146,11 +146,11 @@ export function useLiquidation() {
         
       // Get the exact debt amount from the vault contract to avoid rounding errors
       const vaultContract = vault.tokenType === 'BVIX'
-        ? new ethers.Contract(BVIX_VAULT_ADDRESS, mintRedeemV6ABI, provider)
+        ? new ethers.Contract('0x4c271CffdBf8DcdC21D4Cb80feEc425E00309175', mintRedeemV6ABI, provider) // V7 FIXED
         : new ethers.Contract(EVIX_VAULT_ADDRESS, evixMintRedeemV6ABI, provider);
         
       const signerVaultContract = vault.tokenType === 'BVIX'
-        ? new ethers.Contract(BVIX_VAULT_ADDRESS, mintRedeemV6ABI, signer)
+        ? new ethers.Contract('0x4c271CffdBf8DcdC21D4Cb80feEc425E00309175', mintRedeemV6ABI, signer) // V7 FIXED
         : new ethers.Contract(EVIX_VAULT_ADDRESS, evixMintRedeemV6ABI, signer);
       
       const vaultPosition = await vaultContract.positions(vault.owner);
