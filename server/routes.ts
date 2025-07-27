@@ -149,7 +149,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // For now, return the known user's position if it's liquidatable
       const knownAddress = '0x18633ea30ad5c91e13d2e5714fe5e3d97043679b';
       
-      // Fetch user positions (V7 BVIX with fixed decimals, V6 EVIX)
+      // Use V7 BVIX (FIXED decimals) and V6 EVIX contracts
       const bvixVault = new ethers.Contract('0x4c271CffdBf8DcdC21D4Cb80feEc425E00309175', MINT_REDEEM_ABI, provider); // V7 FIXED
       const evixVault = new ethers.Contract(EVIX_MINT_REDEEM_ADDRESS, MINT_REDEEM_ABI, provider);
       const bvixOracle = new ethers.Contract(BVIX_ORACLE_ADDRESS, ORACLE_ABI, provider);
@@ -242,8 +242,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userAddress = req.params.address;
       
-      // Contract addresses - V6 (current production)
-      const BVIX_MINT_REDEEM_ADDRESS = '0x65Bec0Ab96ab751Fd0b1D9c907342d9A61FB1117'; // BVIX MintRedeem V6
+      // Contract addresses - V7 BVIX (FIXED), V6 EVIX
+      const BVIX_MINT_REDEEM_ADDRESS = '0x4c271CffdBf8DcdC21D4Cb80feEc425E00309175'; // BVIX MintRedeem V7 FIXED
       const EVIX_MINT_REDEEM_ADDRESS = '0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf'; // EVIX MintRedeem V6
       const BVIX_ORACLE_ADDRESS = '0x85485dD6cFaF5220150c413309C61a8EA24d24FE';
       const EVIX_ORACLE_ADDRESS = '0xBd6E9809B9608eCAc3610cA65327735CC3c08104';
