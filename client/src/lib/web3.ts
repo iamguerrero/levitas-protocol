@@ -33,12 +33,12 @@ export const HEX_CHAIN_IDS = {
 
 export const ADDRESSES: { [key: string]: { bvix: string; evix: string; oracle: string; evixOracle: string; mockUsdc: string; mintRedeem: string; evixMintRedeem: string; } } = {
   '84532': {
-    bvix: "0xdcCCCC3A977cC0166788265eD4B683D41f3AED09", // V7 BVIX TOKEN (FIXED)
+    bvix: "0x7223A0Eb07B8d7d3CFbf84AC78eee4ae9DaA22CE", // V8 BVIX TOKEN (WORKING - identical to EVIX)
     evix: "0x7066700CAf442501B308fAe34d5919091e1b2380",
-    oracle: "0x85485dD6cFaF5220150c413309C61a8EA24d24FE",
+    oracle: "0xA6FAC514Fdc2C017FBCaeeDA27562dAC83Cf22cf", // V8 BVIX ORACLE (WORKING)
     evixOracle: "0xBd6E9809B9608eCAc3610cA65327735CC3c08104",
     mockUsdc: "0x9CC37B36FDd8CF5c0297BE15b75663Bf2a193297",
-    mintRedeem: "0x4c271CffdBf8DcdC21D4Cb80feEc425E00309175", // V7 BVIX MINT/REDEEM (FIXED)
+    mintRedeem: "0x653A6a4dCe04dABAEdb521091A889bb1EE298D8d", // V8 BVIX MINT/REDEEM (WORKING)
     evixMintRedeem: "0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf"
   },
   '11155111': {
@@ -55,18 +55,18 @@ export const ADDRESSES: { [key: string]: { bvix: string; evix: string; oracle: s
 export const BASE_SEPOLIA_CHAIN_ID = "0x14a34";
 export const BASE_SEPOLIA_RPC_URL = "https://sepolia.base.org";
 
-// Contract addresses - V6 with position tracking and surplus refunding
-export const BVIX_ADDRESS = "0xdcCCCC3A977cC0166788265eD4B683D41f3AED09"; // V7 BVIX TOKEN (FIXED)
+// Contract addresses - V8 BVIX (WORKING), V6 EVIX (WORKING)
+export const BVIX_ADDRESS = "0x7223A0Eb07B8d7d3CFbf84AC78eee4ae9DaA22CE"; // V8 BVIX TOKEN (WORKING - identical to EVIX)
 
-// V7 contract addresses (fixed decimal precision - current production)
-export const BVIX_MINT_REDEEM_V7_ADDRESS = '0x4c271CffdBf8DcdC21D4Cb80feEc425E00309175'; // BVIX V7 (FIXED)
+// V8 contract addresses (WORKING - identical to EVIX V6 architecture)
+export const BVIX_MINT_REDEEM_V8_ADDRESS = '0x653A6a4dCe04dABAEdb521091A889bb1EE298D8d'; // BVIX V8 (WORKING)
 export const EVIX_MINT_REDEEM_V6_ADDRESS = '0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf'; // EVIX V6
 
 // Token and Oracle addresses
 export const EVIX_ADDRESS = "0x7066700CAf442501B308fAe34d5919091e1b2380"; // EVIX token
-export const ORACLE_ADDRESS = "0x85485dD6cFaF5220150c413309C61a8EA24d24FE";
+export const ORACLE_ADDRESS = "0xA6FAC514Fdc2C017FBCaeeDA27562dAC83Cf22cf"; // V8 BVIX ORACLE (WORKING)
 export const MOCK_USDC_ADDRESS = "0x9CC37B36FDd8CF5c0297BE15b75663Bf2a193297"; // MockUSDC with public faucet
-export const EVIX_ORACLE_ADDRESS = "0xBd6E9809B9608eCAc3610cA65327735CC3c08104"; // Updated EVIX Oracle
+export const EVIX_ORACLE_ADDRESS = "0xBd6E9809B9608eCAc3610cA65327735CC3c08104"; // EVIX Oracle
 
 // Contract factory functions - UPDATED to use V7 for BVIX
 export const getBVIXContract = async (providerOrSigner: any) => {
@@ -89,8 +89,8 @@ export const getOracleContract = async (providerOrSigner: any) => {
 };
 
 export const getMintRedeemContract = async (providerOrSigner: any) => {
-  // FORCE V7 CONTRACT - ignore old addresses  
-  return new ethers.Contract(BVIX_MINT_REDEEM_V7_ADDRESS, MintRedeem_ABI, providerOrSigner);
+  // USE V8 CONTRACT - WORKING identical to EVIX V6
+  return new ethers.Contract(BVIX_MINT_REDEEM_V8_ADDRESS, MintRedeem_ABI, providerOrSigner);
 };
 
 export const getUSDCContract = async (providerOrSigner: any) => {
@@ -470,23 +470,62 @@ export async function mintBVIX(
   usdcAmount: string,
   targetCR: number = 150,
 ): Promise<ethers.ContractTransactionResponse> {
-  console.log("🚀 CRITICAL: BVIX V7 has ownership issues - switching to EVIX-style implementation");
+  console.log("🚀 Starting BVIX V8 mint process for", usdcAmount, "USDC at", targetCR + "% CR");
   
-  // TEMPORARY FIX: Use EVIX contract as a working reference
-  // This gives user the same functionality while we fix BVIX ownership
   const signer = await getSigner();
+  const address = await signer.getAddress();
+  const bvixMintRedeemContract = new ethers.Contract(BVIX_MINT_REDEEM_V8_ADDRESS, MintRedeem_ABI, signer);
+  const usdcContract = await getUSDCContract(signer);
+
+  const usdcAmountWei = ethers.parseUnits(usdcAmount, 6); // USDC has 6 decimals
+
+  console.log("🔍 Checking balances and allowances...");
+  console.log("User address:", address);
+  console.log("USDC contract:", MOCK_USDC_ADDRESS);
+  console.log("BVIX MintRedeem V8 contract (WORKING):", BVIX_MINT_REDEEM_V8_ADDRESS);
+
+  // Check USDC balance first
+  const usdcBalance = await usdcContract.balanceOf(address);
+  console.log("USDC balance:", ethers.formatUnits(usdcBalance, 6));
+  console.log("Required amount:", usdcAmount);
   
-  throw new Error(`BVIX V7 contract has ownership issues. The BVIX token is not owned by the V7 mint/redeem contract, which prevents minting. 
+  if (usdcBalance < usdcAmountWei) {
+    throw new Error(
+      `Insufficient USDC balance. You have ${ethers.formatUnits(usdcBalance, 6)} USDC but need ${usdcAmount} USDC.`,
+    );
+  }
 
-Current status:
-- BVIX Token Owner: 0x4d0ddfbcba76f2e72b0fef2fddcae9ddd6922397
-- V7 Contract Owner: 0x18633ea30ad5c91e13d2e5714fe5e3d97043679b
+  // Check current allowance
+  const currentAllowance = await usdcContract.allowance(
+    address,
+    BVIX_MINT_REDEEM_V8_ADDRESS,
+  );
+  console.log("Current allowance:", ethers.formatUnits(currentAllowance, 6));
 
-To fix this, we need to either:
-1. Deploy fresh V7 contracts with proper ownership, or 
-2. Transfer BVIX token ownership to the V7 contract
+  // Only approve if needed
+  if (currentAllowance < usdcAmountWei) {
+    console.log("🔄 Approving USDC spending for BVIX V8...");
+    const approveTx = await usdcContract.approve(
+      BVIX_MINT_REDEEM_V8_ADDRESS,
+      usdcAmountWei,
+    );
+    await approveTx.wait();
+    console.log("✅ USDC approval confirmed for BVIX V8");
+  } else {
+    console.log("✅ Sufficient allowance already exists");
+  }
 
-For now, please use EVIX tokens which work perfectly. Would you like me to deploy fresh V7 BVIX contracts with correct ownership?`);
+  // Use V8 collateral-aware mint function (identical to EVIX V6)
+  console.log(`🎯 Using V8 BVIX mintWithCollateralRatio: ${usdcAmount} USDC at ${targetCR}% CR`);
+  console.log(`💰 Expected token value: $${(parseFloat(usdcAmount) / (targetCR / 100)).toFixed(2)}`);
+  
+  const mintTx = await bvixMintRedeemContract.mintWithCollateralRatio(usdcAmountWei, targetCR);
+  console.log("📄 BVIX V8 Transaction hash:", mintTx.hash);
+  
+  await mintTx.wait();
+  console.log("✅ V8 BVIX Mint transaction confirmed - working identical to EVIX!");
+  
+  return mintTx;
 }
 
 export async function redeemBVIX(
@@ -494,7 +533,7 @@ export async function redeemBVIX(
 ): Promise<ethers.ContractTransactionResponse> {
   const signer = await getSigner();
   const address = await signer.getAddress();
-  const mintRedeemContract = await getMintRedeemContract(signer);
+  const bvixMintRedeemContract = new ethers.Contract(BVIX_MINT_REDEEM_V8_ADDRESS, MintRedeem_ABI, signer);
   const bvixContract = await getBVIXContract(signer);
 
   const bvixAmountWei = ethers.parseEther(bvixAmount);
@@ -507,8 +546,8 @@ export async function redeemBVIX(
     );
   }
 
-  console.log("Redeeming BVIX tokens...");
-  const redeemTx = await mintRedeemContract.redeem(bvixAmountWei);
+  console.log("Redeeming BVIX V8 tokens...");
+  const redeemTx = await bvixMintRedeemContract.redeem(bvixAmountWei);
   return redeemTx;
 }
 
@@ -652,7 +691,7 @@ export async function getContractDebugInfo(): Promise<any> {
         usdcContract.balanceOf(address),
         bvixContract.balanceOf(address),
         oracleContract.getPrice(),
-        usdcContract.allowance(address, BVIX_MINT_REDEEM_V7_ADDRESS),
+        usdcContract.allowance(address, BVIX_MINT_REDEEM_V8_ADDRESS),
       ]);
 
     return {
@@ -665,7 +704,7 @@ export async function getContractDebugInfo(): Promise<any> {
         usdc: MOCK_USDC_ADDRESS,
         bvix: BVIX_ADDRESS,
         oracle: ORACLE_ADDRESS,
-        mintRedeem: BVIX_MINT_REDEEM_V7_ADDRESS,
+        mintRedeem: BVIX_MINT_REDEEM_V8_ADDRESS,
       },
     };
   } catch (error) {
@@ -687,7 +726,7 @@ export const getCollateralRatio = async (): Promise<number> => {
 
     // 2️⃣ read chain state in parallel
     const [rawVaultUSDC, rawSupply, price] = await Promise.all([
-      usdc.balanceOf(BVIX_MINT_REDEEM_V7_ADDRESS), // 6-decimals
+      usdc.balanceOf(BVIX_MINT_REDEEM_V8_ADDRESS), // 6-decimals
       Promise.resolve(BigInt(0)),          // Individual vault mode - no total supply
       getOraclePrice()                     // plain string like "42.15"
     ]);
@@ -713,7 +752,7 @@ export async function getUserPosition(user: string) {
     const contract = await getMintRedeemContract(provider);
     
     console.log('🔍 Getting BVIX position for user:', user);
-    console.log('🔍 Using V7 contract address:', BVIX_MINT_REDEEM_V7_ADDRESS);
+    console.log('🔍 Using V8 contract address:', BVIX_MINT_REDEEM_V8_ADDRESS);
     
     // Get user's position from V6 contract using positions(address) function
     const position = await contract.positions(user);

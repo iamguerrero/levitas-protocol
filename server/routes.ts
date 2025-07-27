@@ -123,10 +123,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all liquidatable positions across individual vaults
   app.get('/api/v1/liquidatable-positions', async (req, res) => {
     try {
-      // Contract addresses - V7 BVIX, V6 EVIX (INDIVIDUAL VAULT STYLE)
-      const BVIX_MINT_REDEEM_ADDRESS = '0x4c271CffdBf8DcdC21D4Cb80feEc425E00309175'; // BVIX MintRedeem V7 (FIXED)
+      // Contract addresses - V8 BVIX (WORKING), V6 EVIX (WORKING) 
+      const BVIX_MINT_REDEEM_ADDRESS = '0x653A6a4dCe04dABAEdb521091A889bb1EE298D8d'; // BVIX MintRedeem V8 (WORKING)
       const EVIX_MINT_REDEEM_ADDRESS = '0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf'; // EVIX MintRedeem V6
-      const BVIX_ORACLE_ADDRESS = '0x85485dD6cFaF5220150c413309C61a8EA24d24FE';
+      const BVIX_ORACLE_ADDRESS = '0xA6FAC514Fdc2C017FBCaeeDA27562dAC83Cf22cf'; // V8 BVIX ORACLE (WORKING)
       const EVIX_ORACLE_ADDRESS = '0xBd6E9809B9608eCAc3610cA65327735CC3c08104';
       const BASE_SEPOLIA_RPC_URL = 'https://sepolia.base.org';
 
@@ -148,8 +148,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // For now, return the known user's position if it's liquidatable
       const knownAddress = '0x18633ea30ad5c91e13d2e5714fe5e3d97043679b';
       
-      // Use V7 BVIX (FIXED decimals) and V6 EVIX contracts
-      const bvixVault = new ethers.Contract('0x4c271CffdBf8DcdC21D4Cb80feEc425E00309175', MINT_REDEEM_ABI, provider); // V7 FIXED
+      // Use V8 BVIX (WORKING - identical to EVIX) and V6 EVIX contracts
+      const bvixVault = new ethers.Contract(BVIX_MINT_REDEEM_ADDRESS, MINT_REDEEM_ABI, provider); // V8 WORKING
       const evixVault = new ethers.Contract(EVIX_MINT_REDEEM_ADDRESS, MINT_REDEEM_ABI, provider);
       const bvixOracle = new ethers.Contract(BVIX_ORACLE_ADDRESS, ORACLE_ABI, provider);
       const evixOracle = new ethers.Contract(EVIX_ORACLE_ADDRESS, ORACLE_ABI, provider);
@@ -188,7 +188,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             maxBonus: ((debt * price * 0.05)).toFixed(2),
             canLiquidate: true,
             tokenType: 'BVIX',
-            contractAddress: '0x4c271CffdBf8DcdC21D4Cb80feEc425E00309175' // V7 FIXED
+            contractAddress: BVIX_MINT_REDEEM_ADDRESS // V8 WORKING
           });
         }
       }
