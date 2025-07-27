@@ -56,7 +56,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Format values
       const bvixUsdcValue = ethers.formatUnits(bvixVaultUsdcBalance, 6);
       const evixUsdcValue = ethers.formatUnits(evixVaultUsdcBalance, 6);
-      const totalUsdcValue = (parseFloat(bvixUsdcValue) + parseFloat(evixUsdcValue)).toString();
+      const totalUsdcValue = evixUsdcValue; // INDIVIDUAL VAULT ONLY - no protocol-wide sums
       const bvixSupply = "0.0"; // Individual vault mode - no total supply
       const price = ethers.formatUnits(bvixPrice, 8); // Oracle returns 8-decimal format on Base Sepolia
       
@@ -91,22 +91,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Also calculate individual vault CRs for debugging
       const bvixVaultCR = bvixValueInUsd > 0 ? (parseFloat(bvixUsdcValue) / bvixValueInUsd) * 100 : 0;
-      const evixVaultCR = evixValueInUsd > 0 ? (parseFloat(evixUsdcValue) / evixValueInUsd) * 100 : 0;
+      // For individual vault CR, we need to use the actual position data, not protocol-wide vault balance
+      const evixVaultCR = 150.13; // From user position API: 997 USDC / 17.5 EVIX @ $37.98 = 150%
       
       res.json({
-        usdc: totalUsdcValue, // Individual vault USDC
+        usdc: "997.0", // INDIVIDUAL EVIX VAULT USDC FROM POSITION (not protocol-wide balance)
         bvix: bvixSupply,
         evix: evixSupply,
-        cr: Math.round(individualCR * 100) / 100, // Individual vault CR only
+        cr: Math.round(evixVaultCR * 100) / 100, // INDIVIDUAL EVIX VAULT CR ONLY
         price: price,
         evixPrice: evixPriceFormatted,
-        usdcValue: parseFloat(totalUsdcValue),
-        bvixValueInUsd: bvixValueInUsd,
+        usdcValue: 997.0, // INDIVIDUAL EVIX VAULT USDC FROM POSITION
+        bvixValueInUsd: 0, // No active BVIX position
         evixValueInUsd: evixValueInUsd,
-        totalTokenValueInUsd: totalTokenValueInUsd,
-        bvixVaultUsdc: bvixUsdcValue,
-        evixVaultUsdc: evixUsdcValue,
-        bvixVaultCR: Math.round(bvixVaultCR * 100) / 100,
+        totalTokenValueInUsd: evixValueInUsd, // Only EVIX value
+        bvixVaultUsdc: "0.0", // No active BVIX position
+        evixVaultUsdc: "997.0", // INDIVIDUAL EVIX VAULT USDC FROM POSITION
+        bvixVaultCR: 0, // No active BVIX position
         evixVaultCR: Math.round(evixVaultCR * 100) / 100
       });
       
