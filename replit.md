@@ -48,7 +48,7 @@ This project is a decentralized finance (DeFi) application called Levitas Financ
 ✓ **VAULT-SPECIFIC CR TRACKING** - Fixed CR calculation to show individual BVIX vault CR instead of confusing protocol-wide combined CR  
 ✓ **PROTOCOL-WIDE CR RESTORED** - Reverted to correct protocol-wide CR calculation per user feedback
 🔧 **EVIX MINTING BUG IDENTIFIED** - EVIX mint creates almost no tokens despite spending USDC, causing incorrect CR behavior
-✅ **V7 PRODUCTION CONTRACTS** - Current production addresses: BVIX Token V7 (0xdcCCCC3A977cC0166788265eD4B683D41f3AED09), BVIX MintRedeem V7 (0x4c271CffdBf8DcdC21D4Cb80feEc425E00309175), EVIX Token V6 (0x7066700CAf442501B308fAe34d5919091e1b2380), EVIX MintRedeem V6 (0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf), MockUSDC (0x9CC37B36FDd8CF5c0297BE15b75663Bf2a193297)
+✅ **V8 PRODUCTION CONTRACTS** - Current production addresses: BVIX Token V8 (0x7223A0Eb07B8d7d3CFbf84AC78eee4ae9DaA22CE), BVIX MintRedeem V8 (0x653A6a4dCe04dABAEdb521091A889bb1EE298D8d), BVIX Oracle V8 (0xA6FAC514Fdc2C017FBCaeeDA27562dAC83Cf22cf), EVIX Token V6 (0x7066700CAf442501B308fAe34d5919091e1b2380), EVIX MintRedeem V6 (0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf), MockUSDC (0x9CC37B36FDd8CF5c0297BE15b75663Bf2a193297)
 ✓ **Vault Health Real-Time Updates** - Updated vault stats API to use V4 contracts and reduced refresh interval to 5 seconds for faster updates
 ✓ **Post-Transaction Cache Invalidation** - Added automatic vault cache refresh after BVIX transactions for immediate collateral ratio updates (EVIX transactions don't affect BVIX vault)
 ✓ **Comprehensive Debug Logging** - Added detailed console logging for mint process troubleshooting

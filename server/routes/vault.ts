@@ -5,8 +5,8 @@ const router = Router();
 
 // Contract addresses and ABIs - V7 BVIX (FIXED DECIMALS)
 const MOCK_USDC_ADDRESS = '0x9CC37B36FDd8CF5c0297BE15b75663Bf2a193297';
-const BVIX_ADDRESS = '0xdcCCCC3A977cC0166788265eD4B683D41f3AED09'; // V7 BVIX TOKEN (FIXED)
-const MINT_REDEEM_ADDRESS = '0x4c271CffdBf8DcdC21D4Cb80feEc425E00309175'; // V7 BVIX MINT/REDEEM (FIXED)
+const BVIX_ADDRESS = '0x7223A0Eb07B8d7d3CFbf84AC78eee4ae9DaA22CE'; // V8 BVIX TOKEN (WORKING)
+const MINT_REDEEM_ADDRESS = '0x653A6a4dCe04dABAEdb521091A889bb1EE298D8d'; // V8 BVIX MINT/REDEEM (WORKING)
 const BASE_SEPOLIA_RPC_URL = 'https://sepolia.base.org';
 
 // Minimal ERC20 ABI for balance and supply queries
@@ -20,7 +20,7 @@ const ORACLE_ABI = [
   'function getPrice() external view returns (uint256)',
 ];
 
-const ORACLE_ADDRESS = '0x85485dD6cFaF5220150c413309C61a8EA24d24FE';
+const ORACLE_ADDRESS = '0xA6FAC514Fdc2C017FBCaeeDA27562dAC83Cf22cf'; // V8 BVIX ORACLE (WORKING)
 
 router.get('/api/v1/vault-stats', async (req, res) => {
   try {
