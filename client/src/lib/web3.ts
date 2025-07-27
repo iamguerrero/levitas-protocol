@@ -248,7 +248,7 @@ export async function getAllBalances(address: string): Promise<{
     
     // Initialize all contracts - use V7 for BVIX (fixed decimals), V6 for EVIX
     const [bvixContract, evixContract, usdcContract] = await Promise.all([
-      new ethers.Contract(BVIX_TOKEN_V7_ADDRESS, BVIXToken_ABI, provider), // V7 FIXED
+      new ethers.Contract(BVIX_TOKEN_V7_ADDRESS, BVIX_ABI, provider), // V7 FIXED
       getEVIXContract(provider),
       getUSDCContract(provider)
     ]);
@@ -284,7 +284,7 @@ export async function getAllBalances(address: string): Promise<{
 export async function getBVIXBalance(address: string): Promise<string> {
   try {
     const provider = getProvider();
-    const bvixContract = new ethers.Contract(BVIX_TOKEN_V7_ADDRESS, BVIXToken_ABI, provider); // V7 FIXED
+    const bvixContract = new ethers.Contract(BVIX_TOKEN_V7_ADDRESS, BVIX_ABI, provider); // V7 FIXED
     const balance = await bvixContract.balanceOf(address);
     return ethers.formatEther(balance);
   } catch (error) {
@@ -452,7 +452,7 @@ export async function mintBVIX(
   
   const signer = await getSigner();
   const address = await signer.getAddress();
-  const mintRedeemContract = new ethers.Contract(BVIX_MINT_REDEEM_V7_ADDRESS, MintRedeem_ABI.abi, signer); // V7 FIXED
+  const mintRedeemContract = new ethers.Contract(BVIX_MINT_REDEEM_V7_ADDRESS, MintRedeem_ABI, signer); // V7 FIXED
   const usdcContract = await getUSDCContract(signer);
 
   const usdcAmountWei = ethers.parseUnits(usdcAmount, 6); // USDC has 6 decimals
