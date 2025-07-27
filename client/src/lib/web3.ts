@@ -64,6 +64,7 @@ export const EVIX_MINT_REDEEM_V6_ADDRESS = '0x6C3e986c4cc7b3400de732440fa01B66FF
 
 // V7 contract addresses (FIXED decimal precision - current production)
 export const BVIX_MINT_REDEEM_V7_ADDRESS = '0x4c271CffdBf8DcdC21D4Cb80feEc425E00309175'; // BVIX V7 (FIXED)
+export const BVIX_TOKEN_V7_ADDRESS = '0xdcCCCC3A977cC0166788265eD4B683D41f3AED09'; // BVIX V7 Token (FIXED)
 
 // Token and Oracle addresses
 export const EVIX_ADDRESS = "0x7066700CAf442501B308fAe34d5919091e1b2380"; // EVIX token
@@ -248,7 +249,7 @@ export async function getAllBalances(address: string): Promise<{
     
     // Initialize all contracts - use V7 for BVIX (fixed decimals), V6 for EVIX
     const [bvixContract, evixContract, usdcContract] = await Promise.all([
-      new ethers.Contract(BVIX_TOKEN_V7_ADDRESS, BVIX_ABI, provider), // V7 FIXED
+      getBVIXContract(provider), // Use getBVIXContract to get correct token address
       getEVIXContract(provider),
       getUSDCContract(provider)
     ]);
@@ -284,7 +285,7 @@ export async function getAllBalances(address: string): Promise<{
 export async function getBVIXBalance(address: string): Promise<string> {
   try {
     const provider = getProvider();
-    const bvixContract = new ethers.Contract(BVIX_TOKEN_V7_ADDRESS, BVIX_ABI, provider); // V7 FIXED
+    const bvixContract = await getBVIXContract(provider); // Use getBVIXContract to get correct token address
     const balance = await bvixContract.balanceOf(address);
     return ethers.formatEther(balance);
   } catch (error) {
@@ -770,7 +771,7 @@ export async function getUserCollateralRatio(user: string): Promise<number> {
     
     // First check if user has a position
     const position = await contract.positions(user);
-    if (!position || position.debt === 0n) {
+    if (!position || position.debt === BigInt(0)) {
       console.log('🔍 User has no BVIX position, returning 0 CR');
       return 0;
     }
@@ -835,7 +836,7 @@ export async function getUserCollateralRatioEVIX(user: string): Promise<number> 
     
     // First check if user has a position
     const position = await contract.positions(user);
-    if (!position || position.debt === 0n) {
+    if (!position || position.debt === BigInt(0)) {
       console.log('🔍 User has no EVIX position, returning 0 CR');
       return 0;
     }
