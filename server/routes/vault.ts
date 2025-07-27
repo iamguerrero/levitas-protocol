@@ -3,16 +3,16 @@ import { ethers } from 'ethers';
 
 const router = Router();
 
-// Contract addresses and ABIs - V5 Final with fresh BVIX
-const MOCK_USDC_ADDRESS = '0x79640e0f510a7c6d59737442649d9600C84b035f';
-const BVIX_ADDRESS = '0xa60289981b67139fb7a9F3d31dD2D2BaA414A263'; // Fresh BVIX
-const MINT_REDEEM_ADDRESS = '0xa0133C6380bf9618e97Ab9a855aF2035e9498829'; // V5 Final
+// Contract addresses and ABIs - V7 BVIX (FIXED DECIMALS)
+const MOCK_USDC_ADDRESS = '0x9CC37B36FDd8CF5c0297BE15b75663Bf2a193297';
+const BVIX_ADDRESS = '0xdcCCCC3A977cC0166788265eD4B683D41f3AED09'; // V7 BVIX TOKEN (FIXED)
+const MINT_REDEEM_ADDRESS = '0x4c271CffdBf8DcdC21D4Cb80feEc425E00309175'; // V7 BVIX MINT/REDEEM (FIXED)
 const BASE_SEPOLIA_RPC_URL = 'https://sepolia.base.org';
 
 // Minimal ERC20 ABI for balance and supply queries
 const ERC20_ABI = [
   'function balanceOf(address account) external view returns (uint256)',
-  'function totalSupply() external view returns (uint256)',
+  // 'function totalSupply() external view returns (uint256)', // Removed - individual vault mode
 ];
 
 // Oracle ABI for price queries
@@ -35,7 +35,7 @@ router.get('/api/v1/vault-stats', async (req, res) => {
     // Fetch data in parallel
     const [vaultUsdcBalance, bvixTotalSupply, bvixPrice] = await Promise.all([
       usdcContract.balanceOf(MINT_REDEEM_ADDRESS),
-      bvixContract.totalSupply(),
+      Promise.resolve(BigInt(0)), // Individual vault mode - no total supply
       oracleContract.getPrice()
     ]);
     

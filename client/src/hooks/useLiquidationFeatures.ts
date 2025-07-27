@@ -10,7 +10,7 @@ import { useUserPositions } from '@/hooks/useUserPositions';
 import { useVault } from '@/hooks/useVault';
 
 // Define vault addresses (V6 contracts that have positions method)
-const BVIX_VAULT_ADDRESS = "0x65Bec0Ab96ab751Fd0b1D9c907342d9A61FB1117"; // BVIX V6
+const BVIX_VAULT_ADDRESS = "0x4c271CffdBf8DcdC21D4Cb80feEc425E00309175"; // BVIX V7 (FIXED)
 const EVIX_VAULT_ADDRESS = "0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf"; // EVIX V6
 
 export interface LiquidatableVault {

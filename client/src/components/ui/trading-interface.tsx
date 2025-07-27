@@ -40,7 +40,7 @@ import {
   BVIX_ADDRESS,
   EVIX_ADDRESS,
   ORACLE_ADDRESS,
-  BVIX_MINT_REDEEM_V6_ADDRESS,
+  BVIX_MINT_REDEEM_V7_ADDRESS,
   MOCK_USDC_ADDRESS,
 } from "@/lib/web3";
 import { getUserPosition, getUserCollateralRatio, getUserPositionEVIX, getUserCollateralRatioEVIX } from "@/lib/web3";
@@ -626,7 +626,7 @@ export default function TradingInterface() {
                     <strong>Oracle:</strong> {ORACLE_ADDRESS}
                   </p>
                   <p>
-                    <strong>MintRedeem:</strong> {BVIX_MINT_REDEEM_V6_ADDRESS}
+                    <strong>MintRedeem:</strong> {BVIX_MINT_REDEEM_V7_ADDRESS}
                   </p>
                 </div>
               </div>
