@@ -4,10 +4,10 @@
     "owner": "0x58bc63cbb24854f0a5edeaf3c5e530192dcbc24b",
     "liquidator": "0xe18d3b075a241379d77fffe01ed1317dda0e8bac",
     "debtRepaid": "5.91",
-    "collateralSeized": "14.96",
-    "bonus": "14.96",
-    "ownerRefund": "284.14",
-    "timestamp": 1753701910806,
-    "txHash": "mock_tx_1753701910806"
+    "collateralSeized": "261.56",
+    "bonus": "12.46",
+    "ownerRefund": "37.54",
+    "timestamp": 1753702294800,
+    "txHash": "mock_tx_1753702294800"
   }
 }
