@@ -68,15 +68,11 @@ export default function Navigation() {
             >
               Liquidity
             </a>
-            {location === "/app" || location === "/trading" || location === "/liquidation" ? (
-              <WalletConnect />
-            ) : (
-              <Link href="/app">
-                <Button className="bg-blue-600 text-white hover:bg-blue-700">
-                  Launch App
-                </Button>
-              </Link>
-            )}
+            <Link href="/app">
+              <Button className="bg-blue-600 text-white hover:bg-blue-700">
+                Launch App
+              </Button>
+            </Link>
           </div>
 
           <button
