@@ -400,7 +400,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               vaultIsLiquidatable
             });
             
-            if (cr <= 120.01 && cr > 0 && vaultIsLiquidatable) { // Liquidatable at or below 120% CR (allow floating point precision)
+            if (cr <= 120.25 && cr > 0 && vaultIsLiquidatable) { // Liquidatable at or below 120% CR (allow floating point precision)
               liquidatable.push({
                 vaultId: liquidatable.length + 1,
                 owner: userAddress,
