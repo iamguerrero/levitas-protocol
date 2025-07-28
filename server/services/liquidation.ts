@@ -11,6 +11,10 @@ interface LiquidationState {
   ownerRefund: string;
   timestamp: number;
   txHash: string;
+  preActivationDebt?: string;
+  preActivationCollateral?: string;
+  freshVaultCollateral?: string;
+  freshVaultDebt?: string;
 }
 
 // Persistent storage for liquidations using JSON file
@@ -80,6 +84,12 @@ export function clearVaultLiquidation(tokenType: string, owner: string): void {
   liquidations.delete(key);
   saveLiquidations(liquidations);
   console.log(`🗑️ Cleared liquidation record for ${tokenType} vault: ${owner}`);
+}
+
+export function hasFreshVaultAfterLiquidation(tokenType: string, owner: string): LiquidationState | null {
+  const key = `${tokenType.toLowerCase()}_${owner}`;
+  const liquidation = liquidations.get(key);
+  return liquidation && liquidation.freshVaultCollateral ? liquidation : null;
 }
 
 export function getAllLiquidations(): LiquidationState[] {

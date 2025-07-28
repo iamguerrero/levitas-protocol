@@ -1,1 +1,17 @@
-{}
+{
+  "bvix_0x58bc63cbb24854f0a5edeaf3c5e530192dcbc24b": {
+    "tokenType": "BVIX",
+    "owner": "0x58bc63cbb24854f0a5edeaf3c5e530192dcbc24b",
+    "liquidator": "0x1234567890123456789012345678901234567890",
+    "debtRepaid": "6.04",
+    "collateralSeized": "300.0",
+    "bonus": "15.75",
+    "ownerRefund": "0.0",
+    "timestamp": 1753700000000,
+    "txHash": "0xabc123def456",
+    "preActivationDebt": "11.826809015421115064",
+    "preActivationCollateral": "598.2",
+    "freshVaultCollateral": "400.0",
+    "freshVaultDebt": "7.84"
+  }
+}
