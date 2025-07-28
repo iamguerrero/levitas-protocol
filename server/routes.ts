@@ -349,16 +349,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // V8 BVIX Oracle uses 18 decimals - raw: 42150000000000000000 -> 42.15
             let price = parseFloat(ethers.formatUnits(bvixPrice, 18));
             
-            // Check if this vault has been liquidated and apply fresh vault logic
+            // Check if this vault has been liquidated
             const isLiquidated = isVaultLiquidated('BVIX', userAddress);
             
-            let collateral, debt;
-            let vaultIsLiquidatable = false;
+            console.log(`🔍 Liquidation check for BVIX ${userAddress}: isLiquidated=${isLiquidated}`);
             
-            // Normal vault - no liquidated vault checking in liquidation opportunities
+            // Skip liquidated vaults completely in liquidation opportunities
+            if (isLiquidated) {
+              console.log(`⚠️ SKIPPING LIQUIDATED BVIX VAULT for ${userAddress}`);
+              continue; // Don't show liquidated vaults in liquidation center
+            }
+            
+            let collateral, debt;
             collateral = rawCollateral;
             debt = rawDebt;
-            vaultIsLiquidatable = true;
             
             const cr = debt > 0 ? (collateral / (debt * price)) * 100 : 0;
             
@@ -368,12 +372,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
               price,
               cr: cr.toFixed(2),
               crExact: cr,
-              isLiquidatable: cr <= 120.01 && cr > 0 && vaultIsLiquidatable,
-              freshVault: isLiquidated && vaultIsLiquidatable,
-              vaultIsLiquidatable
+              isLiquidatable: cr <= 120.01 && cr > 0
             });
             
-            if (cr <= 120.25 && cr > 0 && vaultIsLiquidatable) { // Liquidatable at or below 120% CR (allow floating point precision)
+            if (cr <= 120.25 && cr > 0) { // Liquidatable at or below 120% CR (allow floating point precision)
               liquidatable.push({
                 vaultId: liquidatable.length + 1,
                 owner: userAddress,
@@ -395,43 +397,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const rawDebt = parseFloat(ethers.formatEther(evixPosition.debt));
             const price = parseFloat(ethers.formatUnits(evixPrice, 8));
             
-            // Check if this vault has been liquidated and apply fresh vault logic
+            // Check if this vault has been liquidated
             const isLiquidated = isVaultLiquidated('EVIX', userAddress);
             
-            let collateral, debt;
-            let vaultIsLiquidatable = false;
-            
+            // Skip liquidated vaults completely in liquidation opportunities
             if (isLiquidated) {
-              // Get liquidation record to find contract state at liquidation time
-              const { getLiquidation } = await import('./services/liquidation.js');
-              const liquidationRecord = getLiquidation('EVIX', userAddress);
-              
-              if (liquidationRecord && liquidationRecord.contractStateAtLiquidation) {
-                // Contract state at liquidation time
-                const oldCollateral = parseFloat(liquidationRecord.contractStateAtLiquidation.collateral);
-                const oldDebt = parseFloat(liquidationRecord.contractStateAtLiquidation.debt);
-                
-                // Calculate fresh vault amounts (current - old)
-                collateral = rawCollateral - oldCollateral;
-                debt = rawDebt - oldDebt;
-                
-                if (collateral > 0 || debt > 0) {
-                  // User has minted after liquidation - this fresh vault can be liquidated
-                  vaultIsLiquidatable = true;
-                } else {
-                  // No fresh activity - skip this vault
-                  continue;
-                }
-              } else {
-                // No liquidation state stored - skip
-                continue;
-              }
-            } else {
-              // Normal vault
-              collateral = rawCollateral;
-              debt = rawDebt;
-              vaultIsLiquidatable = true;
+              console.log(`⚠️ SKIPPING LIQUIDATED EVIX VAULT for ${userAddress}`);
+              continue; // Don't show liquidated vaults in liquidation center
             }
+            
+            let collateral, debt;
+            collateral = rawCollateral;
+            debt = rawDebt;
             
             const cr = debt > 0 ? (collateral / (debt * price)) * 100 : 0;
             
@@ -440,11 +417,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
               debt,
               price,
               cr: cr.toFixed(2),
-              isLiquidatable: cr <= 120.0 && cr > 0 && vaultIsLiquidatable,
-              freshVault: isLiquidated && vaultIsLiquidatable
+              isLiquidatable: cr <= 120.0 && cr > 0,
+              freshVault: false
             });
             
-            if (cr <= 120.0 && cr > 0 && vaultIsLiquidatable) { // Liquidatable at or below 120% CR
+            if (cr <= 120.0 && cr > 0) { // Liquidatable at or below 120% CR
               liquidatable.push({
                 vaultId: liquidatable.length + 1,
                 owner: userAddress,
