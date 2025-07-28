@@ -408,11 +408,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if BVIX vault was liquidated and format position accordingly
       const bvixLiquidated = isVaultLiquidated('BVIX', userAddress);
       
-      // Use vault data directly - contract correctly tracks only minting activity
-      const bvixCollateral = bvixLiquidated ? "0" : ethers.formatUnits(bvixPosition.collateral, 6);
-      const bvixDebt = bvixLiquidated ? "0" : ethers.formatEther(bvixPosition.debt);
+      // LIQUIDATION VAULT RESET: If vault was liquidated, it should show 0/0 regardless of contract state
+      // The contract may still show old data but liquidated vaults are closed
+      let bvixCollateral, bvixDebt;
+      if (bvixLiquidated) {
+        bvixCollateral = "0";
+        bvixDebt = "0";
+        console.log(`🔥 VAULT LIQUIDATED: BVIX vault for ${userAddress} was liquidated - showing 0/0 (vault closed)`);
+      } else {
+        bvixCollateral = ethers.formatUnits(bvixPosition.collateral, 6);
+        bvixDebt = ethers.formatEther(bvixPosition.debt);
+        console.log(`💰 ACTIVE VAULT: ${bvixCollateral} USDC collateral, ${bvixDebt} BVIX debt (minting history)`);
+      }
       
-      console.log(`💰 VAULT STATUS: ${bvixCollateral} USDC collateral, ${bvixDebt} BVIX debt (cumulative minting history, external DEX activity isolated)`);
+      // Vault status already logged above based on liquidation state
       
       // V8 BVIX Oracle uses 18 decimals - raw: 42150000000000000000 -> 42.15
       const bvixPriceFormatted = parseFloat(ethers.formatUnits(bvixPrice, 18));
