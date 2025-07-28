@@ -291,7 +291,11 @@ export function useLiquidation() {
       
       // Mark this vault as liquidated in backend (so it disappears from opportunities)
       // CRITICAL: For fresh vaults, we need to store the CURRENT contract state at liquidation
-      const contractStateAtLiquidation = isFreshVault ? {
+      // Check if this is a fresh vault by comparing collateral with total contract state
+      const isCurrentlyFreshVault = parseFloat(vault.collateral) < 1000; // Fresh vaults have < 1000 USDC
+      console.log(`🔍 Vault being liquidated: ${vault.collateral} USDC, ${vault.debt} ${vault.tokenType}, isFresh: ${isCurrentlyFreshVault}`);
+      
+      const contractStateAtLiquidation = isCurrentlyFreshVault ? {
         // For fresh vaults being liquidated, the current state IS the state at liquidation
         collateral: ethers.formatUnits(vaultPosition.collateral, 6),
         debt: ethers.formatEther(vaultPosition.debt)
