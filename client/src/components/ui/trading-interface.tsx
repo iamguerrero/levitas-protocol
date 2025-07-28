@@ -140,7 +140,7 @@ export default function TradingInterface() {
   // ✅ treat both sides as plain strings
   const contractsDeployed = String(BVIX_ADDRESS) !== "0xBVIXAddressHere";
 
-  // Load vault stats
+  // Load vault stats with user address for mock USDC balance
   const { data: vaultData } = useQuery<{
     price?: string;
     evixPrice?: string;
@@ -149,7 +149,12 @@ export default function TradingInterface() {
     evix?: string;
     cr?: number;
   }>({
-    queryKey: ['/api/v1/vault-stats'],
+    queryKey: ['/api/v1/vault-stats', address],
+    queryFn: async () => {
+      const response = await fetch(`/api/v1/vault-stats${address ? `?address=${address}` : ''}`);
+      if (!response.ok) throw new Error('Failed to fetch vault stats');
+      return response.json();
+    },
     refetchInterval: 15000,
     enabled: true,
   });
