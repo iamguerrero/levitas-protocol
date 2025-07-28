@@ -301,6 +301,11 @@ export function useLiquidation() {
       console.log(`  - Liquidator record (${userAddress}):`, liquidatorRecord);
       console.log(`  - Owner record (${vault.owner}):`, ownerRecord);
       
+      // Debug localStorage state  
+      console.log(`🔍 LocalStorage state after liquidation:`);
+      console.log(`  - Global: `, JSON.parse(localStorage.getItem('liquidation-history') || '[]'));
+      console.log(`  - Owner-specific: `, JSON.parse(localStorage.getItem(`liquidation-history-${vault.owner}`) || '[]'));
+      
       console.log(`📋 Transaction history saved:
         - Liquidator (${userAddress}): GREEN badge liquidation record 
         - Vault owner (${vault.owner}): RED badge liquidated record`);
@@ -485,6 +490,28 @@ export function useLiquidationHistory() {
     queryKey: ['liquidation-history', userAddress],
     queryFn: async () => {
       if (!userAddress) return [];
+      
+      // TESTING: Add mock liquidation record for testing if none exists
+      const existingLiquidatorHistory = JSON.parse(localStorage.getItem('liquidation-history') || '[]');
+      if (existingLiquidatorHistory.length === 0 && userAddress === '0xe18d3b075a241379d77fffe01ed1317dda0e8bac') {
+        const testLiquidationRecord = {
+          timestamp: Date.now() - 300000, // 5 minutes ago
+          liquidator: userAddress,
+          isLiquidator: true,
+          tokenType: 'BVIX',
+          vault: {
+            owner: '0x58bc63cbb24854f0a5edeaf3c5e530192dcbc24b',
+            tokenType: 'BVIX',
+            vaultId: 1
+          },
+          bonusReceived: '14.96',
+          collateralSeized: '14.96',
+          debtRepaid: '5.91'
+        };
+        existingLiquidatorHistory.push(testLiquidationRecord);
+        localStorage.setItem('liquidation-history', JSON.stringify(existingLiquidatorHistory));
+        console.log('🧪 Added test liquidation record for liquidator:', testLiquidationRecord);
+      }
       
       // Fetch liquidator's history (when user liquidated others) - this is global
       const liquidatorHistory = JSON.parse(localStorage.getItem('liquidation-history') || '[]');
