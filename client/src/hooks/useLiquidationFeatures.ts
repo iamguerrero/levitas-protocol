@@ -340,9 +340,10 @@ export function useLiquidation() {
       await queryClient.invalidateQueries({ queryKey: ['liquidations'] });
       await queryClient.invalidateQueries({ queryKey: ['vault-stats'] });
 
-      // Generate UNIQUE vault ID with timestamp to ensure each liquidation creates a new ID
-      const timestamp = Date.now();
-      const uniqueVaultId = `${vault.tokenType}-${vault.owner.slice(-4)}-${timestamp.toString(36).slice(-5)}`.toLowerCase();
+      // Generate UNIQUE vault ID with transaction hash to ensure consistency between all parties
+      // Use txHash for consistency since it's the same for liquidator and owner
+      const txHashShort = receipt.hash.slice(-8); // Last 8 chars of tx hash
+      const uniqueVaultId = `${vault.tokenType}-${vault.owner.slice(-4)}-${txHashShort}`.toLowerCase();
       
       // Create liquidation record for LIQUIDATOR (the person executing this function)
       const liquidatorRecord = {
@@ -715,7 +716,7 @@ export function useLiquidationHistory() {
                 vault: {
                   owner: liq.owner,
                   tokenType: liq.tokenType,
-                  vaultId: `${liq.tokenType}-${liq.owner.slice(-4)}-${liq.owner.slice(2, 7)}`.toLowerCase()
+                  vaultId: `${liq.tokenType}-${liq.owner.slice(-4)}-${liq.txHash.slice(-8)}`.toLowerCase()
                 },
                 bonus: liq.bonus, // FIXED: Use actual bonus amount
                 collateralSeized: liq.collateralSeized,
@@ -753,7 +754,7 @@ export function useLiquidationHistory() {
         vault: {
           owner: liq.owner,
           tokenType: liq.tokenType,
-          vaultId: `${liq.tokenType}-${liq.owner.slice(-4)}-${liq.owner.slice(2, 7)}`.toLowerCase()
+          vaultId: `${liq.tokenType}-${liq.owner.slice(-4)}-${liq.txHash.slice(-8)}`.toLowerCase()
         },
         bonus: liq.bonus,
         collateralSeized: liq.collateralSeized,
