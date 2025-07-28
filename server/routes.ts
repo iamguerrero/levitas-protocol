@@ -399,9 +399,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Liquidation tracking endpoint with mock USDC transfers
   app.post('/api/v1/liquidate-vault', async (req, res) => {
     try {
-      const { tokenType, owner, liquidator, debtRepaid, collateralSeized, bonus, totalCollateral, remainingCollateral, txHash } = req.body;
+      console.log('🔍 Raw request body:', req.body);
       
-      const ownerRefund = remainingCollateral || '0';
+      const { liquidator, vault } = req.body;
+      
+      console.log('🔍 Liquidation request received:', { liquidator, vault });
+      
+      if (!vault || !vault.tokenType) {
+        console.error('❌ Missing vault or tokenType in request');
+        return res.status(400).json({ error: 'Missing vault or tokenType in request body' });
+      }
+      
+      // Extract vault properties
+      const { tokenType, owner, debt, collateral, maxBonus } = vault;
+      
+      console.log('🔍 Extracted vault properties:', { tokenType, owner, debt, collateral, maxBonus });
+      
+      // Calculate liquidation amounts
+      const debtRepaid = debt;
+      const bonus = maxBonus;
+      const collateralSeized = (parseFloat(collateral) * 0.05).toFixed(2); // 5% bonus from collateral  
+      const ownerRefund = (parseFloat(collateral) - parseFloat(collateralSeized)).toFixed(2);
+      const txHash = `mock_tx_${Date.now()}`;
+
       
       // Record liquidation in service
       recordLiquidation({
