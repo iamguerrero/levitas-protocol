@@ -148,7 +148,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const bvixLiquidated = isVaultLiquidated('BVIX', userAddress);
           const evixLiquidated = isVaultLiquidated('EVIX', userAddress);
           
-          // Calculate BVIX position if exists and not liquidated
+          // Calculate BVIX position with fresh vault detection
           console.log(`🔍 BVIX Position Raw Data for ${userAddress}:`, {
             liquidated: bvixLiquidated,
             collateral: bvixPosition.collateral.toString(),
@@ -156,23 +156,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
             debtGreaterThanZero: bvixPosition.debt > 0n
           });
           
-          if (!bvixLiquidated && bvixPosition.debt > 0n) {
-            const collateral = parseFloat(ethers.formatUnits(bvixPosition.collateral, 6));
-            const debt = parseFloat(ethers.formatEther(bvixPosition.debt));
-            const priceFloat = parseFloat(price);
-            const cr = debt > 0 ? (collateral / (debt * priceFloat)) * 100 : 0;
+          if (bvixPosition.debt > 0n) {
+            const rawCollateral = parseFloat(ethers.formatUnits(bvixPosition.collateral, 6));
+            const rawDebt = parseFloat(ethers.formatEther(bvixPosition.debt));
             
-            bvixPositionUsdc = collateral.toFixed(6);
-            bvixPositionValueInUsd = debt * priceFloat;
-            bvixPositionCR = cr;
+            // Apply fresh vault detection logic for liquidated vaults
+            let collateral, debt;
+            let showPosition = true;
             
-            console.log(`✅ BVIX Position Calculated:`, {
-              collateral: bvixPositionUsdc,
-              valueInUsd: bvixPositionValueInUsd,
-              cr: bvixPositionCR
-            });
-          } else {
-            console.log(`❌ BVIX Position Skipped: liquidated=${bvixLiquidated}, hasDebt=${bvixPosition.debt > 0n}`);
+            if (bvixLiquidated) {
+              // Auto-detect fresh vault activity after liquidation
+              const { detectAndUpdateFreshVaultActivity, hasFreshVaultAfterLiquidation } = await import('./services/liquidation.js');
+              await detectAndUpdateFreshVaultActivity('BVIX', userAddress, rawCollateral, rawDebt);
+              const freshVaultData = hasFreshVaultAfterLiquidation('BVIX', userAddress);
+              
+              if (freshVaultData) {
+                // Fresh vault after liquidation - show only new activity
+                const preCollateral = parseFloat(freshVaultData.preActivationCollateral!);
+                const preDebt = parseFloat(freshVaultData.preActivationDebt!);
+                collateral = Math.max(0, rawCollateral - preCollateral);
+                debt = Math.max(0, rawDebt - preDebt);
+                console.log(`🆕 FRESH VAULT DETECTED: Using fresh activity data - Collateral: ${collateral}, Debt: ${debt}`);
+              } else {
+                // Liquidated with no fresh activity - don't show position
+                showPosition = false;
+                console.log(`🔥 VAULT LIQUIDATED: No fresh activity detected - hiding position`);
+              }
+            } else {
+              // Normal active vault
+              collateral = rawCollateral;
+              debt = rawDebt;
+            }
+            
+            if (showPosition && debt > 0) {
+              const priceFloat = parseFloat(price);
+              const cr = debt > 0 ? (collateral / (debt * priceFloat)) * 100 : 0;
+              
+              bvixPositionUsdc = collateral.toFixed(6);
+              bvixPositionValueInUsd = debt * priceFloat;
+              bvixPositionCR = cr;
+              
+              console.log(`✅ BVIX Position Calculated:`, {
+                collateral: bvixPositionUsdc,
+                valueInUsd: bvixPositionValueInUsd,
+                cr: bvixPositionCR,
+                freshVault: bvixLiquidated && showPosition
+              });
+            } else {
+              console.log(`❌ BVIX Position Skipped: liquidated=${bvixLiquidated}, hasDebt=${bvixPosition.debt > 0n}, showPosition=${showPosition}`);
+            }
           }
           
           // Calculate EVIX position if exists and not liquidated  
