@@ -495,6 +495,56 @@ export function usePermissionlessLiquidation() {
   });
 }
 
+// Function to fix existing transaction history with consistent vault IDs
+export function fixExistingTransactionHistory() {
+  console.log('🔧 Fixing existing transaction history with consistent vault IDs...');
+  
+  const allKeys = Object.keys(localStorage);
+  const liquidationKeys = allKeys.filter(key => key.includes('liquidation-history'));
+  
+  liquidationKeys.forEach(key => {
+    try {
+      const history = JSON.parse(localStorage.getItem(key) || '[]');
+      let updated = false;
+      
+      const fixedHistory = history.map((record: any) => {
+        if (record.vault && record.vault.owner && record.vault.tokenType) {
+          const correctVaultId = `${record.vault.tokenType}-${record.vault.owner.slice(-4)}-${record.vault.owner.slice(2, 7)}`.toLowerCase();
+          
+          if (record.vault.vaultId !== correctVaultId || record.vaultId !== correctVaultId) {
+            console.log(`Fixing vault ID: ${record.vault.vaultId || record.vaultId} → ${correctVaultId}`);
+            updated = true;
+            
+            return {
+              ...record,
+              vaultId: correctVaultId,
+              vault: {
+                ...record.vault,
+                vaultId: correctVaultId
+              }
+            };
+          }
+        }
+        return record;
+      });
+      
+      if (updated) {
+        localStorage.setItem(key, JSON.stringify(fixedHistory));
+        console.log(`✅ Updated ${key} with consistent vault IDs`);
+      }
+    } catch (error) {
+      console.error(`Error fixing ${key}:`, error);
+    }
+  });
+  
+  console.log('🎉 Transaction history fix complete - refresh the page to see consistent vault IDs');
+}
+
+// Make the fix function available globally for easy access
+if (typeof window !== 'undefined') {
+  (window as any).fixTransactionHistory = fixExistingTransactionHistory;
+}
+
 // Hook for vault health monitoring
 export function useVaultHealth(address: string | null) {
   const { data: positions, isLoading: positionsLoading } = useUserPositions();
