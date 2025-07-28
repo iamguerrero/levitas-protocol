@@ -164,10 +164,15 @@ export default function TradingInterface() {
       setVaultStats(vaultData);
 
       // Prioritize real-time oracle prices over API data
+      // Also update balances from vault-stats API when liquidation occurs
       setContractData(prev => ({
         ...prev,
         bvixPrice: realtimeBvixPrice || vaultData.price || prev.bvixPrice,
         evixPrice: realtimeEvixPrice || vaultData.evixPrice || prev.evixPrice,
+        // Update BVIX balance from API when liquidated (shows 0.0)
+        bvixBalance: vaultData.bvix !== undefined ? vaultData.bvix : prev.bvixBalance,
+        evixBalance: vaultData.evix !== undefined ? vaultData.evix : prev.evixBalance,
+        usdcBalance: vaultData.usdc !== undefined ? vaultData.usdc : prev.usdcBalance,
       }));
     }
   }, [vaultData, realtimeBvixPrice, realtimeEvixPrice]);
