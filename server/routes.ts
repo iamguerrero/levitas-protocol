@@ -274,24 +274,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
           // Check BVIX position for this user
           if (bvixPosition.debt > 0n) {
-            const collateral = parseFloat(ethers.formatUnits(bvixPosition.collateral, 6));
-            const debt = parseFloat(ethers.formatEther(bvixPosition.debt));
+            const rawCollateral = parseFloat(ethers.formatUnits(bvixPosition.collateral, 6));
+            const rawDebt = parseFloat(ethers.formatEther(bvixPosition.debt));
             // V8 BVIX Oracle uses 18 decimals - raw: 42150000000000000000 -> 42.15
             let price = parseFloat(ethers.formatUnits(bvixPrice, 18));
-            const cr = debt > 0 ? (collateral / (debt * price)) * 100 : 0;
             
-            // Check if this vault has been liquidated
+            // Check if this vault has been liquidated and apply fresh vault logic
             const isLiquidated = isVaultLiquidated('BVIX', userAddress);
+            const { hasFreshVaultAfterLiquidation } = await import('./services/liquidation.js');
+            const freshVaultData = hasFreshVaultAfterLiquidation('BVIX', userAddress);
+            
+            let collateral, debt;
+            let vaultIsLiquidatable = false;
+            
+            if (freshVaultData) {
+              // Use fresh vault data (same logic as user-positions endpoint)
+              const preCollateral = parseFloat(freshVaultData.preActivationCollateral!);
+              const preDebt = parseFloat(freshVaultData.preActivationDebt!);
+              collateral = Math.max(0, rawCollateral - preCollateral);
+              debt = Math.max(0, rawDebt - preDebt);
+              // Fresh vaults can be liquidated even if there's a liquidation record (they're active again)
+              vaultIsLiquidatable = true;
+            } else if (isLiquidated) {
+              // Liquidated vault with no fresh activity - skip
+              continue;
+            } else {
+              // Normal vault
+              collateral = rawCollateral;
+              debt = rawDebt;
+              vaultIsLiquidatable = true;
+            }
+            
+            const cr = debt > 0 ? (collateral / (debt * price)) * 100 : 0;
             
             console.log(`🔍 BVIX Position Check for ${userAddress}:`, {
               collateral,
               debt,
               price,
               cr: cr.toFixed(2),
-              isLiquidatable: cr <= 120.1 && cr > 0 && !isLiquidated
+              crExact: cr,
+              isLiquidatable: cr <= 120.01 && cr > 0 && vaultIsLiquidatable,
+              freshVault: !!freshVaultData,
+              vaultIsLiquidatable
             });
             
-            if (cr <= 120.1 && cr > 0 && !isLiquidated) { // Allow small floating point precision, exclude liquidated
+            if (cr <= 120.01 && cr > 0 && vaultIsLiquidatable) { // Liquidatable at or below 120% CR (allow floating point precision)
               liquidatable.push({
                 vaultId: liquidatable.length + 1,
                 owner: userAddress,
@@ -322,10 +349,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
               debt,
               price,
               cr: cr.toFixed(2),
-              isLiquidatable: cr <= 120.1 && cr > 0 && !isLiquidated
+              isLiquidatable: cr <= 120.0 && cr > 0 && !isLiquidated
             });
             
-            if (cr <= 120.1 && cr > 0 && !isLiquidated) { // Allow small floating point precision, exclude liquidated
+            if (cr <= 120.0 && cr > 0 && !isLiquidated) { // Liquidatable at or below 120% CR
               liquidatable.push({
                 vaultId: liquidatable.length + 1,
                 owner: userAddress,
@@ -417,10 +444,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`🔍 VAULT CHECK: liquidated=${bvixLiquidated}, freshVault=${!!freshVaultData}, rawCollateral=${rawCollateral}, rawDebt=${rawDebt}`);
       
       if (freshVaultData) {
-        // Show isolated fresh vault data (not cumulative contract data)
-        bvixCollateral = freshVaultData.freshVaultCollateral!;
-        bvixDebt = freshVaultData.freshVaultDebt!;
-        console.log(`🆕 FRESH VAULT: Showing isolated fresh vault - ${bvixCollateral} USDC, ${bvixDebt} BVIX (ignoring contract cumulative data)`);
+        // DYNAMIC FRESH VAULT: Calculate current vault size minus pre-liquidation amounts
+        const preCollateral = parseFloat(freshVaultData.preActivationCollateral!);
+        const preDebt = parseFloat(freshVaultData.preActivationDebt!);
+        
+        // Current vault = total contract activity - pre-liquidation activity
+        const currentCollateral = Math.max(0, rawCollateral - preCollateral);
+        const currentDebt = Math.max(0, rawDebt - preDebt);
+        
+        bvixCollateral = currentCollateral.toFixed(1);
+        bvixDebt = currentDebt.toFixed(2);
+        
+        console.log(`🆕 DYNAMIC FRESH VAULT: ${bvixCollateral} USDC, ${bvixDebt} BVIX (total: ${rawCollateral} - pre: ${preCollateral} = fresh: ${currentCollateral})`);
       } else if (bvixLiquidated) {
         // Liquidated with no fresh vault
         bvixCollateral = "0";
