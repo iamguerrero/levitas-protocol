@@ -356,10 +356,13 @@ export function useLiquidation() {
         }
       };
 
-      // Clear old history to start fresh with consistent vault IDs
-      localStorage.removeItem('liquidation-history');
-      localStorage.removeItem(`liquidation-history-${userAddress}`);
-      localStorage.removeItem(`liquidation-history-${vault.owner}`);
+      // CRITICAL FIX: Clear ALL existing transaction history to start fresh with consistent vault IDs
+      // Remove all possible localStorage keys that might contain old inconsistent vault IDs
+      const allKeys = Object.keys(localStorage);
+      const liquidationKeys = allKeys.filter(key => key.includes('liquidation-history'));
+      liquidationKeys.forEach(key => localStorage.removeItem(key));
+      
+      console.log(`🧹 Cleared ${liquidationKeys.length} old liquidation history keys:`, liquidationKeys);
       
       // Store liquidator history in GLOBAL localStorage (for current user who is liquidating)
       const globalHistory = JSON.parse(localStorage.getItem('liquidation-history') || '[]');
@@ -394,11 +397,19 @@ export function useLiquidation() {
 
       console.log(`✅ Liquidation completed: ${vault.debt} ${vault.tokenType} → ${totalPaymentToLiquidator.toFixed(2)} USDC (${bonusAmount.toFixed(2)} bonus)`);
 
-      // Invalidate cache to refresh data
+      // FORCE COMPLETE CACHE REFRESH - Clear all cached data to ensure fresh balance display
       await queryClient.invalidateQueries({ queryKey: ['/api/v1/liquidatable-positions'] });
       await queryClient.invalidateQueries({ queryKey: ['/api/v1/user-positions'] });
       await queryClient.invalidateQueries({ queryKey: ['/api/v1/vault-stats'] });
       await queryClient.invalidateQueries({ queryKey: ['liquidation-history'] });
+      await queryClient.invalidateQueries({ queryKey: ['balances'] });
+      await queryClient.invalidateQueries({ queryKey: ['contract-data'] });
+      
+      // Force reload balances to fix 0.00 BVIX display issue
+      queryClient.removeQueries({ queryKey: ['/api/v1/vault-stats'] });
+      queryClient.removeQueries({ queryKey: ['balances'] });
+      
+      console.log(`🔄 Forced complete cache refresh - all balances will reload from blockchain`);
 
       return {
         success: true,
