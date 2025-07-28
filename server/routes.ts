@@ -534,38 +534,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`🔍 VAULT CHECK: liquidated=${bvixLiquidated}, rawCollateral=${rawCollateral}, rawDebt=${rawDebt}`);
       
       if (bvixLiquidated) {
-        // Get liquidation record to find contract state at liquidation time
-        const { getLiquidation } = await import('./services/liquidation.js');
-        const liquidationRecord = getLiquidation('BVIX', userAddress);
-        
-        if (liquidationRecord && liquidationRecord.contractStateAtLiquidation) {
-          // Contract state at liquidation time
-          const oldCollateral = parseFloat(liquidationRecord.contractStateAtLiquidation.collateral);
-          const oldDebt = parseFloat(liquidationRecord.contractStateAtLiquidation.debt);
-          
-          // Calculate fresh vault amounts (current - old)
-          const freshCollateral = rawCollateral - oldCollateral;
-          const freshDebt = rawDebt - oldDebt;
-          
-          if (freshCollateral > 0 || freshDebt > 0) {
-            // User has minted after liquidation - show ONLY the new mint
-            bvixCollateral = freshCollateral.toFixed(2);
-            bvixDebt = freshDebt.toFixed(2);
-            console.log(`🆕 NEW VAULT AFTER LIQUIDATION: ${bvixCollateral} USDC, ${bvixDebt} BVIX`);
-            console.log(`   (Contract total: ${rawCollateral} USDC, ${rawDebt} BVIX)`);
-            console.log(`   (At liquidation: ${oldCollateral} USDC, ${oldDebt} BVIX)`);
-          } else {
-            // No fresh activity - hide position
-            bvixCollateral = "0";
-            bvixDebt = "0";
-            console.log(`🔥 VAULT LIQUIDATED: No fresh activity - position closed`);
-          }
-        } else {
-          // No liquidation state stored - shouldn't happen but show nothing
-          bvixCollateral = "0";
-          bvixDebt = "0";
-          console.log(`⚠️ WARNING: Liquidation record exists but no contract state stored`);
-        }
+        // Liquidated vault - completely hide from active positions
+        bvixCollateral = "0";
+        bvixDebt = "0";
+        console.log(`🔥 BVIX VAULT LIQUIDATED: Position closed`);
       } else {
         // Normal vault (no liquidation history)
         bvixCollateral = ethers.formatUnits(bvixPosition.collateral, 6);
@@ -586,38 +558,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let evixCollateral, evixDebt;
       
       if (evixLiquidated) {
-        // Get liquidation record to find contract state at liquidation time
-        const { getLiquidation } = await import('./services/liquidation.js');
-        const evixLiquidationRecord = getLiquidation('EVIX', userAddress);
-        
-        if (evixLiquidationRecord && evixLiquidationRecord.contractStateAtLiquidation) {
-          // Contract state at liquidation time
-          const oldEvixCollateral = parseFloat(evixLiquidationRecord.contractStateAtLiquidation.collateral);
-          const oldEvixDebt = parseFloat(evixLiquidationRecord.contractStateAtLiquidation.debt);
-          
-          // Calculate fresh vault amounts (current - old)
-          const freshEvixCollateral = rawEvixCollateral - oldEvixCollateral;
-          const freshEvixDebt = rawEvixDebt - oldEvixDebt;
-          
-          if (freshEvixCollateral > 0 || freshEvixDebt > 0) {
-            // User has minted after liquidation - show ONLY the new mint
-            evixCollateral = freshEvixCollateral.toFixed(2);
-            evixDebt = freshEvixDebt.toFixed(2);
-            console.log(`🆕 NEW EVIX VAULT AFTER LIQUIDATION: ${evixCollateral} USDC, ${evixDebt} EVIX`);
-            console.log(`   (Contract total: ${rawEvixCollateral} USDC, ${rawEvixDebt} EVIX)`);
-            console.log(`   (At liquidation: ${oldEvixCollateral} USDC, ${oldEvixDebt} EVIX)`);
-          } else {
-            // No fresh activity - hide position
-            evixCollateral = "0";
-            evixDebt = "0";
-            console.log(`🔥 EVIX VAULT LIQUIDATED: No fresh activity - position closed`);
-          }
-        } else {
-          // No liquidation state stored - shouldn't happen but show nothing
-          evixCollateral = "0";
-          evixDebt = "0";
-          console.log(`⚠️ WARNING: EVIX liquidation record exists but no contract state stored`);
-        }
+        // Liquidated vault - completely hide from active positions
+        evixCollateral = "0";
+        evixDebt = "0";
+        console.log(`🔥 EVIX VAULT LIQUIDATED: Position closed`);
       } else {
         // Normal vault (no liquidation history)
         evixCollateral = ethers.formatUnits(evixPosition.collateral, 6);
