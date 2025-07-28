@@ -309,7 +309,7 @@ export function useLiquidation() {
       await queryClient.invalidateQueries({ queryKey: ['balances'] });
 
       // Generate consistent vault ID based on owner and token type
-      const uniqueVaultId = `${vault.tokenType}-${vault.owner.slice(-4)}-${vault.owner.slice(2, 7)}`;
+      const uniqueVaultId = `${vault.tokenType}-${vault.owner.slice(-4)}-${vault.owner.slice(2, 7)}`.toLowerCase();
       
       // Create liquidation record for LIQUIDATOR (the person executing this function)
       const liquidatorRecord = {
@@ -606,7 +606,7 @@ export function useLiquidationHistory() {
                 vault: {
                   owner: liq.owner,
                   tokenType: liq.tokenType,
-                  vaultId: `${liq.tokenType}-${liq.owner.slice(-4)}-${liq.owner.slice(2, 7)}`
+                  vaultId: `${liq.tokenType}-${liq.owner.slice(-4)}-${liq.owner.slice(2, 7)}`.toLowerCase()
                 },
                 bonus: liq.bonus, // FIXED: Use actual bonus amount
                 collateralSeized: liq.collateralSeized,
@@ -644,7 +644,7 @@ export function useLiquidationHistory() {
         vault: {
           owner: liq.owner,
           tokenType: liq.tokenType,
-          vaultId: `${liq.tokenType}-${liq.owner.slice(-4)}-${liq.owner.slice(2, 7)}`
+          vaultId: `${liq.tokenType}-${liq.owner.slice(-4)}-${liq.owner.slice(2, 7)}`.toLowerCase()
         },
         bonus: liq.bonus,
         collateralSeized: liq.collateralSeized,
