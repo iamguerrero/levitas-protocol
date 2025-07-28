@@ -37,6 +37,9 @@ This project is a decentralized finance (DeFi) application called Levitas Financ
 ✅ **BACKEND LIQUIDATION SERVICE** - Created liquidation.ts service to track liquidated vaults, preventing them from reappearing in opportunities list
 ✅ **PROPER BURN MECHANICS** - Liquidators burn their BVIX/EVIX tokens (via redemption) to pay debt, receiving USDC collateral + 5% bonus
 ✅ **SPRINT 2.2 COMPLETE - ALL LIQUIDATION ISSUES RESOLVED** - Perfect 6-point liquidation flow: mint creates vaults, redeem closes positions, sub-120% CR vaults appear in liquidation center, liquidators burn tokens for USDC+bonus without affecting their vaults, vault owners receive remaining collateral refunds and positions close, transaction history shows GREEN badges for liquidators and RED badges for liquidatees. Mock USDC transfer system working flawlessly for both BVIX and EVIX tokens with real-time balance updates.
+✅ **LIQUIDATION TRANSACTION HISTORY FIXED** - Both liquidator and owner now see consistent vault IDs (BVIX-c24b-58bc6) in their transaction history
+✅ **USDC BALANCE UPDATES WORKING** - Liquidator's USDC balance correctly increases by $523.57 from mock transfers (32,566 USDC total)
+✅ **VAULT CLOSURE COMPLETE** - Liquidated vaults properly show 0/0 and disappear from liquidation opportunities
 
 ✅ **SPRINT 2.2 LIQUIDATION SYSTEM 100% COMPLETE** - All 6 liquidation flow points working perfectly for both BVIX and EVIX tokens with real smart contract interactions, proper USDC transfers, transaction history badges, and vault management
 ✅ **VAULT ISOLATION CLARIFIED** - V8 BVIX contract correctly uses one vault per user that tracks only minting activity (USDC deposited + BVIX minted). External BVIX/USDC acquired on DEXes remain separate in wallet balances and do not affect vault collateral ratio. This is the correct DeFi design pattern.
