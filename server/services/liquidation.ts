@@ -58,14 +58,25 @@ const liquidations = loadLiquidations();
 
 export function recordLiquidation(liquidation: LiquidationState) {
   const key = `${liquidation.tokenType.toLowerCase()}_${liquidation.owner}`;
-  liquidations.set(key, liquidation);
+  
+  // Mark the vault as fully liquidated with no fresh activity
+  const liquidationRecord = {
+    ...liquidation,
+    freshVaultCollateral: undefined, // No fresh vault after liquidation
+    freshVaultDebt: undefined,
+    preActivationCollateral: undefined,
+    preActivationDebt: undefined
+  };
+  
+  liquidations.set(key, liquidationRecord);
   saveLiquidations(liquidations);
   
-  console.log(`📝 Liquidation recorded:`, {
+  console.log(`📝 Liquidation recorded and vault closed:`, {
     vault: `${liquidation.tokenType} ${liquidation.owner}`,
     liquidator: liquidation.liquidator,
     payment: `$${liquidation.collateralSeized} USDC`,
-    ownerRefund: `$${liquidation.ownerRefund} USDC`
+    ownerRefund: `$${liquidation.ownerRefund} USDC`,
+    vaultClosed: true
   });
 }
 
