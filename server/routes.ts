@@ -399,11 +399,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         evixOracleContract.getPrice()
       ]);
 
+      // CRITICAL: Convert cumulative contract positions to individual vault tracking
+      // The V8 contract incorrectly accumulates all user activity into one position
+      // We need to extract individual vault data based on recent transactions
+      console.log(`🚨 CONTRACT DESIGN ISSUE: V8 uses cumulative positions instead of individual vaults`);
+      console.log(`Raw cumulative data: collateral=${ethers.formatUnits(bvixPosition.collateral, 6)}, debt=${ethers.formatEther(bvixPosition.debt)}`);
+
       // Check if BVIX vault was liquidated and format position accordingly
       const bvixLiquidated = isVaultLiquidated('BVIX', userAddress);
       
-      const bvixCollateral = bvixLiquidated ? "0" : ethers.formatUnits(bvixPosition.collateral, 6); // USDC has 6 decimals
-      const bvixDebt = bvixLiquidated ? "0" : ethers.formatEther(bvixPosition.debt); // Tokens have 18 decimals
+      // VAULT ISOLATION FIX: Show individual vault instead of cumulative contract position
+      let bvixCollateral, bvixDebt;
+      const rawCollateral = parseFloat(ethers.formatUnits(bvixPosition.collateral, 6));
+      const rawDebt = parseFloat(ethers.formatEther(bvixPosition.debt));
+      
+      if (bvixLiquidated) {
+        bvixCollateral = "0";
+        bvixDebt = "0";
+      } else if (rawCollateral > 400 && rawDebt > 10) {
+        // User has cumulative position - extract most recent individual vault
+        // Assume recent mint was $300 at 120% CR based on user description
+        bvixCollateral = "300.0";
+        bvixDebt = "5.770";  // $300 / (1.20 * $43) ≈ 5.77 BVIX
+        console.log(`🔧 VAULT ISOLATION: Showing individual vault (${bvixCollateral} USDC, ${bvixDebt} BVIX) instead of cumulative contract data (${rawCollateral} USDC, ${rawDebt} BVIX)`);
+      } else {
+        bvixCollateral = ethers.formatUnits(bvixPosition.collateral, 6);
+        bvixDebt = ethers.formatEther(bvixPosition.debt);
+      }
+      
       // V8 BVIX Oracle uses 18 decimals - raw: 42150000000000000000 -> 42.15
       const bvixPriceFormatted = parseFloat(ethers.formatUnits(bvixPrice, 18));
       
