@@ -3,11 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import WalletConnect from "@/components/ui/wallet-connect";
+import { useWallet } from "@/hooks/use-wallet";
 const levitasLogoPath = "/levi large.jpg";
 
 export default function Navigation() {
   const [location] = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { isConnected } = useWallet();
 
   return (
     <nav className="fixed top-0 w-full z-50 glass-effect border-b border-gray-200">
@@ -68,15 +70,16 @@ export default function Navigation() {
             >
               Liquidity
             </a>
-            {location === "/app" || location === "/trading" || location === "/liquidation" ? (
+            {/* Only show WalletConnect on app pages when connected */}
+            {(location === "/app" || location === "/trading" || location === "/liquidation") && isConnected ? (
               <WalletConnect />
-            ) : (
+            ) : location !== "/app" && location !== "/trading" && location !== "/liquidation" ? (
               <Link href="/app">
                 <Button className="bg-blue-600 text-white hover:bg-blue-700">
                   Launch App
                 </Button>
               </Link>
-            )}
+            ) : null}
           </div>
 
           <button
