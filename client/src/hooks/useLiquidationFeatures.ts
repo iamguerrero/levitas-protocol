@@ -356,6 +356,11 @@ export function useLiquidation() {
         }
       };
 
+      // Clear old history to start fresh with consistent vault IDs
+      localStorage.removeItem('liquidation-history');
+      localStorage.removeItem(`liquidation-history-${userAddress}`);
+      localStorage.removeItem(`liquidation-history-${vault.owner}`);
+      
       // Store liquidator history in GLOBAL localStorage (for current user who is liquidating)
       const globalHistory = JSON.parse(localStorage.getItem('liquidation-history') || '[]');
       globalHistory.unshift(liquidatorRecord);
