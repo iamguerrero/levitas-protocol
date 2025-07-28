@@ -154,7 +154,31 @@ export function useLiquidation() {
         : new ethers.Contract(EVIX_VAULT_ADDRESS, evixMintRedeemV6ABI, signer);
       
       const vaultPosition = await vaultContract.positions(vault.owner);
-      const exactDebtWei = vaultPosition.debt; // Use exact debt amount from contract
+      
+      // CRITICAL FIX: For fresh vaults, use the debt from the UI, not the total contract debt
+      let exactDebtWei: bigint;
+      let totalCollateral: number;
+      
+      // Check if this is a fresh vault (has liquidation history)
+      const liquidationRes = await fetch('/api/v1/liquidations');
+      const liquidationData = await liquidationRes.json();
+      const hasLiquidationHistory = liquidationData.liquidations.some((l: any) => 
+        l.owner.toLowerCase() === vault.owner.toLowerCase() && l.tokenType === vault.tokenType
+      );
+      
+      if (hasLiquidationHistory) {
+        // FRESH VAULT: Use the isolated debt and collateral from the UI
+        const debtFromUI = parseFloat(vault.debt);
+        exactDebtWei = ethers.parseEther(debtFromUI.toString());
+        totalCollateral = parseFloat(vault.collateral);
+        console.log(`🆕 FRESH VAULT LIQUIDATION: Using isolated debt ${debtFromUI} ${vault.tokenType} (not total ${ethers.formatEther(vaultPosition.debt)})`);
+        console.log(`🆕 FRESH VAULT COLLATERAL: Using ${totalCollateral} USDC`);
+      } else {
+        // Normal vault: use contract values
+        exactDebtWei = vaultPosition.debt;
+        totalCollateral = parseFloat(ethers.formatUnits(vaultPosition.collateral, 6));
+        console.log(`📊 Normal vault liquidation: ${ethers.formatEther(exactDebtWei)} ${vault.tokenType}`);
+      }
       
       // Check user has enough tokens to liquidate using exact debt amount
       const tokenBalance = await tokenContract.balanceOf(userAddress);
@@ -193,8 +217,7 @@ export function useLiquidation() {
       const bonusAmount = debtValue * 0.05;
       const totalPaymentToLiquidator = debtValue + bonusAmount; // What liquidator should receive
       
-      // Get the vault's total collateral to calculate remaining amount
-      const totalCollateral = parseFloat(ethers.formatUnits(vaultPosition.collateral, 6)); // USDC collateral
+      // Calculate remaining collateral (totalCollateral was already set above based on fresh vault status)
       const remainingCollateral = totalCollateral - totalPaymentToLiquidator; // What vault owner gets back
       
       console.log(`🔢 Liquidation calculation:`, {
@@ -233,8 +256,31 @@ export function useLiquidation() {
       // Note: In a real liquidation system, the smart contract would handle the correct payment amounts
       // Here we're simulating by redeeming tokens (which gives full value) but tracking what SHOULD happen
       
+      // Get current USDC balance before mock transfer
+      const liquidatorUsdcBefore = await usdcContract.balanceOf(userAddress);
+      const liquidatorUsdcBeforeFormatted = parseFloat(ethers.formatUnits(liquidatorUsdcBefore, 6));
+      console.log(`💰 Liquidator USDC balance before: ${liquidatorUsdcBeforeFormatted.toFixed(2)}`);
+      
+      // Create mock USDC transfers for liquidation
+      const mockTransferData = {
+        liquidatorPayment: {
+          from: vault.owner,
+          to: userAddress,
+          amount: totalPaymentToLiquidator.toFixed(2),
+          reason: `Liquidation payout (debt + 5% bonus) for ${vault.tokenType} vault`
+        },
+        ownerRefund: remainingCollateral > 0 ? {
+          from: 'vault',
+          to: vault.owner,
+          amount: remainingCollateral.toFixed(2),
+          reason: `Remaining collateral refund after liquidation`
+        } : null
+      };
+      
+      console.log(`📝 Creating mock USDC transfers:`, mockTransferData);
+      
       // Mark this vault as liquidated in backend (so it disappears from opportunities)
-      await fetch('/api/v1/liquidate-vault', {
+      const liquidateResponse = await fetch('/api/v1/liquidate-vault', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -246,9 +292,21 @@ export function useLiquidation() {
           bonus: bonusAmount.toFixed(2),
           totalCollateral: totalCollateral.toFixed(2),
           remainingCollateral: Math.max(0, remainingCollateral).toFixed(2), // What owner gets back
-          txHash: receipt.hash
+          txHash: receipt.hash,
+          mockTransfers: mockTransferData // Include mock transfers
         })
       });
+      
+      if (!liquidateResponse.ok) {
+        console.error('Failed to mark vault as liquidated:', await liquidateResponse.text());
+      }
+      
+      // Simulate USDC balance update (in a real system, the contract would handle this)
+      const liquidatorUsdcAfter = liquidatorUsdcBeforeFormatted + totalPaymentToLiquidator;
+      console.log(`💰 Liquidator USDC balance after: ${liquidatorUsdcAfter.toFixed(2)} (+${totalPaymentToLiquidator.toFixed(2)})`);
+      
+      // Force refresh balances
+      await queryClient.invalidateQueries({ queryKey: ['balances'] });
 
       // Generate unique vault ID
       const uniqueVaultId = `${vault.tokenType}-${vault.owner.slice(-4)}-${Math.random().toString(36).substr(2, 5)}`;
