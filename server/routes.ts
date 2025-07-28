@@ -405,40 +405,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`✅ VAULT DESIGN CORRECT: One vault per user tracking minting activity only`);
       console.log(`Vault data (minting only): collateral=${ethers.formatUnits(bvixPosition.collateral, 6)}, debt=${ethers.formatEther(bvixPosition.debt)}`);
 
-      // POST-LIQUIDATION VAULT LOGIC: Check if user has fresh minting activity after liquidation
+      // FRESH VAULT DETECTION: Check if user has fresh vault after liquidation
       const rawCollateral = parseFloat(ethers.formatUnits(bvixPosition.collateral, 6));
       const rawDebt = parseFloat(ethers.formatEther(bvixPosition.debt));
       const bvixLiquidated = isVaultLiquidated('BVIX', userAddress);
+      const { hasFreshVaultAfterLiquidation } = await import('./services/liquidation.js');
+      const freshVaultData = hasFreshVaultAfterLiquidation('BVIX', userAddress);
       
       let bvixCollateral, bvixDebt;
       
-      console.log(`🔍 LIQUIDATION CHECK: bvixLiquidated=${bvixLiquidated}, rawCollateral=${rawCollateral}, rawDebt=${rawDebt}`);
+      console.log(`🔍 VAULT CHECK: liquidated=${bvixLiquidated}, freshVault=${!!freshVaultData}, rawCollateral=${rawCollateral}, rawDebt=${rawDebt}`);
       
-      if (bvixLiquidated && rawCollateral > 0 && rawDebt > 0) {
-        // Fresh minting after liquidation detected - clear liquidation and show new vault
-        const { clearVaultLiquidation } = await import('./services/liquidation.js');
-        clearVaultLiquidation('BVIX', userAddress);
-        
-        // For fresh vault after liquidation, show only the NEW minting activity
-        // Current contract shows cumulative (997 USDC, 19.7 BVIX) but fresh mint was $400 at 120%
-        const freshCollateral = "400.0";  // User's fresh $400 mint
-        const freshDebt = "7.84";         // ~$400 / (1.20 * $42.15) = 7.84 BVIX
-        
-        bvixCollateral = freshCollateral;
-        bvixDebt = freshDebt;
-        
-        console.log(`🔄 NEW VAULT CREATED: Fresh $${freshCollateral} mint after liquidation - ${freshDebt} BVIX debt (120% CR)`);
-        console.log(`📊 Contract shows cumulative: ${rawCollateral} USDC, ${rawDebt} BVIX (includes old liquidated data)`);
+      if (freshVaultData) {
+        // Show isolated fresh vault data (not cumulative contract data)
+        bvixCollateral = freshVaultData.freshVaultCollateral!;
+        bvixDebt = freshVaultData.freshVaultDebt!;
+        console.log(`🆕 FRESH VAULT: Showing isolated fresh vault - ${bvixCollateral} USDC, ${bvixDebt} BVIX (ignoring contract cumulative data)`);
       } else if (bvixLiquidated) {
-        // Still liquidated with no new activity
+        // Liquidated with no fresh vault
         bvixCollateral = "0";
         bvixDebt = "0";
-        console.log(`🔥 VAULT LIQUIDATED: BVIX vault for ${userAddress} was liquidated - showing 0/0 (vault closed)`);
+        console.log(`🔥 VAULT LIQUIDATED: ${userAddress} vault closed - showing 0/0`);
       } else {
-        // Normal active vault
+        // Normal vault (no liquidation history)
         bvixCollateral = ethers.formatUnits(bvixPosition.collateral, 6);
         bvixDebt = ethers.formatEther(bvixPosition.debt);
-        console.log(`💰 ACTIVE VAULT: ${bvixCollateral} USDC collateral, ${bvixDebt} BVIX debt (minting history)`);
+        console.log(`💰 NORMAL VAULT: ${bvixCollateral} USDC collateral, ${bvixDebt} BVIX debt`);
       }
       
       // Vault status already logged above based on liquidation state
