@@ -396,7 +396,13 @@ export function useLiquidation() {
       const liquidationKeys = allKeys.filter(key => key.includes('liquidation-history'));
       liquidationKeys.forEach(key => localStorage.removeItem(key));
       
-      console.log(`🧹 Cleared ${liquidationKeys.length} old liquidation history keys:`, liquidationKeys);
+      // ALSO clear any other potential storage that might have inconsistent vault IDs
+      localStorage.removeItem('liquidation-history');
+      localStorage.removeItem(`liquidation-history-${userAddress}`);
+      localStorage.removeItem(`liquidation-history-${vault.owner}`);
+      
+      console.log(`🧹 Cleared ${liquidationKeys.length} old liquidation history keys plus specific user keys`);
+      console.log(`🔄 Creating fresh transaction history with vault ID: ${uniqueVaultId}`);
       
       // Store liquidator history in GLOBAL localStorage (for current user who is liquidating)
       const globalHistory = JSON.parse(localStorage.getItem('liquidation-history') || '[]');
@@ -716,7 +722,7 @@ export function useLiquidationHistory() {
                 vault: {
                   owner: liq.owner,
                   tokenType: liq.tokenType,
-                  vaultId: `${liq.tokenType}-${liq.owner.slice(-4)}-${liq.txHash.slice(-8)}`.toLowerCase()
+                  vaultId: `${liq.tokenType.toLowerCase()}-${liq.owner.slice(-4)}-${liq.txHash.slice(-8)}`
                 },
                 bonus: liq.bonus, // FIXED: Use actual bonus amount
                 collateralSeized: liq.collateralSeized,
@@ -754,7 +760,7 @@ export function useLiquidationHistory() {
         vault: {
           owner: liq.owner,
           tokenType: liq.tokenType,
-          vaultId: `${liq.tokenType}-${liq.owner.slice(-4)}-${liq.txHash.slice(-8)}`.toLowerCase()
+          vaultId: `${liq.tokenType.toLowerCase()}-${liq.owner.slice(-4)}-${liq.txHash.slice(-8)}`
         },
         bonus: liq.bonus,
         collateralSeized: liq.collateralSeized,
