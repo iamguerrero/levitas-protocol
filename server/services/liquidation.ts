@@ -56,16 +56,21 @@ function saveLiquidations(liquidations: Map<string, LiquidationState>) {
 // Persistent storage for liquidations
 const liquidations = loadLiquidations();
 
-export function recordLiquidation(liquidation: LiquidationState) {
+export function recordLiquidation(liquidation: LiquidationState & { contractStateAtLiquidation?: { collateral: string; debt: string } }) {
   const key = `${liquidation.tokenType.toLowerCase()}_${liquidation.owner}`;
   
-  // Mark the vault as fully liquidated with no fresh activity
+  // Store the contract state at time of liquidation
+  // This is critical - when user mints again, we subtract this to get ONLY the new mint
   const liquidationRecord = {
     ...liquidation,
-    freshVaultCollateral: undefined, // No fresh vault after liquidation
+    freshVaultCollateral: undefined, // No fresh vault yet
     freshVaultDebt: undefined,
     preActivationCollateral: undefined,
-    preActivationDebt: undefined
+    preActivationDebt: undefined,
+    contractStateAtLiquidation: liquidation.contractStateAtLiquidation || {
+      collateral: "0",
+      debt: "0"
+    }
   };
   
   liquidations.set(key, liquidationRecord);
@@ -76,7 +81,8 @@ export function recordLiquidation(liquidation: LiquidationState) {
     liquidator: liquidation.liquidator,
     payment: `$${liquidation.collateralSeized} USDC`,
     ownerRefund: `$${liquidation.ownerRefund} USDC`,
-    vaultClosed: true
+    vaultClosed: true,
+    contractState: liquidationRecord.contractStateAtLiquidation
   });
 }
 
@@ -133,28 +139,21 @@ export async function detectAndUpdateFreshVaultActivity(
     return liquidation;
   }
   
-  // AUTO-DETECT: If current activity exceeds liquidation amounts, there's fresh activity
-  const liquidatedCollateral = parseFloat(liquidation.collateralSeized);
-  const liquidatedDebt = parseFloat(liquidation.debtRepaid);
-  
-  // Check if there's significant new activity beyond liquidation amounts
-  // (allowing for small precision differences)
-  if (currentCollateral > liquidatedCollateral + 50 || currentDebt > liquidatedDebt + 1) {
-    console.log(`🆕 FRESH VAULT ACTIVITY DETECTED for ${tokenType} ${owner}:`);
-    console.log(`   Current: ${currentCollateral} USDC, ${currentDebt} ${tokenType}`);
-    console.log(`   Liquidated: ${liquidatedCollateral} USDC, ${liquidatedDebt} ${tokenType}`);
+  // LIQUIDATED VAULTS ARE GONE FOREVER
+  // If there's ANY activity after liquidation, it's a COMPLETELY NEW VAULT
+  if (currentCollateral > 0 || currentDebt > 0) {
+    console.log(`🆕 NEW VAULT CREATED AFTER LIQUIDATION for ${tokenType} ${owner}:`);
+    console.log(`   New vault: ${currentCollateral} USDC collateral, ${currentDebt} ${tokenType} debt`);
+    console.log(`   Previous vault was liquidated and is gone forever`);
     
-    // Calculate pre-activation amounts (what existed before fresh activity)
-    const preActivationCollateral = Math.max(0, currentCollateral * 0.2); // Estimate pre-activity
-    const preActivationDebt = Math.max(0, currentDebt * 0.2); // Estimate pre-activity
-    
-    // Update liquidation record with fresh vault data
+    // The current contract state IS the fresh vault - no calculations needed
+    // This is a brand new vault with only the recent mint activity
     const updatedLiquidation = {
       ...liquidation,
-      preActivationCollateral: preActivationCollateral.toString(),
-      preActivationDebt: preActivationDebt.toString(),
-      freshVaultCollateral: (currentCollateral - preActivationCollateral).toString(),
-      freshVaultDebt: (currentDebt - preActivationDebt).toString()
+      preActivationCollateral: "0", // Nothing before - it's a new vault
+      preActivationDebt: "0",
+      freshVaultCollateral: currentCollateral.toString(),
+      freshVaultDebt: currentDebt.toString()
     };
     
     liquidations.set(key, updatedLiquidation);
