@@ -60,25 +60,31 @@ export default function AppDashboard() {
                             {item.tokenType || item.vault?.tokenType || 'UNKNOWN'}
                           </Badge>
                           <span className="font-semibold">
-                            {item.type === 'liquidation' ? 'Liquidated' : item.type === 'liquidated' ? 'Got Liquidated' : item.type || 'Liquidation'}
+                            {item.isLiquidator === true ? 'You Liquidated' : item.isLiquidator === false ? 'You Got Liquidated' : item.type === 'liquidation' ? 'Liquidated' : item.type === 'liquidated' ? 'Got Liquidated' : 'Liquidation'}
                           </span>
                           <span className="text-sm text-gray-500">
                             Vault {item.vault?.vaultId ? `#${item.vault.vaultId}` : '#001'}
                           </span>
                         </div>
                         <div className="text-right">
-                          <p className="font-medium text-green-600">+${item.bonus || '0.00'} USDC</p>
+                          {item.isLiquidator === true ? (
+                            <p className="font-medium text-green-600">+${item.bonus || '0.00'} USDC Bonus</p>
+                          ) : item.isLiquidator === false ? (
+                            <p className="font-medium text-red-600">-${item.collateralSeized || '0.00'} USDC Lost</p>
+                          ) : (
+                            <p className="font-medium text-green-600">+${item.bonus || '0.00'} USDC</p>
+                          )}
                           <p className="text-xs text-gray-500">{new Date(item.timestamp).toLocaleString()}</p>
                         </div>
                       </div>
                       <div className="mt-3 pt-3 border-t grid grid-cols-3 gap-4 text-sm">
                         <div>
                           <p className="text-gray-500">Debt Repaid</p>
-                          <p className="font-medium">{item.debtRepaid} {item.tokenType || item.vault?.tokenType || 'UNKNOWN'}</p>
+                          <p className="font-medium">{item.amount || item.debtRepaid || '0'} {item.tokenType || item.vault?.tokenType || 'UNKNOWN'}</p>
                         </div>
                         <div>
-                          <p className="text-gray-500">Collateral Seized</p>
-                          <p className="font-medium">${item.collateralSeized} USDC</p>
+                          <p className="text-gray-500">{item.isLiquidator === false ? 'Collateral Lost' : 'Total Received'}</p>
+                          <p className="font-medium">${item.collateralSeized || '0.00'} USDC</p>
                         </div>
                         <div>
                           <p className="text-gray-500">Transaction</p>

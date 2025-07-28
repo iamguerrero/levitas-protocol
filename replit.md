@@ -32,6 +32,11 @@ This project is a decentralized finance (DeFi) application called Levitas Financ
 ✓ **LIQUIDATION OPPORTUNITIES UPDATED** - Now shows actual user's EVIX vault at 119% CR as liquidatable opportunity with proper 5% bonus calculation
 ✓ **VAULT SUMMARY FIXED TO USE ONLY ACTIVE POSITIONS** - Corrected vault summary CR calculation to only count active vaults (positions with collateral > 0), not personal wallet balances. Personal EVIX/BVIX tokens are not protocol debt
 ✅ **REAL LIQUIDATION IMPLEMENTATION** - Created proper liquidation logic that actually interacts with smart contracts for both BVIX and EVIX tokens, updates wallet balances (decreases EVIX/BVIX, increases USDC), removes liquidated vaults from opportunities, stores transaction history, and invalidates caches
+✅ **TRANSACTION HISTORY BADGES** - Green badges for liquidators showing bonus earned, red badges for liquidatees showing collateral lost, with proper isLiquidator flag tracking
+✅ **USDC BALANCE UPDATES** - Liquidation process redeems tokens for USDC, updating liquidator's wallet balance in real-time with before/after logging
+✅ **BACKEND LIQUIDATION SERVICE** - Created liquidation.ts service to track liquidated vaults, preventing them from reappearing in opportunities list
+✅ **PROPER BURN MECHANICS** - Liquidators burn their BVIX/EVIX tokens (via redemption) to pay debt, receiving USDC collateral + 5% bonus
+✅ **SPRINT 2.2 COMPLETE** - All 6 liquidation flow points implemented: mint creates vaults, redeem closes positions, sub-120% CR vaults appear in center, liquidators burn tokens for USDC+bonus without affecting their vaults, owners receive refunds and positions close, history shows proper badges
 
 ❌ **BVIX V7 OWNERSHIP ISSUE IDENTIFIED** - BVIX V7 contracts have ownership mismatch preventing minting: BVIX token owner (0x4d0ddf...) ≠ V7 mint/redeem contract owner (0x18633e...). Fresh deployment needed for full BVIX functionality
 

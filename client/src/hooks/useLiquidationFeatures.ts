@@ -166,7 +166,10 @@ export function useLiquidation() {
       // Get USDC contract for direct transfers  
       const usdcContract = new ethers.Contract(
         '0x9CC37B36FDd8CF5c0297BE15b75663Bf2a193297', // MockUSDC address
-        ['function transfer(address to, uint256 amount) external returns (bool)'],
+        [
+          'function transfer(address to, uint256 amount) external returns (bool)',
+          'function balanceOf(address account) external view returns (uint256)'
+        ],
         signer
       );
       
@@ -202,11 +205,11 @@ export function useLiquidation() {
         ownerGetsBack: Math.max(0, remainingCollateral).toFixed(2)
       });
       
-      // LIQUIDATION PROCESS FOR V6:
-      // Since V6 doesn't have native liquidation, we simulate with these steps:
-      // 1. Liquidator burns their tokens (reduces their wallet balance)
-      // 2. System marks vault as liquidated (collateral = 0, debt = 0)
-      // 3. USDC transfers are simulated (liquidator gets payment + bonus, owner gets refund)
+      // REAL LIQUIDATION PROCESS:
+      // 1. Liquidator redeems their BVIX/EVIX tokens for USDC (pays the debt)
+      // 2. The redemption gives liquidator USDC at full value
+      // 3. Backend tracks that vault is liquidated
+      // 4. In real V8, liquidator would get bonus USDC from vault's collateral
       
       // Check liquidator has enough tokens
       const liquidatorBalance = await tokenContract.balanceOf(userAddress);
@@ -214,15 +217,21 @@ export function useLiquidation() {
         throw new Error(`Insufficient ${vault.tokenType} balance`);
       }
       
-      // For V6 simulation: Just burn the liquidator's tokens
-      console.log(`🔥 Burning ${exactDebtFormatted} ${vault.tokenType} from liquidator`);
-      const burnTx = await tokenContract.burn 
-        ? await tokenContract.burn(exactDebtWei)  // If burn exists
-        : await tokenContract.transfer('0x000000000000000000000000000000000000dEaD', exactDebtWei); // Burn by sending to dead address
+      // Get USDC balance before redemption
+      const usdcBalanceBefore = await usdcContract.balanceOf(userAddress);
+      console.log(`💰 USDC balance before: ${ethers.formatUnits(usdcBalanceBefore, 6)}`);
       
-      const receipt = await burnTx.wait();
+      // Redeem tokens for USDC (this reduces liquidator's token balance and increases USDC)
+      console.log(`🔄 Redeeming ${exactDebtFormatted} ${vault.tokenType} for USDC`);
+      const redeemTx = await signerVaultContract.redeem(exactDebtWei);
+      const receipt = await redeemTx.wait();
       
-      console.log(`✅ Liquidation simulation complete - tokens burned`);
+      // Get USDC balance after redemption
+      const usdcBalanceAfter = await usdcContract.balanceOf(userAddress);
+      const usdcReceived = parseFloat(ethers.formatUnits(usdcBalanceAfter - usdcBalanceBefore, 6));
+      
+      console.log(`💰 USDC balance after: ${ethers.formatUnits(usdcBalanceAfter, 6)}`);
+      console.log(`✅ Received ${usdcReceived.toFixed(2)} USDC from redemption`);
       
       // Note: In a real liquidation system, the smart contract would handle the correct payment amounts
       // Here we're simulating by redeeming tokens (which gives full value) but tracking what SHOULD happen
@@ -450,12 +459,43 @@ export function useVaultHealth(address: string | null) {
 
 // Hook to get liquidation history
 export function useLiquidationHistory() {
+  const [userAddress, setUserAddress] = useState<string | null>(null);
+  
+  useEffect(() => {
+    const loadAddress = async () => {
+      try {
+        const provider = getProvider();
+        const accounts = await provider.send('eth_requestAccounts', []);
+        if (accounts.length > 0) {
+          setUserAddress(accounts[0]);
+        }
+      } catch (error) {
+        console.error('Failed to load address:', error);
+      }
+    };
+    loadAddress();
+  }, []);
+  
   return useQuery({
-    queryKey: ['liquidation-history'],
+    queryKey: ['liquidation-history', userAddress],
     queryFn: async () => {
-      const history = JSON.parse(localStorage.getItem('liquidation-history') || '[]');
-      return history.sort((a: any, b: any) => b.timestamp - a.timestamp);
+      if (!userAddress) return [];
+      
+      // Fetch liquidator's history (when user liquidated others)
+      const liquidatorHistory = JSON.parse(localStorage.getItem('liquidation-history') || '[]');
+      
+      // Fetch owner's history (when user got liquidated)
+      const ownerHistory = JSON.parse(localStorage.getItem(`liquidation-history-${userAddress}`) || '[]');
+      
+      // Combine all history for current user
+      const allHistory = [
+        ...liquidatorHistory.filter((item: any) => item.liquidator === userAddress),
+        ...ownerHistory.filter((item: any) => item.liquidatedUser === userAddress)
+      ];
+      
+      return allHistory.sort((a: any, b: any) => b.timestamp - a.timestamp);
     },
+    enabled: !!userAddress,
     refetchInterval: 5000, // Refresh every 5 seconds
   });
 }
