@@ -383,7 +383,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Liquidation tracking endpoint
   app.post('/api/v1/liquidate-vault', async (req, res) => {
     try {
-      const { tokenType, owner, liquidator, debtRepaid, collateralSeized, bonus, txHash } = req.body;
+      const { tokenType, owner, liquidator, debtRepaid, collateralSeized, bonus, totalCollateral, remainingCollateral, txHash } = req.body;
       
       // Store liquidated vaults in memory (in production, use database)
       const liquidationKey = `liquidated_${tokenType.toLowerCase()}_${owner}`;
@@ -394,6 +394,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         debtRepaid,
         collateralSeized,
         bonus,
+        totalCollateral,
+        remainingCollateral,
         txHash,
         timestamp: Date.now()
       };
@@ -403,6 +405,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       global.liquidatedVaults[liquidationKey] = liquidationData;
       
       console.log(`📋 Vault liquidated: ${tokenType} owner ${owner} by ${liquidator}`);
+      console.log(`💰 Liquidation details: Total collateral: $${totalCollateral}, Liquidator gets: $${collateralSeized}, Owner gets back: $${remainingCollateral}`);
       
       res.json({ success: true, liquidation: liquidationData });
     } catch (error) {
