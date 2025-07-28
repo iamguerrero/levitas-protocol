@@ -2,6 +2,12 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { ethers } from "ethers";
+import { recordLiquidation, isVaultLiquidated, getLiquidation, getAllLiquidations, clearLiquidations } from './services/liquidation';
+
+// Declare global types for TypeScript
+declare global {
+  var liquidatedVaults: Record<string, any> | undefined;
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // put application routes here
@@ -183,9 +189,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const cr = debt > 0 ? (collateral / (debt * price)) * 100 : 0;
             
             // Check if this vault has been liquidated
-            const liquidationKey = `liquidated_bvix_${userAddress}`;
-            global.liquidatedVaults = global.liquidatedVaults || {};
-            const isLiquidated = !!global.liquidatedVaults[liquidationKey];
+            const isLiquidated = isVaultLiquidated('BVIX', userAddress);
             
             console.log(`🔍 BVIX Position Check for ${userAddress}:`, {
               collateral,
@@ -219,9 +223,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const cr = debt > 0 ? (collateral / (debt * price)) * 100 : 0;
             
             // Check if this vault has been liquidated
-            const liquidationKey = `liquidated_evix_${userAddress}`;
-            global.liquidatedVaults = global.liquidatedVaults || {};
-            const isLiquidated = !!global.liquidatedVaults[liquidationKey];
+            const isLiquidated = isVaultLiquidated('EVIX', userAddress);
             
             console.log(`🔍 EVIX Position Check for ${userAddress}:`, {
               collateral,
@@ -306,9 +308,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ]);
 
       // Check if BVIX vault was liquidated and format position accordingly
-      const bvixLiquidationKey = `liquidated_bvix_${userAddress}`;
-      global.liquidatedVaults = global.liquidatedVaults || {};
-      const bvixLiquidated = !!global.liquidatedVaults[bvixLiquidationKey];
+      const bvixLiquidated = isVaultLiquidated('BVIX', userAddress);
       
       const bvixCollateral = bvixLiquidated ? "0" : ethers.formatUnits(bvixPosition.collateral, 6); // USDC has 6 decimals
       const bvixDebt = bvixLiquidated ? "0" : ethers.formatEther(bvixPosition.debt); // Tokens have 18 decimals
@@ -316,9 +316,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const bvixPriceFormatted = parseFloat(ethers.formatUnits(bvixPrice, 18));
       
       // Check if EVIX vault was liquidated and format position accordingly
-      const evixLiquidationKey = `liquidated_evix_${userAddress}`;
-      global.liquidatedVaults = global.liquidatedVaults || {};
-      const evixLiquidated = !!global.liquidatedVaults[evixLiquidationKey];
+      const evixLiquidated = isVaultLiquidated('EVIX', userAddress);
       
       const evixCollateral = evixLiquidated ? "0" : ethers.formatUnits(evixPosition.collateral, 6);
       const evixDebt = evixLiquidated ? "0" : ethers.formatEther(evixPosition.debt);
@@ -385,32 +383,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { tokenType, owner, liquidator, debtRepaid, collateralSeized, bonus, totalCollateral, remainingCollateral, txHash } = req.body;
       
-      // Store liquidated vaults in memory (in production, use database)
-      const liquidationKey = `liquidated_${tokenType.toLowerCase()}_${owner}`;
-      const liquidationData = {
+      const ownerRefund = remainingCollateral || '0';
+      
+      // Record liquidation in service
+      recordLiquidation({
         tokenType,
         owner,
         liquidator,
         debtRepaid,
         collateralSeized,
         bonus,
-        totalCollateral,
-        remainingCollateral,
-        txHash,
-        timestamp: Date.now()
-      };
+        ownerRefund,
+        timestamp: Date.now(),
+        txHash
+      });
       
-      // For simplicity, store in a global object (in production, use proper storage)
-      global.liquidatedVaults = global.liquidatedVaults || {};
-      global.liquidatedVaults[liquidationKey] = liquidationData;
-      
-      console.log(`📋 Vault liquidated: ${tokenType} owner ${owner} by ${liquidator}`);
-      console.log(`💰 Liquidation details: Total collateral: $${totalCollateral}, Liquidator gets: $${collateralSeized}, Owner gets back: $${remainingCollateral}`);
-      
-      res.json({ success: true, liquidation: liquidationData });
+      res.json({ 
+        success: true, 
+        liquidation: {
+          tokenType,
+          owner,
+          liquidator,
+          debtRepaid,
+          collateralSeized,
+          bonus,
+          ownerRefund,
+          txHash,
+          timestamp: Date.now()
+        }
+      });
     } catch (error) {
       console.error('Error processing liquidation:', error);
       res.status(500).json({ error: 'Failed to process liquidation' });
+    }
+  });
+  
+  // Get liquidation history
+  app.get('/api/v1/liquidations', async (req, res) => {
+    try {
+      const liquidations = getAllLiquidations();
+      res.json({ liquidations });
+    } catch (error) {
+      console.error('Error fetching liquidations:', error);
+      res.status(500).json({ error: 'Failed to fetch liquidations' });
     }
   });
 
