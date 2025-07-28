@@ -243,8 +243,18 @@ export function useLiquidation() {
       // Since V6 contracts don't have liquidation, we simulate it:
       // 1. Burn liquidator's tokens (send to dead address)
       console.log(`🔥 Burning ${exactDebtFormatted} ${vault.tokenType} from liquidator's wallet`);
+      console.log(`📊 Pre-liquidation balances:`, {
+        liquidatorBVIX: ethers.formatEther(await tokenContract.balanceOf(userAddress)),
+        ownerBVIX: ethers.formatEther(await tokenContract.balanceOf(vault.owner))
+      });
+      
       const burnTx = await tokenContract.transfer('0x000000000000000000000000000000000000dEaD', exactDebtWei);
       const receipt = await burnTx.wait();
+      
+      console.log(`📊 Post-burn balances:`, {
+        liquidatorBVIX: ethers.formatEther(await tokenContract.balanceOf(userAddress)),
+        ownerBVIX: ethers.formatEther(await tokenContract.balanceOf(vault.owner))
+      });
       
       // 2. Calculate what liquidator SHOULD receive (debt value + 5% bonus)
       const liquidatorPayment = totalPaymentToLiquidator; // This is debt value + bonus
