@@ -77,7 +77,34 @@ export function useUserPositions() {
       const bvixContract = new Contract(BVIX_VAULT_ADDRESS, mintRedeemV6ABI, provider);
       const evixContract = new Contract(EVIX_VAULT_ADDRESS, evixMintRedeemV6ABI, provider);
 
-      // Don't check for liquidated vaults - only use real blockchain data
+      // Use backend API for accurate liquidated vault detection instead of raw blockchain
+      try {
+        const response = await fetch(`/api/v1/user-positions/${address}`);
+        if (response.ok) {
+          const backendData = await response.json();
+          
+          console.log('🏦 Using backend API for liquidated vault detection:', backendData);
+          
+          // Return backend data which properly handles liquidated vaults
+          return {
+            bvix: {
+              collateral: backendData.bvix.collateral,
+              debt: backendData.bvix.debt,
+              cr: backendData.bvix.cr
+            },
+            evix: {
+              collateral: backendData.evix.collateral,  
+              debt: backendData.evix.debt,
+              cr: backendData.evix.cr
+            },
+            prices: backendData.prices
+          };
+        }
+      } catch (error) {
+        console.error('Backend API failed, falling back to blockchain data:', error);
+      }
+
+      // Fallback to blockchain data if API fails
       const isBVIXLiquidated = false;
       const isEVIXLiquidated = false;
       

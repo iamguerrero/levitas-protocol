@@ -56,9 +56,11 @@ export default function AppDashboard() {
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <Badge>{item.tokenType || item.vault?.tokenType || 'UNKNOWN'}</Badge>
+                          <Badge className={item.isLiquidator === true ? 'bg-green-600 hover:bg-green-700' : item.isLiquidator === false ? 'bg-red-600 hover:bg-red-700' : ''}>
+                            {item.tokenType || item.vault?.tokenType || 'UNKNOWN'}
+                          </Badge>
                           <span className="font-semibold">
-                            {item.type === 'liquidation' ? 'Liquidated' : item.type || 'Liquidation'}
+                            {item.type === 'liquidation' ? 'Liquidated' : item.type === 'liquidated' ? 'Got Liquidated' : item.type || 'Liquidation'}
                           </span>
                           <span className="text-sm text-gray-500">
                             Vault {item.vault?.vaultId ? `#${item.vault.vaultId}` : '#001'}
@@ -72,7 +74,7 @@ export default function AppDashboard() {
                       <div className="mt-3 pt-3 border-t grid grid-cols-3 gap-4 text-sm">
                         <div>
                           <p className="text-gray-500">Debt Repaid</p>
-                          <p className="font-medium">{item.debtRepaid} {item.vault?.tokenType || 'EVIX'}</p>
+                          <p className="font-medium">{item.debtRepaid} {item.tokenType || item.vault?.tokenType || 'UNKNOWN'}</p>
                         </div>
                         <div>
                           <p className="text-gray-500">Collateral Seized</p>
