@@ -68,27 +68,35 @@ export default function AppDashboard() {
                         </div>
                         <div className="text-right">
                           {item.isLiquidator === true ? (
-                            <p className="font-medium text-green-600">+${item.bonus || '0.00'} USDC Bonus</p>
+                            <p className="font-medium text-green-600">+${parseFloat(item.bonus || '0').toFixed(2)} USDC Bonus</p>
                           ) : item.isLiquidator === false ? (
-                            <p className="font-medium text-red-600">-${item.collateralSeized || '0.00'} USDC Lost</p>
+                            <p className="font-medium text-red-600">-${parseFloat(item.bonus || '0').toFixed(2)} USDC Fee</p>
                           ) : (
-                            <p className="font-medium text-green-600">+${item.bonus || '0.00'} USDC</p>
+                            <p className="font-medium text-green-600">+${parseFloat(item.bonus || '0').toFixed(2)} USDC</p>
                           )}
                           <p className="text-xs text-gray-500">{new Date(item.timestamp).toLocaleString()}</p>
                         </div>
                       </div>
-                      <div className="mt-3 pt-3 border-t grid grid-cols-3 gap-4 text-sm">
+                      <div className="mt-3 pt-3 border-t grid grid-cols-4 gap-4 text-sm">
                         <div>
-                          <p className="text-gray-500">Debt Repaid</p>
+                          <p className="text-gray-500">{item.isLiquidator === false ? 'Debt Repaid On Your Behalf' : 'Debt Repaid'}</p>
                           <p className="font-medium">{item.amount || item.debtRepaid || '0'} {item.tokenType || item.vault?.tokenType || 'UNKNOWN'}</p>
                         </div>
                         <div>
+                          <p className="text-gray-500">Debt Value</p>
+                          <p className="font-medium">${(() => {
+                            const debt = parseFloat(item.amount || item.debtRepaid || '0');
+                            const price = (item.tokenType || item.vault?.tokenType) === 'BVIX' ? 42.15 : 37.98;
+                            return (debt * price).toFixed(2);
+                          })()} USDC</p>
+                        </div>
+                        <div>
                           <p className="text-gray-500">{item.isLiquidator === false ? 'Collateral Lost' : 'Total Received'}</p>
-                          <p className="font-medium">${item.collateralSeized || '0.00'} USDC</p>
+                          <p className="font-medium">${parseFloat(item.collateralSeized || '0').toFixed(2)} USDC</p>
                         </div>
                         <div>
                           <p className="text-gray-500">Transaction</p>
-                          <p className="font-mono text-xs">{item.txHash?.slice(0, 10)}...</p>
+                          <p className="font-mono text-xs">{item.txHash ? `${item.txHash.slice(0, 10)}...` : 'Pending...'}</p>
                         </div>
                       </div>
                     </CardContent>
