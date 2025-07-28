@@ -491,26 +491,58 @@ export function useLiquidationHistory() {
     queryFn: async () => {
       if (!userAddress) return [];
       
-      // TESTING: Add mock liquidation record for testing if none exists
-      const existingLiquidatorHistory = JSON.parse(localStorage.getItem('liquidation-history') || '[]');
-      if (existingLiquidatorHistory.length === 0 && userAddress === '0xe18d3b075a241379d77fffe01ed1317dda0e8bac') {
-        const testLiquidationRecord = {
-          timestamp: Date.now() - 300000, // 5 minutes ago
-          liquidator: userAddress,
-          isLiquidator: true,
-          tokenType: 'BVIX',
-          vault: {
-            owner: '0x58bc63cbb24854f0a5edeaf3c5e530192dcbc24b',
-            tokenType: 'BVIX',
-            vaultId: 1
-          },
-          bonusReceived: '14.96',
-          collateralSeized: '14.96',
-          debtRepaid: '5.91'
-        };
-        existingLiquidatorHistory.push(testLiquidationRecord);
-        localStorage.setItem('liquidation-history', JSON.stringify(existingLiquidatorHistory));
-        console.log('🧪 Added test liquidation record for liquidator:', testLiquidationRecord);
+      // SYNC: Fetch recent liquidations from backend and sync with localStorage
+      try {
+        const response = await fetch('/api/v1/liquidations');
+        const data = await response.json();
+        const backendLiquidations = data.liquidations || [];
+        
+        console.log(`🔄 Syncing ${backendLiquidations.length} backend liquidations with localStorage`);
+        
+        // Check for liquidations involving current user as liquidator
+        const userLiquidations = backendLiquidations.filter((liq: any) => 
+          liq.liquidator.toLowerCase() === userAddress.toLowerCase()
+        );
+        
+        if (userLiquidations.length > 0) {
+          const existingLiquidatorHistory = JSON.parse(localStorage.getItem('liquidation-history') || '[]');
+          let hasNew = false;
+          
+          userLiquidations.forEach((liq: any) => {
+            // Check if this liquidation is already in localStorage
+            const exists = existingLiquidatorHistory.some((existing: any) => 
+              existing.timestamp === liq.timestamp && existing.liquidator === liq.liquidator
+            );
+            
+            if (!exists) {
+              const liquidatorRecord = {
+                timestamp: liq.timestamp,
+                liquidator: liq.liquidator,
+                isLiquidator: true,
+                tokenType: liq.tokenType,
+                vault: {
+                  owner: liq.owner,
+                  tokenType: liq.tokenType,
+                  vaultId: 1
+                },
+                bonusReceived: liq.collateralSeized,
+                collateralSeized: liq.collateralSeized,
+                debtRepaid: liq.debtRepaid
+              };
+              
+              existingLiquidatorHistory.unshift(liquidatorRecord);
+              hasNew = true;
+              console.log('🔄 Synced new liquidation to localStorage:', liquidatorRecord);
+            }
+          });
+          
+          if (hasNew) {
+            localStorage.setItem('liquidation-history', JSON.stringify(existingLiquidatorHistory));
+            console.log(`✅ Updated localStorage with new liquidation records`);
+          }
+        }
+      } catch (error) {
+        console.error('❌ Failed to sync liquidations from backend:', error);
       }
       
       // Fetch liquidator's history (when user liquidated others) - this is global

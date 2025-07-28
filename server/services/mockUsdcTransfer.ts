@@ -9,8 +9,39 @@ interface MockTransfer {
   timestamp: number;
 }
 
-// Store mock transfers in memory
-const mockTransfers: MockTransfer[] = [];
+// Persistent storage for mock USDC transfers using JSON file
+import fs from 'fs';
+import path from 'path';
+
+const TRANSFERS_FILE = path.join(process.cwd(), 'mock-transfers.json');
+
+// Load transfers from file on startup
+function loadTransfers(): MockTransfer[] {
+  try {
+    if (fs.existsSync(TRANSFERS_FILE)) {
+      const data = fs.readFileSync(TRANSFERS_FILE, 'utf8');
+      const transfers = JSON.parse(data);
+      console.log(`📂 Loaded ${transfers.length} mock USDC transfer records from file`);
+      return transfers;
+    }
+  } catch (error) {
+    console.error('Error loading transfers file:', error);
+  }
+  return [];
+}
+
+// Save transfers to file
+function saveTransfers(transfers: MockTransfer[]) {
+  try {
+    fs.writeFileSync(TRANSFERS_FILE, JSON.stringify(transfers, null, 2));
+    console.log(`💾 Saved ${transfers.length} mock USDC transfer records to file`);
+  } catch (error) {
+    console.error('Error saving transfers file:', error);
+  }
+}
+
+// Persistent storage for mock USDC transfers
+const mockTransfers = loadTransfers();
 
 export function recordMockTransfer(from: string, to: string, amount: string, reason: string) {
   const transfer: MockTransfer = {
@@ -22,6 +53,7 @@ export function recordMockTransfer(from: string, to: string, amount: string, rea
   };
   
   mockTransfers.push(transfer);
+  saveTransfers(mockTransfers);
   console.log(`💸 Mock USDC Transfer: ${amount} USDC from ${from} to ${to} (${reason})`);
   
   return transfer;
