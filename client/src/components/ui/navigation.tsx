@@ -68,11 +68,15 @@ export default function Navigation() {
             >
               Liquidity
             </a>
-            <Link href="/app">
-              <Button className="bg-blue-600 text-white hover:bg-blue-700">
-                Launch App
-              </Button>
-            </Link>
+            {location === "/app" || location === "/trading" || location === "/liquidation" ? (
+              <WalletConnect />
+            ) : (
+              <Link href="/app">
+                <Button className="bg-blue-600 text-white hover:bg-blue-700">
+                  Launch App
+                </Button>
+              </Link>
+            )}
           </div>
 
           <button
@@ -129,17 +133,11 @@ export default function Navigation() {
             >
               Governance
             </a>
-            {location === "/app" || location === "/trading" || location === "/liquidation" ? (
-              <div className="mt-2">
-                <WalletConnect />
-              </div>
-            ) : (
-              <Link href="/app">
-                <Button className="w-full mt-2 bg-blue-600 text-white hover:bg-blue-700">
-                  Launch App
-                </Button>
-              </Link>
-            )}
+            <Link href="/app">
+              <Button className="w-full mt-2 bg-blue-600 text-white hover:bg-blue-700">
+                Launch App
+              </Button>
+            </Link>
           </div>
         </div>
       )}

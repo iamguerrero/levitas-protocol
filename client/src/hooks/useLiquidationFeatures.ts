@@ -295,6 +295,12 @@ export function useLiquidation() {
       existingOwnerHistory.unshift(ownerRecord);
       localStorage.setItem(`liquidation-history-${vault.owner}`, JSON.stringify(existingOwnerHistory));
       
+      console.log(`💾 Stored transaction history:`);
+      console.log(`  - Global liquidation history now has ${existingLiquidatorHistory.length} records`);
+      console.log(`  - Owner-specific history for ${vault.owner} now has ${existingOwnerHistory.length} records`);
+      console.log(`  - Liquidator record (${userAddress}):`, liquidatorRecord);
+      console.log(`  - Owner record (${vault.owner}):`, ownerRecord);
+      
       console.log(`📋 Transaction history saved:
         - Liquidator (${userAddress}): GREEN badge liquidation record 
         - Vault owner (${vault.owner}): RED badge liquidated record`);
@@ -480,11 +486,15 @@ export function useLiquidationHistory() {
     queryFn: async () => {
       if (!userAddress) return [];
       
-      // Fetch liquidator's history (when user liquidated others)
+      // Fetch liquidator's history (when user liquidated others) - this is global
       const liquidatorHistory = JSON.parse(localStorage.getItem('liquidation-history') || '[]');
       
-      // Fetch owner's history (when user got liquidated)
+      // Fetch owner's history (when user got liquidated) - this is user-specific
       const ownerHistory = JSON.parse(localStorage.getItem(`liquidation-history-${userAddress}`) || '[]');
+      
+      console.log(`📋 Loading history for ${userAddress}:`);
+      console.log(`  - Liquidator records: ${liquidatorHistory.length} (filtered for user: ${liquidatorHistory.filter((item: any) => item.liquidator === userAddress).length})`);
+      console.log(`  - Owner records: ${ownerHistory.length}`);
       
       // Combine all history for current user
       const allHistory = [
