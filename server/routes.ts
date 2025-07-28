@@ -192,10 +192,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
+      // CRITICAL FIX: Get actual wallet balances from blockchain instead of vault position data
+      let actualBvixBalance = "0.0";
+      let actualEvixBalance = "0.0";
+      
+      if (userAddress) {
+        try {
+          // Get actual BVIX and EVIX wallet balances from blockchain
+          const [userBvixBalance, userEvixBalance] = await Promise.all([
+            bvixContract.balanceOf(userAddress),
+            evixContract.balanceOf(userAddress)
+          ]);
+          
+          actualBvixBalance = ethers.formatEther(userBvixBalance);
+          actualEvixBalance = ethers.formatEther(userEvixBalance);
+          
+          console.log(`💰 Actual wallet balances for ${userAddress}:`, {
+            bvix: actualBvixBalance,
+            evix: actualEvixBalance,
+            usdc: adjustedUsdcBalance
+          });
+        } catch (error) {
+          console.error('Error fetching wallet balances:', error);
+        }
+      }
+
       res.json({
         usdc: adjustedUsdcBalance, // Adjusted USDC balance with mock transfers
-        bvix: bvixSupply,
-        evix: evixSupply,
+        bvix: actualBvixBalance, // ACTUAL BLOCKCHAIN WALLET BALANCE
+        evix: actualEvixBalance, // ACTUAL BLOCKCHAIN WALLET BALANCE
         cr: Math.round(evixPositionCR * 100) / 100, // INDIVIDUAL EVIX VAULT CR ONLY
         price: price,
         evixPrice: evixPriceFormatted,
