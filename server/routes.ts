@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { ethers } from "ethers";
 import { recordLiquidation, isVaultLiquidated, getLiquidation, getAllLiquidations, clearLiquidations } from './services/liquidation';
+import { recordMockTransfer, getMockUsdcBalance, getMockTransfers } from './services/mockUsdcTransfer';
 
 // Declare global types for TypeScript
 declare global {
@@ -100,14 +101,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Calculate EVIX vault CR from actual position data (if exists)
       const evixVaultCR = evixValueInUsd > 0 ? (parseFloat(evixUsdcValue) / evixValueInUsd) * 100 : 0;
       
+      // Get real USDC balance and add mock transfers
+      const userAddress = req.query.address as string;
+      let adjustedUsdcBalance = totalUsdcFloat.toFixed(4);
+      
+      if (userAddress) {
+        adjustedUsdcBalance = getMockUsdcBalance(userAddress, totalUsdcFloat.toFixed(4));
+      }
+      
       res.json({
-        usdc: evixUsdcValue, // INDIVIDUAL EVIX VAULT USDC FROM POSITION
+        usdc: adjustedUsdcBalance, // Adjusted USDC balance with mock transfers
         bvix: bvixSupply,
         evix: evixSupply,
         cr: Math.round(evixVaultCR * 100) / 100, // INDIVIDUAL EVIX VAULT CR ONLY
         price: price,
         evixPrice: evixPriceFormatted,
-        usdcValue: parseFloat(evixUsdcValue), // INDIVIDUAL EVIX VAULT USDC FROM POSITION
+        usdcValue: parseFloat(adjustedUsdcBalance), // Adjusted USDC value
         bvixValueInUsd: 0, // No active BVIX position
         evixValueInUsd: evixValueInUsd,
         totalTokenValueInUsd: evixValueInUsd, // Only EVIX value
@@ -378,7 +387,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Liquidation tracking endpoint
+  // Liquidation tracking endpoint with mock USDC transfers
   app.post('/api/v1/liquidate-vault', async (req, res) => {
     try {
       const { tokenType, owner, liquidator, debtRepaid, collateralSeized, bonus, totalCollateral, remainingCollateral, txHash } = req.body;
@@ -396,6 +405,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ownerRefund,
         timestamp: Date.now(),
         txHash
+      });
+      
+      // Mock USDC transfers
+      // 1. Transfer collateral + bonus from vault to liquidator
+      recordMockTransfer(
+        'vault_collateral_pool',
+        liquidator,
+        collateralSeized,
+        `Liquidation payment for ${tokenType} vault`
+      );
+      
+      // 2. Transfer remaining collateral from vault to owner (if any)
+      if (parseFloat(ownerRefund) > 0) {
+        recordMockTransfer(
+          'vault_collateral_pool',
+          owner,
+          ownerRefund,
+          `Remaining collateral refund after liquidation`
+        );
+      }
+      
+      console.log(`✅ Vault liquidated with mock transfers:`, {
+        tokenType,
+        owner,
+        liquidator,
+        liquidatorReceived: collateralSeized,
+        ownerReceived: ownerRefund
       });
       
       res.json({ 
