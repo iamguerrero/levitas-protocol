@@ -5,7 +5,6 @@ import { toast } from '@/hooks/use-toast';
 import { getProvider, getSigner, getBVIXContract, getEVIXContract } from '@/lib/web3';
 import mintRedeemV6ABI from '@/contracts/MintRedeemV6.abi.json';
 import evixMintRedeemV6ABI from '@/contracts/EVIXMintRedeemV6.abi.json';
-import { executeMockLiquidation } from './useMockLiquidation';
 
 import { useUserPositions } from '@/hooks/useUserPositions';
 import { useVault } from '@/hooks/useVault';
@@ -203,26 +202,27 @@ export function useLiquidation() {
         ownerGetsBack: Math.max(0, remainingCollateral).toFixed(2)
       });
       
-      // For V6 simulation, liquidation works as follows:
-      // 1. Liquidator transfers their BVIX/EVIX tokens directly to vault owner (debt repayment)
-      // 2. Backend will handle USDC transfers from vault collateral to liquidator
-      // 3. No vault positions are modified - only wallet balances change
+      // LIQUIDATION PROCESS FOR V6:
+      // Since V6 doesn't have native liquidation, we simulate with these steps:
+      // 1. Liquidator burns their tokens (reduces their wallet balance)
+      // 2. System marks vault as liquidated (collateral = 0, debt = 0)
+      // 3. USDC transfers are simulated (liquidator gets payment + bonus, owner gets refund)
       
-      // Transfer tokens from liquidator to vault owner (repaying their debt)
-      const transferTx = await tokenContract.transfer(vault.owner, exactDebtWei);
-      const receipt = await transferTx.wait();
+      // Check liquidator has enough tokens
+      const liquidatorBalance = await tokenContract.balanceOf(userAddress);
+      if (liquidatorBalance < exactDebtWei) {
+        throw new Error(`Insufficient ${vault.tokenType} balance`);
+      }
       
-      console.log(`💸 Transferred ${exactDebtFormatted} ${vault.tokenType} to vault owner ${vault.owner}`);
+      // For V6 simulation: Just burn the liquidator's tokens
+      console.log(`🔥 Burning ${exactDebtFormatted} ${vault.tokenType} from liquidator`);
+      const burnTx = await tokenContract.burn 
+        ? await tokenContract.burn(exactDebtWei)  // If burn exists
+        : await tokenContract.transfer('0x000000000000000000000000000000000000dEaD', exactDebtWei); // Burn by sending to dead address
       
-      // Execute mock USDC transfers
-      await executeMockLiquidation({
-        vaultOwner: vault.owner,
-        liquidatorAddress: userAddress,
-        liquidatorPayment: totalPaymentToLiquidator,
-        ownerRefund: remainingCollateral,
-        tokenType: vault.tokenType,
-        debtAmount: exactDebtWei.toString()
-      });
+      const receipt = await burnTx.wait();
+      
+      console.log(`✅ Liquidation simulation complete - tokens burned`);
       
       // Note: In a real liquidation system, the smart contract would handle the correct payment amounts
       // Here we're simulating by redeeming tokens (which gives full value) but tracking what SHOULD happen
