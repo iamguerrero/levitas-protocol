@@ -56,7 +56,7 @@ export default function AppDashboard() {
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <Badge>{item.vault?.tokenType || 'EVIX'}</Badge>
+                          <Badge>{item.tokenType || item.vault?.tokenType || 'UNKNOWN'}</Badge>
                           <span className="font-semibold">
                             {item.type === 'liquidation' ? 'Liquidated' : item.type || 'Liquidation'}
                           </span>

@@ -426,6 +426,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Clear liquidations endpoint for testing
+  app.post('/api/v1/clear-liquidations', async (req, res) => {
+    try {
+      global.liquidatedVaults = {};
+      console.log('🧹 All liquidation records cleared');
+      res.json({ success: true, message: 'All liquidation records cleared' });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to clear liquidations' });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

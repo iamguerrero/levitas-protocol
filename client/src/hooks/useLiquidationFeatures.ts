@@ -170,24 +170,52 @@ export function useLiquidation() {
         signer
       );
       
-      // For V6 simulation, liquidation works as follows:
-      // 1. Liquidator burns their tokens (to simulate paying debt)
-      // 2. Liquidator gets USDC worth debt value + 5% bonus
-      // 3. Vault owner's position is marked as liquidated
+      // Get real oracle prices FIRST - BVIX uses 18 decimals, EVIX uses 8 decimals
+      const bvixOracle = new ethers.Contract('0xA6FAC514Fdc2C017FBCaeeDA27562dAC83Cf22cf', ['function getPrice() external view returns (uint256)'], provider);
+      const evixOracle = new ethers.Contract('0xBd6E9809B9608eCAc3610cA65327735CC3c08104', ['function getPrice() external view returns (uint256)'], provider);
       
-      // Burn liquidator's tokens first using exact debt amount (this reduces their balance)
+      let tokenPrice: number;
+      if (vault.tokenType === 'BVIX') {
+        const bvixPriceRaw = await bvixOracle.getPrice();
+        tokenPrice = parseFloat(ethers.formatUnits(bvixPriceRaw, 18)); // BVIX V8 oracle uses 18 decimals
+      } else {
+        const evixPriceRaw = await evixOracle.getPrice();
+        tokenPrice = parseFloat(ethers.formatUnits(evixPriceRaw, 8)); // EVIX oracle uses 8 decimals
+      }
+      
+      console.log(`🏦 Liquidation using real price: ${vault.tokenType} = $${tokenPrice}`);
+      
+      const exactDebtFormatted = ethers.formatEther(exactDebtWei);
+      const debtValue = parseFloat(exactDebtFormatted) * tokenPrice;
+      const bonusAmount = debtValue * 0.05;
+      const totalPaymentToLiquidator = debtValue + bonusAmount; // What liquidator should receive
+      
+      // Get the vault's total collateral to calculate remaining amount
+      const totalCollateral = parseFloat(ethers.formatUnits(vaultPosition.collateral, 6)); // USDC collateral
+      const remainingCollateral = totalCollateral - totalPaymentToLiquidator; // What vault owner gets back
+      
+      console.log(`🔢 Liquidation calculation:`, {
+        totalCollateral: totalCollateral.toFixed(2),
+        debtValue: debtValue.toFixed(2),
+        bonus: bonusAmount.toFixed(2),
+        liquidatorReceives: totalPaymentToLiquidator.toFixed(2),
+        ownerGetsBack: Math.max(0, remainingCollateral).toFixed(2)
+      });
+      
+      // For V6 simulation, liquidation works as follows:
+      // 1. Liquidator burns their tokens (to simulate paying debt) - this gives them full USDC value
+      // 2. We calculate the correct liquidation amounts and track the difference
+      // 3. The vault owner's position is marked as liquidated and they should get remaining collateral back
+      
+      // Burn liquidator's tokens (this gives them full USDC value for their tokens)
       const burnTx = vault.tokenType === 'BVIX'
-        ? await signerVaultContract.redeem(exactDebtWei) // Redeem = burn tokens, get USDC
+        ? await signerVaultContract.redeem(exactDebtWei) // This gives them full USDC value for tokens
         : await signerVaultContract.redeem(exactDebtWei);
       
       const receipt = await burnTx.wait();
       
-      // Calculate amounts using real oracle prices and exact debt amount
-      const tokenPrice = vault.tokenType === 'EVIX' ? 38.02 : 45.0; // Current prices
-      const exactDebtFormatted = ethers.formatEther(exactDebtWei);
-      const debtValue = parseFloat(exactDebtFormatted) * tokenPrice;
-      const bonusAmount = debtValue * 0.05;
-      const totalCollateralSeized = debtValue + bonusAmount;
+      // Note: In a real liquidation system, the smart contract would handle the correct payment amounts
+      // Here we're simulating by redeeming tokens (which gives full value) but tracking what SHOULD happen
       
       // Mark this vault as liquidated in backend (so it disappears from opportunities)
       await fetch('/api/v1/liquidate-vault', {
@@ -198,14 +226,16 @@ export function useLiquidation() {
           owner: vault.owner,
           liquidator: userAddress,
           debtRepaid: exactDebtFormatted,
-          collateralSeized: totalCollateralSeized.toFixed(2),
+          collateralSeized: totalPaymentToLiquidator.toFixed(2), // What liquidator actually gets
           bonus: bonusAmount.toFixed(2),
+          totalCollateral: totalCollateral.toFixed(2),
+          remainingCollateral: Math.max(0, remainingCollateral).toFixed(2), // What owner gets back
           txHash: receipt.hash
         })
       });
 
-      // Create liquidation record for history
-      const liquidationRecord = {
+      // Create liquidation record for LIQUIDATOR (the person executing this function)
+      const liquidatorRecord = {
         id: Date.now().toString(),
         type: 'liquidation' as const,
         vaultId: vault.vaultId,
@@ -213,19 +243,43 @@ export function useLiquidation() {
         amount: vault.debt,
         liquidator: userAddress,
         liquidatedUser: vault.owner,
-        collateralSeized: totalCollateralSeized.toFixed(2),
+        collateralSeized: totalPaymentToLiquidator.toFixed(2),
         bonus: bonusAmount.toFixed(2),
         txHash: receipt.hash,
         timestamp: Date.now(),
-        status: 'confirmed' as const
+        status: 'confirmed' as const,
+        isLiquidator: true // Flag to show this is for the liquidator
       };
 
-      // Store in localStorage for history tracking
-      const existingHistory = JSON.parse(localStorage.getItem('liquidation-history') || '[]');
-      existingHistory.unshift(liquidationRecord);
-      localStorage.setItem('liquidation-history', JSON.stringify(existingHistory));
+      // Create liquidation record for VAULT OWNER (different view)
+      const ownerRecord = {
+        id: (Date.now() + 1).toString(),
+        type: 'liquidated' as const, // Different type for vault owner
+        vaultId: vault.vaultId,
+        tokenType: vault.tokenType,
+        amount: vault.debt,
+        liquidator: userAddress,
+        liquidatedUser: vault.owner,
+        collateralSeized: totalPaymentToLiquidator.toFixed(2),
+        collateralReturned: Math.max(0, remainingCollateral).toFixed(2), // What they got back
+        bonus: bonusAmount.toFixed(2),
+        txHash: receipt.hash,
+        timestamp: Date.now(),
+        status: 'confirmed' as const,
+        isLiquidator: false // Flag to show this is for the vault owner
+      };
 
-      console.log(`✅ Liquidation completed: ${vault.debt} ${vault.tokenType} → ${totalCollateralSeized.toFixed(2)} USDC (${bonusAmount.toFixed(2)} bonus)`);
+      // Store liquidator history in their localStorage
+      const existingLiquidatorHistory = JSON.parse(localStorage.getItem('liquidation-history') || '[]');
+      existingLiquidatorHistory.unshift(liquidatorRecord);
+      localStorage.setItem('liquidation-history', JSON.stringify(existingLiquidatorHistory));
+      
+      // Also store the owner's history (this would normally be done per user, but for demo we'll store both)
+      const existingOwnerHistory = JSON.parse(localStorage.getItem(`liquidation-history-${vault.owner}`) || '[]');
+      existingOwnerHistory.unshift(ownerRecord);
+      localStorage.setItem(`liquidation-history-${vault.owner}`, JSON.stringify(existingOwnerHistory));
+
+      console.log(`✅ Liquidation completed: ${vault.debt} ${vault.tokenType} → ${totalPaymentToLiquidator.toFixed(2)} USDC (${bonusAmount.toFixed(2)} bonus)`);
 
       // Invalidate cache to refresh data
       await queryClient.invalidateQueries({ queryKey: ['/api/v1/liquidatable-positions'] });
