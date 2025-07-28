@@ -295,7 +295,7 @@ export function LiquidationDashboard() {
                     <div className="flex items-center justify-between">
                       <div className="space-y-1">
                         <div className="flex items-center gap-3">
-                          <h3 className="font-semibold">Vault #{vault.vaultId}</h3>
+                          <h3 className="font-semibold">Vault #{vault.vaultId || `${vault.tokenType.toLowerCase()}-${vault.owner.slice(-4)}`}</h3>
                           <Badge>{vault.tokenType}</Badge>
                           {getRiskBadge(vault.currentCR)}
                         </div>
