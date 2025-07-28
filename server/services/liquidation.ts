@@ -100,7 +100,70 @@ export function clearVaultLiquidation(tokenType: string, owner: string): void {
 export function hasFreshVaultAfterLiquidation(tokenType: string, owner: string): LiquidationState | null {
   const key = `${tokenType.toLowerCase()}_${owner}`;
   const liquidation = liquidations.get(key);
-  return liquidation && liquidation.freshVaultCollateral ? liquidation : null;
+  
+  if (!liquidation) {
+    return null;
+  }
+  
+  // If fresh vault data already exists, return it
+  if (liquidation.freshVaultCollateral) {
+    return liquidation;
+  }
+  
+  // AUTO-DETECT: Check if current vault has more activity than at liquidation time
+  // This happens when users mint after being liquidated
+  return null; // Will be updated by detectAndUpdateFreshVaultActivity
+}
+
+export async function detectAndUpdateFreshVaultActivity(
+  tokenType: string, 
+  owner: string, 
+  currentCollateral: number, 
+  currentDebt: number
+): Promise<LiquidationState | null> {
+  const key = `${tokenType.toLowerCase()}_${owner}`;
+  const liquidation = liquidations.get(key);
+  
+  if (!liquidation) {
+    return null;
+  }
+  
+  // If fresh vault data already calculated, return it
+  if (liquidation.freshVaultCollateral) {
+    return liquidation;
+  }
+  
+  // AUTO-DETECT: If current activity exceeds liquidation amounts, there's fresh activity
+  const liquidatedCollateral = parseFloat(liquidation.collateralSeized);
+  const liquidatedDebt = parseFloat(liquidation.debtRepaid);
+  
+  // Check if there's significant new activity beyond liquidation amounts
+  // (allowing for small precision differences)
+  if (currentCollateral > liquidatedCollateral + 50 || currentDebt > liquidatedDebt + 1) {
+    console.log(`🆕 FRESH VAULT ACTIVITY DETECTED for ${tokenType} ${owner}:`);
+    console.log(`   Current: ${currentCollateral} USDC, ${currentDebt} ${tokenType}`);
+    console.log(`   Liquidated: ${liquidatedCollateral} USDC, ${liquidatedDebt} ${tokenType}`);
+    
+    // Calculate pre-activation amounts (what existed before fresh activity)
+    const preActivationCollateral = Math.max(0, currentCollateral * 0.2); // Estimate pre-activity
+    const preActivationDebt = Math.max(0, currentDebt * 0.2); // Estimate pre-activity
+    
+    // Update liquidation record with fresh vault data
+    const updatedLiquidation = {
+      ...liquidation,
+      preActivationCollateral: preActivationCollateral.toString(),
+      preActivationDebt: preActivationDebt.toString(),
+      freshVaultCollateral: (currentCollateral - preActivationCollateral).toString(),
+      freshVaultDebt: (currentDebt - preActivationDebt).toString()
+    };
+    
+    liquidations.set(key, updatedLiquidation);
+    saveLiquidations(liquidations);
+    
+    return updatedLiquidation;
+  }
+  
+  return null;
 }
 
 export function getAllLiquidations(): LiquidationState[] {
