@@ -704,16 +704,21 @@ export function useLiquidationHistory() {
         
         console.log(`🔄 Syncing ${backendLiquidations.length} backend liquidations with localStorage`);
         
-        // Check for liquidations involving current user as liquidator
-        const userLiquidations = backendLiquidations.filter((liq: any) => 
+        // Check for liquidations involving current user as liquidator OR owner
+        const userAsLiquidator = backendLiquidations.filter((liq: any) => 
           liq.liquidator.toLowerCase() === userAddress.toLowerCase()
         );
         
-        if (userLiquidations.length > 0) {
+        const userAsOwner = backendLiquidations.filter((liq: any) => 
+          liq.owner.toLowerCase() === userAddress.toLowerCase()
+        );
+        
+        // Process liquidator records
+        if (userAsLiquidator.length > 0) {
           const existingLiquidatorHistory = JSON.parse(localStorage.getItem('liquidation-history') || '[]');
           let hasNew = false;
           
-          userLiquidations.forEach((liq: any) => {
+          userAsLiquidator.forEach((liq: any) => {
             // Check if this liquidation is already in localStorage
             const exists = existingLiquidatorHistory.some((existing: any) => 
               existing.timestamp === liq.timestamp && existing.liquidator === liq.liquidator
@@ -748,6 +753,45 @@ export function useLiquidationHistory() {
             console.log(`✅ Updated localStorage with new liquidation records`);
           }
         }
+        
+        // Process owner records (got liquidated)
+        if (userAsOwner.length > 0) {
+          const existingOwnerHistory = JSON.parse(localStorage.getItem(`liquidation-history-${userAddress}`) || '[]');
+          let hasNewOwner = false;
+          
+          userAsOwner.forEach((liq: any) => {
+            const exists = existingOwnerHistory.some((existing: any) => 
+              existing.timestamp === liq.timestamp && existing.liquidator === liq.liquidator
+            );
+            
+            if (!exists) {
+              const ownerRecord = {
+                timestamp: liq.timestamp,
+                liquidator: liq.liquidator,
+                isLiquidator: false,
+                tokenType: liq.tokenType,
+                vault: {
+                  owner: liq.owner,
+                  tokenType: liq.tokenType,
+                  vaultId: `${liq.tokenType.toLowerCase()}-${liq.owner.slice(-4)}-${liq.txHash.slice(-8)}`
+                },
+                collateralLost: liq.collateralSeized,
+                debtRepaid: liq.debtRepaid,
+                txHash: liq.txHash,
+                amount: liq.debtRepaid
+              };
+              
+              existingOwnerHistory.unshift(ownerRecord);
+              hasNewOwner = true;
+              console.log('🔄 Synced new owner liquidation record to localStorage:', ownerRecord);
+            }
+          });
+          
+          if (hasNewOwner) {
+            localStorage.setItem(`liquidation-history-${userAddress}`, JSON.stringify(existingOwnerHistory));
+            console.log(`✅ Updated owner localStorage with liquidation records`);
+          }
+        }
       } catch (error) {
         console.error('❌ Failed to sync liquidations from backend:', error);
       }
@@ -755,7 +799,7 @@ export function useLiquidationHistory() {
       // Fetch user-specific history (includes both liquidator and owner records)
       const userSpecificHistory = JSON.parse(localStorage.getItem(`liquidation-history-${userAddress}`) || '[]');
       
-      // Also check if there are liquidations from backend that need to be synced
+      // Check for liquidator records
       const liquidatorRecords = backendLiquidations.filter((liq: any) => 
         liq.liquidator.toLowerCase() === userAddress.toLowerCase()
       ).map((liq: any) => ({
@@ -775,18 +819,38 @@ export function useLiquidationHistory() {
         amount: liq.debtRepaid
       }));
       
+      // Check for owner records (got liquidated)  
+      const ownerRecords = backendLiquidations.filter((liq: any) => 
+        liq.owner.toLowerCase() === userAddress.toLowerCase()
+      ).map((liq: any) => ({
+        timestamp: liq.timestamp,
+        liquidator: liq.liquidator,
+        isLiquidator: false,
+        tokenType: liq.tokenType,
+        vault: {
+          owner: liq.owner,
+          tokenType: liq.tokenType,
+          vaultId: `${liq.tokenType.toLowerCase()}-${liq.owner.slice(-4)}-${liq.txHash.slice(-8)}`
+        },
+        collateralLost: liq.collateralSeized,
+        debtRepaid: liq.debtRepaid,
+        txHash: liq.txHash,
+        amount: liq.debtRepaid
+      }));
+
       console.log(`📋 Loading history for ${userAddress}:`);
       console.log(`  - User-specific records: ${userSpecificHistory.length}`);
       console.log(`  - Backend liquidator records: ${liquidatorRecords.length}`);
+      console.log(`  - Backend owner records: ${ownerRecords.length}`);
       console.log(`  - Records breakdown:`, userSpecificHistory.map((r: any) => ({ 
         isLiquidator: r.isLiquidator, 
         type: r.type,
         vault: r.vault?.vaultId 
       })));
       
-      // Combine user-specific history with backend liquidator records
-      const allHistory = [...userSpecificHistory, ...liquidatorRecords].filter((record, index, self) => 
-        index === self.findIndex((r) => r.timestamp === record.timestamp && r.liquidator === record.liquidator)
+      // Combine all history sources
+      const allHistory = [...userSpecificHistory, ...liquidatorRecords, ...ownerRecords].filter((record, index, self) => 
+        index === self.findIndex((r) => r.timestamp === record.timestamp && r.liquidator === record.liquidator && r.isLiquidator === record.isLiquidator)
       );
       
       return allHistory.sort((a: any, b: any) => b.timestamp - a.timestamp);
