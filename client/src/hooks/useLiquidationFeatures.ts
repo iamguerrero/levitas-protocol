@@ -280,6 +280,17 @@ export function useLiquidation() {
       console.log(`📝 Creating mock USDC transfers:`, mockTransferData);
       
       // Mark this vault as liquidated in backend (so it disappears from opportunities)
+      // CRITICAL: For fresh vaults, we need to store the CURRENT contract state at liquidation
+      const contractStateAtLiquidation = isFreshVault ? {
+        // For fresh vaults being liquidated, the current state IS the state at liquidation
+        collateral: ethers.formatUnits(vaultPosition.collateral, 6),
+        debt: ethers.formatEther(vaultPosition.debt)
+      } : {
+        // For normal vaults, use the full contract values
+        collateral: ethers.formatUnits(vaultPosition.collateral, 6),
+        debt: ethers.formatEther(vaultPosition.debt)
+      };
+      
       const liquidateResponse = await fetch('/api/v1/liquidate-vault', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -293,7 +304,8 @@ export function useLiquidation() {
           totalCollateral: totalCollateral.toFixed(2),
           remainingCollateral: Math.max(0, remainingCollateral).toFixed(2), // What owner gets back
           txHash: receipt.hash,
-          mockTransfers: mockTransferData // Include mock transfers
+          mockTransfers: mockTransferData, // Include mock transfers
+          contractStateAtLiquidation // Store the contract state at liquidation time
         })
       });
       
