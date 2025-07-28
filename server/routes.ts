@@ -101,13 +101,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Calculate EVIX vault CR from actual position data (if exists)
       const evixVaultCR = evixValueInUsd > 0 ? (parseFloat(evixUsdcValue) / evixValueInUsd) * 100 : 0;
       
-      // Get real USDC balance and add mock transfers
+      // Get user's personal wallet USDC balance (not vault balance)
       const userAddress = req.query.address as string;
-      let adjustedUsdcBalance = totalUsdcFloat.toFixed(4);
+      let adjustedUsdcBalance = "0.0000";
       
       if (userAddress) {
-        adjustedUsdcBalance = getMockUsdcBalance(userAddress, totalUsdcFloat.toFixed(4));
-        console.log(`💰 USDC Balance for ${userAddress}: Base=${totalUsdcFloat.toFixed(4)}, Adjusted=${adjustedUsdcBalance}`);
+        // Fetch user's actual wallet USDC balance
+        const userWalletUsdcBalance = await usdcContract.balanceOf(userAddress);
+        const userWalletUsdcFormatted = ethers.formatUnits(userWalletUsdcBalance, 6);
+        
+        // Apply mock transfers to user's actual wallet balance
+        adjustedUsdcBalance = getMockUsdcBalance(userAddress, userWalletUsdcFormatted);
+        console.log(`💰 USDC Balance for ${userAddress}: Wallet=${userWalletUsdcFormatted}, With Transfers=${adjustedUsdcBalance}`);
+      } else {
+        // Fallback if no user address provided
+        adjustedUsdcBalance = totalUsdcFloat.toFixed(4);
       }
       
       res.json({

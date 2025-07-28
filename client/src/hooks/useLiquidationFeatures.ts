@@ -362,10 +362,8 @@ export function useLiquidation() {
       queryClient.invalidateQueries({ queryKey: ['userPositions'] });
       queryClient.invalidateQueries({ queryKey: ['liquidation-history'] });
       
-      // Force refresh the page to ensure all components update
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
+      // Stay in liquidation center instead of refreshing to mint/redeem
+      // No page refresh needed - just invalidate queries
     },
     onError: (error: any) => {
       console.error('Liquidation error:', error);
