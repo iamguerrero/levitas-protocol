@@ -290,7 +290,7 @@ export function useLiquidation() {
       return {
         success: true,
         txHash: receipt.hash,
-        liquidation: liquidationRecord
+        liquidation: liquidatorRecord
       };
 
       /* Original implementation for when V8 is deployed:
