@@ -689,6 +689,12 @@ export function useLiquidationHistory() {
     queryFn: async () => {
       if (!userAddress) return [];
       
+      // CRITICAL FIX: Clear ALL localStorage liquidation data first to fix vault ID inconsistency
+      const allKeys = Object.keys(localStorage);
+      const liquidationKeys = allKeys.filter(key => key.includes('liquidation'));
+      liquidationKeys.forEach(key => localStorage.removeItem(key));
+      console.log(`🧹 Cleared ${liquidationKeys.length} localStorage keys containing old vault IDs`);
+
       // SYNC: Fetch recent liquidations from backend and sync with localStorage
       let backendLiquidations: any[] = [];
       try {
