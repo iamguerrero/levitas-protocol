@@ -8,6 +8,10 @@
     "bonus": "24.93",
     "ownerRefund": "74.63",
     "timestamp": 1753708848047,
-    "txHash": "0x4e2af632662936c40903a37f2299b9ced4850b2f0179419941b71330416a59b8"
+    "txHash": "0x4e2af632662936c40903a37f2299b9ced4850b2f0179419941b71330416a59b8",
+    "preActivationCollateral": "299.1",
+    "preActivationDebt": "5.9134045029656",
+    "freshVaultCollateral": "1196.4",
+    "freshVaultDebt": "23.6536180118624"
   }
 }
