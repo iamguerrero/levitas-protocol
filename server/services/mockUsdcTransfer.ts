@@ -38,16 +38,21 @@ export function getMockUsdcBalance(address: string, baseBalance: string): string
   const lowercaseAddress = address.toLowerCase();
   let balance = parseFloat(baseBalance);
   
+  console.log(`🔍 Calculating mock USDC for ${address}: base=${baseBalance}`);
+  
   // Calculate balance changes from mock transfers
   mockTransfers.forEach(transfer => {
     if (transfer.to === lowercaseAddress) {
       balance += parseFloat(transfer.amount);
+      console.log(`  ➕ Received ${transfer.amount} USDC (${transfer.reason})`);
     }
-    if (transfer.from === lowercaseAddress) {
+    if (transfer.from === lowercaseAddress && transfer.from !== 'vault_collateral_pool') {
       balance -= parseFloat(transfer.amount);
+      console.log(`  ➖ Sent ${transfer.amount} USDC (${transfer.reason})`);
     }
   });
   
+  console.log(`💰 Final balance for ${address}: ${balance.toFixed(4)} USDC`);
   return balance.toFixed(4);
 }
 
