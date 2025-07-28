@@ -107,6 +107,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (userAddress) {
         adjustedUsdcBalance = getMockUsdcBalance(userAddress, totalUsdcFloat.toFixed(4));
+        console.log(`💰 USDC Balance for ${userAddress}: Base=${totalUsdcFloat.toFixed(4)}, Adjusted=${adjustedUsdcBalance}`);
       }
       
       res.json({

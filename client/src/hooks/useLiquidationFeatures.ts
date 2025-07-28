@@ -285,15 +285,19 @@ export function useLiquidation() {
         isLiquidator: false // Flag to show this is for the vault owner
       };
 
-      // Store liquidator history in their localStorage
+      // Store liquidator history in their localStorage (CURRENT USER - the liquidator)
       const existingLiquidatorHistory = JSON.parse(localStorage.getItem('liquidation-history') || '[]');
       existingLiquidatorHistory.unshift(liquidatorRecord);
       localStorage.setItem('liquidation-history', JSON.stringify(existingLiquidatorHistory));
       
-      // Also store the owner's history (this would normally be done per user, but for demo we'll store both)
+      // Store owner's history in their specific key (vault owner gets "got liquidated" record)
       const existingOwnerHistory = JSON.parse(localStorage.getItem(`liquidation-history-${vault.owner}`) || '[]');
       existingOwnerHistory.unshift(ownerRecord);
       localStorage.setItem(`liquidation-history-${vault.owner}`, JSON.stringify(existingOwnerHistory));
+      
+      console.log(`📋 Transaction history saved:
+        - Liquidator (${userAddress}): GREEN badge liquidation record 
+        - Vault owner (${vault.owner}): RED badge liquidated record`);
 
       console.log(`✅ Liquidation completed: ${vault.debt} ${vault.tokenType} → ${totalPaymentToLiquidator.toFixed(2)} USDC (${bonusAmount.toFixed(2)} bonus)`);
 
