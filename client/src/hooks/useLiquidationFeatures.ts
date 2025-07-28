@@ -264,13 +264,13 @@ export function useLiquidation() {
       // Create mock USDC transfers for liquidation
       const mockTransferData = {
         liquidatorPayment: {
-          from: vault.owner,
+          from: 'vault_collateral_pool',
           to: userAddress,
           amount: totalPaymentToLiquidator.toFixed(2),
           reason: `Liquidation payout (debt + 5% bonus) for ${vault.tokenType} vault`
         },
         ownerRefund: remainingCollateral > 0 ? {
-          from: 'vault',
+          from: 'vault_collateral_pool',
           to: vault.owner,
           amount: remainingCollateral.toFixed(2),
           reason: `Remaining collateral refund after liquidation`
@@ -569,10 +569,11 @@ export function useLiquidationHistory() {
       if (!userAddress) return [];
       
       // SYNC: Fetch recent liquidations from backend and sync with localStorage
+      let backendLiquidations: any[] = [];
       try {
         const response = await fetch('/api/v1/liquidations');
         const data = await response.json();
-        const backendLiquidations = data.liquidations || [];
+        backendLiquidations = data.liquidations || [];
         
         console.log(`🔄 Syncing ${backendLiquidations.length} backend liquidations with localStorage`);
         
@@ -627,16 +628,39 @@ export function useLiquidationHistory() {
       // Fetch user-specific history (includes both liquidator and owner records)
       const userSpecificHistory = JSON.parse(localStorage.getItem(`liquidation-history-${userAddress}`) || '[]');
       
+      // Also check if there are liquidations from backend that need to be synced
+      const liquidatorRecords = backendLiquidations.filter((liq: any) => 
+        liq.liquidator.toLowerCase() === userAddress.toLowerCase()
+      ).map((liq: any) => ({
+        timestamp: liq.timestamp,
+        liquidator: liq.liquidator,
+        isLiquidator: true,
+        tokenType: liq.tokenType,
+        vault: {
+          owner: liq.owner,
+          tokenType: liq.tokenType,
+          vaultId: `${liq.tokenType}-${liq.owner.slice(-4)}-${Math.random().toString(36).substr(2, 5)}`
+        },
+        bonus: liq.bonus,
+        collateralSeized: liq.collateralSeized,
+        debtRepaid: liq.debtRepaid,
+        txHash: liq.txHash,
+        amount: liq.debtRepaid
+      }));
+      
       console.log(`📋 Loading history for ${userAddress}:`);
       console.log(`  - User-specific records: ${userSpecificHistory.length}`);
+      console.log(`  - Backend liquidator records: ${liquidatorRecords.length}`);
       console.log(`  - Records breakdown:`, userSpecificHistory.map((r: any) => ({ 
         isLiquidator: r.isLiquidator, 
         type: r.type,
         vault: r.vault?.vaultId 
       })));
       
-      // Return user-specific history directly
-      const allHistory = userSpecificHistory;
+      // Combine user-specific history with backend liquidator records
+      const allHistory = [...userSpecificHistory, ...liquidatorRecords].filter((record, index, self) => 
+        index === self.findIndex((r) => r.timestamp === record.timestamp && r.liquidator === record.liquidator)
+      );
       
       return allHistory.sort((a: any, b: any) => b.timestamp - a.timestamp);
     },
