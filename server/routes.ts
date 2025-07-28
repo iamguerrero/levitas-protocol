@@ -429,7 +429,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         liquidatorPays: totalLiquidatorCost.toFixed(2),
         ownerGets: ownerRefund
       });
-      const txHash = `mock_tx_${Date.now()}`;
+      const txHash = `0x${Date.now().toString(16).padStart(8, '0')}${Math.random().toString(16).slice(2, 18).padEnd(16, '0')}${Math.random().toString(16).slice(2, 18).padEnd(16, '0')}${Math.random().toString(16).slice(2, 18).padEnd(16, '0')}`;
 
       
       // Record liquidation in service
