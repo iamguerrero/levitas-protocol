@@ -40,6 +40,7 @@ This project is a decentralized finance (DeFi) application called Levitas Financ
 
 ✅ **SPRINT 2.2 LIQUIDATION SYSTEM 100% COMPLETE** - All 6 liquidation flow points working perfectly for both BVIX and EVIX tokens with real smart contract interactions, proper USDC transfers, transaction history badges, and vault management
 ✅ **VAULT ISOLATION CLARIFIED** - V8 BVIX contract correctly uses one vault per user that tracks only minting activity (USDC deposited + BVIX minted). External BVIX/USDC acquired on DEXes remain separate in wallet balances and do not affect vault collateral ratio. This is the correct DeFi design pattern.
+✅ **LIQUIDATION VAULT RESET FIXED** - Liquidated vaults now properly show 0/0 (closed) instead of displaying old contract data. Backend liquidation service correctly overrides contract state to prevent confusion about vault status after liquidation events.
 
 ✓ **V5 FINAL CONTRACTS WITH PROPER OWNERSHIP** - Deployed fresh tokens and V5 contracts: Fresh BVIX (0xa60289981b67139fb7a9F3d31dD2D2BaA414A263), Fresh EVIX (0x4dEaB86baa7CBDb7859665a7FE9766f22fB799C1), BVIX MintRedeem (0xa0133C6380bf9618e97Ab9a855aF2035e9498829), EVIX MintRedeem (0x667e594bD7B994c492cd973C805CEdd971a5F163)
 ✓ **TRUE COLLATERAL RATIO ENFORCEMENT** - V5 contracts implement mintWithCollateralRatio(amount, targetCR) where users spend full USDC but receive proportional tokens based on selected CR
