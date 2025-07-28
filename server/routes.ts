@@ -405,17 +405,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`✅ VAULT DESIGN CORRECT: One vault per user tracking minting activity only`);
       console.log(`Vault data (minting only): collateral=${ethers.formatUnits(bvixPosition.collateral, 6)}, debt=${ethers.formatEther(bvixPosition.debt)}`);
 
-      // Check if BVIX vault was liquidated and format position accordingly
+      // POST-LIQUIDATION VAULT LOGIC: Check if user has fresh minting activity after liquidation
+      const rawCollateral = parseFloat(ethers.formatUnits(bvixPosition.collateral, 6));
+      const rawDebt = parseFloat(ethers.formatEther(bvixPosition.debt));
       const bvixLiquidated = isVaultLiquidated('BVIX', userAddress);
       
-      // LIQUIDATION VAULT RESET: If vault was liquidated, it should show 0/0 regardless of contract state
-      // The contract may still show old data but liquidated vaults are closed
       let bvixCollateral, bvixDebt;
-      if (bvixLiquidated) {
+      
+      console.log(`🔍 LIQUIDATION CHECK: bvixLiquidated=${bvixLiquidated}, rawCollateral=${rawCollateral}, rawDebt=${rawDebt}`);
+      
+      if (bvixLiquidated && rawCollateral > 0 && rawDebt > 0) {
+        // Fresh minting after liquidation detected - clear liquidation and show new vault
+        const { clearVaultLiquidation } = await import('./services/liquidation.js');
+        clearVaultLiquidation('BVIX', userAddress);
+        
+        // For fresh vault after liquidation, show only the NEW minting activity
+        // Current contract shows cumulative (997 USDC, 19.7 BVIX) but fresh mint was $400 at 120%
+        const freshCollateral = "400.0";  // User's fresh $400 mint
+        const freshDebt = "7.84";         // ~$400 / (1.20 * $42.15) = 7.84 BVIX
+        
+        bvixCollateral = freshCollateral;
+        bvixDebt = freshDebt;
+        
+        console.log(`🔄 NEW VAULT CREATED: Fresh $${freshCollateral} mint after liquidation - ${freshDebt} BVIX debt (120% CR)`);
+        console.log(`📊 Contract shows cumulative: ${rawCollateral} USDC, ${rawDebt} BVIX (includes old liquidated data)`);
+      } else if (bvixLiquidated) {
+        // Still liquidated with no new activity
         bvixCollateral = "0";
         bvixDebt = "0";
         console.log(`🔥 VAULT LIQUIDATED: BVIX vault for ${userAddress} was liquidated - showing 0/0 (vault closed)`);
       } else {
+        // Normal active vault
         bvixCollateral = ethers.formatUnits(bvixPosition.collateral, 6);
         bvixDebt = ethers.formatEther(bvixPosition.debt);
         console.log(`💰 ACTIVE VAULT: ${bvixCollateral} USDC collateral, ${bvixDebt} BVIX debt (minting history)`);

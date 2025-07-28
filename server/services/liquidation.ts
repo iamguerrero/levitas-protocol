@@ -75,6 +75,13 @@ export function getLiquidation(tokenType: string, owner: string): LiquidationSta
   return liquidations.get(key) || null;
 }
 
+export function clearVaultLiquidation(tokenType: string, owner: string): void {
+  const key = `${tokenType.toLowerCase()}_${owner}`;
+  liquidations.delete(key);
+  saveLiquidations(liquidations);
+  console.log(`🗑️ Cleared liquidation record for ${tokenType} vault: ${owner}`);
+}
+
 export function getAllLiquidations(): LiquidationState[] {
   return Array.from(liquidations.values());
 }
