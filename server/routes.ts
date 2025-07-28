@@ -118,21 +118,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
         adjustedUsdcBalance = totalUsdcFloat.toFixed(4);
       }
       
+      // GET ACTUAL USER POSITION DATA DIRECTLY WITHOUT API CALL TO AVOID CIRCULAR DEPENDENCY
+      let bvixPositionValueInUsd = 0;
+      let bvixPositionUsdc = "0.0";
+      let bvixPositionCR = 0;
+      let evixPositionValueInUsd = 0;
+      let evixPositionUsdc = "0.0";
+      let evixPositionCR = 0;
+      
+      if (userAddress) {
+        try {
+          // DIRECT CONTRACT CALLS TO GET ACTUAL POSITIONS (same logic as user-positions endpoint)
+          const BVIX_MINT_REDEEM_ADDRESS = '0x653A6a4dCe04dABAEdb521091A889bb1EE298D8d';
+          const EVIX_MINT_REDEEM_ADDRESS = '0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf';
+          
+          const MINT_REDEEM_ABI = [
+            'function positions(address user) external view returns (uint256 collateral, uint256 debt)',
+          ];
+          
+          const bvixVaultContract = new ethers.Contract(BVIX_MINT_REDEEM_ADDRESS, MINT_REDEEM_ABI, provider);
+          const evixVaultContract = new ethers.Contract(EVIX_MINT_REDEEM_ADDRESS, MINT_REDEEM_ABI, provider);
+          
+          const [bvixPosition, evixPosition] = await Promise.all([
+            bvixVaultContract.positions(userAddress),
+            evixVaultContract.positions(userAddress)
+          ]);
+          
+          // Check if BVIX vault was liquidated and format position accordingly
+          const bvixLiquidated = isVaultLiquidated('BVIX', userAddress);
+          const evixLiquidated = isVaultLiquidated('EVIX', userAddress);
+          
+          // Calculate BVIX position if exists and not liquidated
+          console.log(`🔍 BVIX Position Raw Data for ${userAddress}:`, {
+            liquidated: bvixLiquidated,
+            collateral: bvixPosition.collateral.toString(),
+            debt: bvixPosition.debt.toString(),
+            debtGreaterThanZero: bvixPosition.debt > 0n
+          });
+          
+          if (!bvixLiquidated && bvixPosition.debt > 0n) {
+            const collateral = parseFloat(ethers.formatUnits(bvixPosition.collateral, 6));
+            const debt = parseFloat(ethers.formatEther(bvixPosition.debt));
+            const priceFloat = parseFloat(price);
+            const cr = debt > 0 ? (collateral / (debt * priceFloat)) * 100 : 0;
+            
+            bvixPositionUsdc = collateral.toFixed(6);
+            bvixPositionValueInUsd = debt * priceFloat;
+            bvixPositionCR = cr;
+            
+            console.log(`✅ BVIX Position Calculated:`, {
+              collateral: bvixPositionUsdc,
+              valueInUsd: bvixPositionValueInUsd,
+              cr: bvixPositionCR
+            });
+          } else {
+            console.log(`❌ BVIX Position Skipped: liquidated=${bvixLiquidated}, hasDebt=${bvixPosition.debt > 0n}`);
+          }
+          
+          // Calculate EVIX position if exists and not liquidated  
+          if (!evixLiquidated && evixPosition.debt > 0n) {
+            const collateral = parseFloat(ethers.formatUnits(evixPosition.collateral, 6));
+            const debt = parseFloat(ethers.formatEther(evixPosition.debt));
+            const priceFloat = parseFloat(evixPriceFormatted);
+            const cr = debt > 0 ? (collateral / (debt * priceFloat)) * 100 : 0;
+            
+            evixPositionUsdc = collateral.toFixed(6);
+            evixPositionValueInUsd = debt * priceFloat;
+            evixPositionCR = cr;
+          }
+          
+        } catch (error) {
+          console.log('Could not fetch user positions for vault stats:', error);
+        }
+      }
+
       res.json({
         usdc: adjustedUsdcBalance, // Adjusted USDC balance with mock transfers
         bvix: bvixSupply,
         evix: evixSupply,
-        cr: Math.round(evixVaultCR * 100) / 100, // INDIVIDUAL EVIX VAULT CR ONLY
+        cr: Math.round(evixPositionCR * 100) / 100, // INDIVIDUAL EVIX VAULT CR ONLY
         price: price,
         evixPrice: evixPriceFormatted,
         usdcValue: parseFloat(adjustedUsdcBalance), // Adjusted USDC value
-        bvixValueInUsd: 0, // No active BVIX position
-        evixValueInUsd: evixValueInUsd,
-        totalTokenValueInUsd: evixValueInUsd, // Only EVIX value
-        bvixVaultUsdc: "0.0", // No active BVIX position
-        evixVaultUsdc: evixUsdcValue, // INDIVIDUAL EVIX VAULT USDC FROM POSITION
-        bvixVaultCR: 0, // No active BVIX position
-        evixVaultCR: Math.round(evixVaultCR * 100) / 100
+        bvixValueInUsd: bvixPositionValueInUsd, // ACTUAL BVIX POSITION VALUE
+        evixValueInUsd: evixPositionValueInUsd,
+        totalTokenValueInUsd: bvixPositionValueInUsd + evixPositionValueInUsd, // Both position values
+        bvixVaultUsdc: bvixPositionUsdc, // ACTUAL BVIX POSITION COLLATERAL
+        evixVaultUsdc: evixPositionUsdc, // ACTUAL EVIX POSITION COLLATERAL
+        bvixVaultCR: Math.round(bvixPositionCR * 100) / 100, // ACTUAL BVIX POSITION CR
+        evixVaultCR: Math.round(evixPositionCR * 100) / 100
       });
       
     } catch (error) {
