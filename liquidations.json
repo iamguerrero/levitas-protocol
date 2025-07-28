@@ -10,8 +10,8 @@
     "timestamp": 1753719720559,
     "txHash": "0x478282c23023f7d6abb526b3161d07c96c50415190a952a131d6f9e300dba223",
     "contractStateAtLiquidation": {
-      "collateral": "1595.2",
-      "debt": "31.538157342823250294"
+      "collateral": "1495.5",
+      "debt": "29.57"
     }
   }
 }
