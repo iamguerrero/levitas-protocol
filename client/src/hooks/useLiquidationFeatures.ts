@@ -5,6 +5,7 @@ import { toast } from '@/hooks/use-toast';
 import { getProvider, getSigner, getBVIXContract, getEVIXContract } from '@/lib/web3';
 import mintRedeemV6ABI from '@/contracts/MintRedeemV6.abi.json';
 import evixMintRedeemV6ABI from '@/contracts/EVIXMintRedeemV6.abi.json';
+import { executeMockLiquidation } from './useMockLiquidation';
 
 import { useUserPositions } from '@/hooks/useUserPositions';
 import { useVault } from '@/hooks/useVault';
@@ -203,16 +204,25 @@ export function useLiquidation() {
       });
       
       // For V6 simulation, liquidation works as follows:
-      // 1. Liquidator burns their tokens (to simulate paying debt) - this gives them full USDC value
-      // 2. We calculate the correct liquidation amounts and track the difference
-      // 3. The vault owner's position is marked as liquidated and they should get remaining collateral back
+      // 1. Liquidator transfers their BVIX/EVIX tokens directly to vault owner (debt repayment)
+      // 2. Backend will handle USDC transfers from vault collateral to liquidator
+      // 3. No vault positions are modified - only wallet balances change
       
-      // Burn liquidator's tokens (this gives them full USDC value for their tokens)
-      const burnTx = vault.tokenType === 'BVIX'
-        ? await signerVaultContract.redeem(exactDebtWei) // This gives them full USDC value for tokens
-        : await signerVaultContract.redeem(exactDebtWei);
+      // Transfer tokens from liquidator to vault owner (repaying their debt)
+      const transferTx = await tokenContract.transfer(vault.owner, exactDebtWei);
+      const receipt = await transferTx.wait();
       
-      const receipt = await burnTx.wait();
+      console.log(`💸 Transferred ${exactDebtFormatted} ${vault.tokenType} to vault owner ${vault.owner}`);
+      
+      // Execute mock USDC transfers
+      await executeMockLiquidation({
+        vaultOwner: vault.owner,
+        liquidatorAddress: userAddress,
+        liquidatorPayment: totalPaymentToLiquidator,
+        ownerRefund: remainingCollateral,
+        tokenType: vault.tokenType,
+        debtAmount: exactDebtWei.toString()
+      });
       
       // Note: In a real liquidation system, the smart contract would handle the correct payment amounts
       // Here we're simulating by redeeming tokens (which gives full value) but tracking what SHOULD happen
