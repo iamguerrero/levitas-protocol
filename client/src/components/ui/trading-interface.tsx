@@ -242,7 +242,8 @@ export default function TradingInterface() {
     setIsLoading(true);
     try {
       console.log("🔄 Loading contract data for address:", address);
-      // Use optimized batch balance fetcher for faster loading
+      
+      // Always get wallet balances from blockchain for accurate display
       const [balances, oraclePrice, evixPrice, ratio] = await Promise.all([
         getAllBalances(address),
         getOraclePrice(),
@@ -252,15 +253,7 @@ export default function TradingInterface() {
       
       const { bvixBalance, evixBalance, usdcBalance } = balances;
 
-      console.log("📊 Contract data loaded:", { bvixBalance, evixBalance, usdcBalance, oraclePrice, evixPrice, ratio });
-      
-      // Log if there's mock data interfering
-      const mockBalances = JSON.parse(localStorage.getItem('mockBalances') || '{}');
-      if (Object.keys(mockBalances).length > 0) {
-        console.warn("⚠️ Mock balances detected:", mockBalances);
-        console.log("🧹 Clearing mock balances...");
-        localStorage.removeItem('mockBalances');
-      }
+      console.log("📊 Wallet balances from blockchain:", { bvixBalance, evixBalance, usdcBalance, oraclePrice, evixPrice, ratio });
 
       setCollateralRatio(ratio);
 
@@ -269,15 +262,6 @@ export default function TradingInterface() {
         parseFloat(evixBalance) * parseFloat(evixPrice) +
         parseFloat(usdcBalance)
       ).toFixed(2);
-
-      console.log("💰 Setting contract data:", {
-        bvixPrice: oraclePrice,
-        evixPrice,
-        usdcBalance,
-        bvixBalance,
-        evixBalance,
-        totalValue,
-      });
 
       setContractData({
         bvixPrice: oraclePrice,
