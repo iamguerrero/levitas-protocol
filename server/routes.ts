@@ -727,7 +727,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalCollateral, 
         remainingCollateral, 
         txHash,
-        mockTransfers 
+        mockTransfers,
+        contractStateAtLiquidation 
       } = req.body;
       
       console.log('🔍 Liquidation request received:', { 
@@ -758,7 +759,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         bonus,
         ownerRefund: remainingCollateral,
         timestamp: Date.now(),
-        txHash: finalTxHash
+        txHash: finalTxHash,
+        contractStateAtLiquidation: contractStateAtLiquidation || {
+          collateral: totalCollateral || "0",
+          debt: debtRepaid || "0"
+        }
       });
       
       // Handle mock transfers if provided
