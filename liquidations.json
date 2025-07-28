@@ -3,15 +3,15 @@
     "tokenType": "BVIX",
     "owner": "0x58bc63cbb24854f0a5edeaf3c5e530192dcbc24b",
     "liquidator": "0xe18d3B075A241379D77fffE01eD1317ddA0e8bac",
-    "debtRepaid": "23.567022514827997",
-    "collateralSeized": "1039.69",
-    "bonus": "49.51",
-    "ownerRefund": "155.81",
-    "timestamp": 1753716000000,
-    "txHash": "0x0000000000000000000000000000000000000000000000000000000000000001",
+    "debtRepaid": "6.0",
+    "collateralSeized": "265.54",
+    "bonus": "12.64",
+    "ownerRefund": "34.46",
+    "timestamp": 1753718010653,
+    "txHash": "0xe958e20458cca5a04636955d9eed952d9b0e838e2ffa22f519bd41f8e4c17ff3",
     "contractStateAtLiquidation": {
-      "collateral": "1195.5",
-      "debt": "23.567022514827997"
+      "collateral": "1495.5",
+      "debt": "29.567022514827995253"
     }
   }
 }
