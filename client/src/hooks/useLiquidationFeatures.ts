@@ -340,8 +340,9 @@ export function useLiquidation() {
       await queryClient.invalidateQueries({ queryKey: ['liquidations'] });
       await queryClient.invalidateQueries({ queryKey: ['vault-stats'] });
 
-      // Generate consistent vault ID based on owner and token type
-      const uniqueVaultId = `${vault.tokenType}-${vault.owner.slice(-4)}-${vault.owner.slice(2, 7)}`.toLowerCase();
+      // Generate UNIQUE vault ID with timestamp to ensure each liquidation creates a new ID
+      const timestamp = Date.now();
+      const uniqueVaultId = `${vault.tokenType}-${vault.owner.slice(-4)}-${timestamp.toString(36).slice(-5)}`.toLowerCase();
       
       // Create liquidation record for LIQUIDATOR (the person executing this function)
       const liquidatorRecord = {

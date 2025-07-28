@@ -222,7 +222,7 @@ export default function LiquidationOpportunities() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <div className="flex items-center gap-3">
-                      <h3 className="font-semibold">Vault #{vault.tokenType}-{vault.owner.slice(-4)}-{vault.vaultId}</h3>
+                      <h3 className="font-semibold">Vault #{vault.tokenType.toLowerCase()}-{vault.owner.slice(-4)}</h3>
                       <Badge>{vault.tokenType}</Badge>
                       {getRiskBadge(vault.currentCR)}
                     </div>
