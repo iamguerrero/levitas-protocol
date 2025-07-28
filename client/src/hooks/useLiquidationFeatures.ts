@@ -250,11 +250,14 @@ export function useLiquidation() {
         })
       });
 
+      // Generate unique vault ID
+      const uniqueVaultId = `${vault.tokenType}-${vault.owner.slice(-4)}-${Math.random().toString(36).substr(2, 5)}`;
+      
       // Create liquidation record for LIQUIDATOR (the person executing this function)
       const liquidatorRecord = {
         id: Date.now().toString(),
         type: 'liquidation' as const,
-        vaultId: vault.vaultId,
+        vaultId: uniqueVaultId,
         tokenType: vault.tokenType,
         amount: vault.debt,
         liquidator: userAddress,
@@ -264,14 +267,19 @@ export function useLiquidation() {
         txHash: receipt.hash,
         timestamp: Date.now(),
         status: 'confirmed' as const,
-        isLiquidator: true // Flag to show this is for the liquidator
+        isLiquidator: true, // Flag to show this is for the liquidator
+        vault: {
+          owner: vault.owner,
+          tokenType: vault.tokenType,
+          vaultId: uniqueVaultId
+        }
       };
 
       // Create liquidation record for VAULT OWNER (different view)
       const ownerRecord = {
         id: (Date.now() + 1).toString(),
         type: 'liquidated' as const, // Different type for vault owner
-        vaultId: vault.vaultId,
+        vaultId: uniqueVaultId,
         tokenType: vault.tokenType,
         amount: vault.debt,
         liquidator: userAddress,
@@ -282,7 +290,12 @@ export function useLiquidation() {
         txHash: receipt.hash,
         timestamp: Date.now(),
         status: 'confirmed' as const,
-        isLiquidator: false // Flag to show this is for the vault owner
+        isLiquidator: false, // Flag to show this is for the vault owner
+        vault: {
+          owner: vault.owner,
+          tokenType: vault.tokenType,
+          vaultId: uniqueVaultId
+        }
       };
 
       // Store liquidator history in their localStorage (CURRENT USER - the liquidator)
@@ -523,11 +536,13 @@ export function useLiquidationHistory() {
                 vault: {
                   owner: liq.owner,
                   tokenType: liq.tokenType,
-                  vaultId: 1
+                  vaultId: `${liq.tokenType}-${liq.owner.slice(-4)}-${Math.random().toString(36).substr(2, 5)}`
                 },
-                bonusReceived: liq.collateralSeized,
+                bonus: liq.bonus, // FIXED: Use actual bonus amount
                 collateralSeized: liq.collateralSeized,
-                debtRepaid: liq.debtRepaid
+                debtRepaid: liq.debtRepaid,
+                txHash: liq.txHash,
+                amount: liq.debtRepaid // For consistency with existing structure
               };
               
               existingLiquidatorHistory.unshift(liquidatorRecord);
