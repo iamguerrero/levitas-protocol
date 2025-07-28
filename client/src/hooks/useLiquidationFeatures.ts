@@ -356,10 +356,15 @@ export function useLiquidation() {
         }
       };
 
-      // Store liquidator history in their localStorage (CURRENT USER - the liquidator)
-      const existingLiquidatorHistory = JSON.parse(localStorage.getItem('liquidation-history') || '[]');
-      existingLiquidatorHistory.unshift(liquidatorRecord);
-      localStorage.setItem('liquidation-history', JSON.stringify(existingLiquidatorHistory));
+      // Store liquidator history in GLOBAL localStorage (for current user who is liquidating)
+      const globalHistory = JSON.parse(localStorage.getItem('liquidation-history') || '[]');
+      globalHistory.unshift(liquidatorRecord);
+      localStorage.setItem('liquidation-history', JSON.stringify(globalHistory));
+      
+      // Also store in user-specific key for the liquidator
+      const liquidatorSpecificHistory = JSON.parse(localStorage.getItem(`liquidation-history-${userAddress}`) || '[]');
+      liquidatorSpecificHistory.unshift(liquidatorRecord);
+      localStorage.setItem(`liquidation-history-${userAddress}`, JSON.stringify(liquidatorSpecificHistory));
       
       // Store owner's history in their specific key (vault owner gets "got liquidated" record)
       const existingOwnerHistory = JSON.parse(localStorage.getItem(`liquidation-history-${vault.owner}`) || '[]');
@@ -367,7 +372,8 @@ export function useLiquidation() {
       localStorage.setItem(`liquidation-history-${vault.owner}`, JSON.stringify(existingOwnerHistory));
       
       console.log(`💾 Stored transaction history:`);
-      console.log(`  - Global liquidation history now has ${existingLiquidatorHistory.length} records`);
+      console.log(`  - Global liquidation history now has ${globalHistory.length} records`);
+      console.log(`  - Liquidator-specific history for ${userAddress} now has ${liquidatorSpecificHistory.length} records`);
       console.log(`  - Owner-specific history for ${vault.owner} now has ${existingOwnerHistory.length} records`);
       console.log(`  - Liquidator record (${userAddress}):`, liquidatorRecord);
       console.log(`  - Owner record (${vault.owner}):`, ownerRecord);
@@ -618,21 +624,19 @@ export function useLiquidationHistory() {
         console.error('❌ Failed to sync liquidations from backend:', error);
       }
       
-      // Fetch liquidator's history (when user liquidated others) - this is global
-      const liquidatorHistory = JSON.parse(localStorage.getItem('liquidation-history') || '[]');
-      
-      // Fetch owner's history (when user got liquidated) - this is user-specific
-      const ownerHistory = JSON.parse(localStorage.getItem(`liquidation-history-${userAddress}`) || '[]');
+      // Fetch user-specific history (includes both liquidator and owner records)
+      const userSpecificHistory = JSON.parse(localStorage.getItem(`liquidation-history-${userAddress}`) || '[]');
       
       console.log(`📋 Loading history for ${userAddress}:`);
-      console.log(`  - Liquidator records: ${liquidatorHistory.length} (filtered for user: ${liquidatorHistory.filter((item: any) => item.liquidator === userAddress).length})`);
-      console.log(`  - Owner records: ${ownerHistory.length}`);
+      console.log(`  - User-specific records: ${userSpecificHistory.length}`);
+      console.log(`  - Records breakdown:`, userSpecificHistory.map((r: any) => ({ 
+        isLiquidator: r.isLiquidator, 
+        type: r.type,
+        vault: r.vault?.vaultId 
+      })));
       
-      // Combine all history for current user
-      const allHistory = [
-        ...liquidatorHistory.filter((item: any) => item.liquidator === userAddress),
-        ...ownerHistory
-      ];
+      // Return user-specific history directly
+      const allHistory = userSpecificHistory;
       
       return allHistory.sort((a: any, b: any) => b.timestamp - a.timestamp);
     },

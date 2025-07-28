@@ -18,6 +18,15 @@ export default function AppDashboard() {
   const [location] = useLocation();
   const [defaultTab, setDefaultTab] = useState("trading");
   
+  // Debug logging
+  useEffect(() => {
+    if (address && history) {
+      console.log(`🎨 AppDashboard - Current user: ${address}`);
+      console.log(`🎨 AppDashboard - History length: ${history.length}`);
+      console.log(`🎨 AppDashboard - History items:`, history);
+    }
+  }, [address, history]);
+  
   useEffect(() => {
     // Check URL parameters for tab selection
     const params = new URLSearchParams(window.location.search);
