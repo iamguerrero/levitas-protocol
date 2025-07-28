@@ -355,37 +355,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             let collateral, debt;
             let vaultIsLiquidatable = false;
             
-            if (isLiquidated) {
-              // Get liquidation record to find contract state at liquidation time
-              const { getLiquidation } = await import('./services/liquidation.js');
-              const liquidationRecord = getLiquidation('BVIX', userAddress);
-              
-              if (liquidationRecord && liquidationRecord.contractStateAtLiquidation) {
-                // Contract state at liquidation time
-                const oldCollateral = parseFloat(liquidationRecord.contractStateAtLiquidation.collateral);
-                const oldDebt = parseFloat(liquidationRecord.contractStateAtLiquidation.debt);
-                
-                // Calculate fresh vault amounts (current - old)
-                collateral = rawCollateral - oldCollateral;
-                debt = rawDebt - oldDebt;
-                
-                if (collateral > 0 || debt > 0) {
-                  // User has minted after liquidation - this fresh vault can be liquidated
-                  vaultIsLiquidatable = true;
-                } else {
-                  // No fresh activity - skip this vault
-                  continue;
-                }
-              } else {
-                // No liquidation state stored - skip
-                continue;
-              }
-            } else {
-              // Normal vault
-              collateral = rawCollateral;
-              debt = rawDebt;
-              vaultIsLiquidatable = true;
-            }
+            // Normal vault - no liquidated vault checking in liquidation opportunities
+            collateral = rawCollateral;
+            debt = rawDebt;
+            vaultIsLiquidatable = true;
             
             const cr = debt > 0 ? (collateral / (debt * price)) * 100 : 0;
             
