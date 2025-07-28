@@ -1,0 +1,16 @@
+[
+  {
+    "from": "vault_collateral_pool",
+    "to": "0xe18d3b075a241379d77fffe01ed1317dda0e8bac",
+    "amount": "14.96",
+    "reason": "Liquidation payment for BVIX vault",
+    "timestamp": 1753701910807
+  },
+  {
+    "from": "vault_collateral_pool",
+    "to": "0x58bc63cbb24854f0a5edeaf3c5e530192dcbc24b",
+    "amount": "284.14",
+    "reason": "Remaining collateral refund after liquidation",
+    "timestamp": 1753701910808
+  }
+]

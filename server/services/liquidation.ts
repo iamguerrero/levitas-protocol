@@ -13,12 +13,49 @@ interface LiquidationState {
   txHash: string;
 }
 
-// In-memory storage for liquidations (in production, use database)
-const liquidations = new Map<string, LiquidationState>();
+// Persistent storage for liquidations using JSON file
+import fs from 'fs';
+import path from 'path';
+
+const LIQUIDATIONS_FILE = path.join(process.cwd(), 'liquidations.json');
+
+// Load liquidations from file on startup
+function loadLiquidations(): Map<string, LiquidationState> {
+  try {
+    if (fs.existsSync(LIQUIDATIONS_FILE)) {
+      const data = fs.readFileSync(LIQUIDATIONS_FILE, 'utf8');
+      const parsed = JSON.parse(data);
+      const map = new Map<string, LiquidationState>();
+      for (const [key, value] of Object.entries(parsed)) {
+        map.set(key, value as LiquidationState);
+      }
+      console.log(`📂 Loaded ${map.size} liquidation records from file`);
+      return map;
+    }
+  } catch (error) {
+    console.error('Error loading liquidations file:', error);
+  }
+  return new Map<string, LiquidationState>();
+}
+
+// Save liquidations to file
+function saveLiquidations(liquidations: Map<string, LiquidationState>) {
+  try {
+    const obj = Object.fromEntries(liquidations.entries());
+    fs.writeFileSync(LIQUIDATIONS_FILE, JSON.stringify(obj, null, 2));
+    console.log(`💾 Saved ${liquidations.size} liquidation records to file`);
+  } catch (error) {
+    console.error('Error saving liquidations file:', error);
+  }
+}
+
+// Persistent storage for liquidations
+const liquidations = loadLiquidations();
 
 export function recordLiquidation(liquidation: LiquidationState) {
   const key = `${liquidation.tokenType.toLowerCase()}_${liquidation.owner}`;
   liquidations.set(key, liquidation);
+  saveLiquidations(liquidations);
   
   console.log(`📝 Liquidation recorded:`, {
     vault: `${liquidation.tokenType} ${liquidation.owner}`,
@@ -44,4 +81,5 @@ export function getAllLiquidations(): LiquidationState[] {
 
 export function clearLiquidations() {
   liquidations.clear();
+  saveLiquidations(liquidations);
 }
