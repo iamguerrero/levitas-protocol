@@ -415,11 +415,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log('🔍 Extracted vault properties:', { tokenType, owner, debt, collateral, maxBonus });
       
-      // Calculate liquidation amounts
+      // Calculate liquidation amounts - CORRECT DeFi mechanics
       const debtRepaid = debt;
-      const bonus = maxBonus;
-      const collateralSeized = (parseFloat(collateral) * 0.05).toFixed(2); // 5% bonus from collateral  
-      const ownerRefund = (parseFloat(collateral) - parseFloat(collateralSeized)).toFixed(2);
+      const debtValue = parseFloat(debt) * (vault.tokenType === 'BVIX' ? 42.15 : 37.98); // debt * price
+      const bonus = debtValue * 0.05; // 5% bonus on debt value
+      const totalLiquidatorCost = debtValue + bonus; // Liquidator pays debt + bonus
+      const ownerRefund = (parseFloat(collateral) - totalLiquidatorCost).toFixed(2); // Owner gets remaining collateral
+      
+      console.log(`💰 Liquidation Economics:`, {
+        collateral: parseFloat(collateral),
+        debtValue: debtValue.toFixed(2),
+        bonus: bonus.toFixed(2),
+        liquidatorPays: totalLiquidatorCost.toFixed(2),
+        ownerGets: ownerRefund
+      });
       const txHash = `mock_tx_${Date.now()}`;
 
       
@@ -429,23 +438,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         owner,
         liquidator,
         debtRepaid,
-        collateralSeized,
-        bonus,
+        collateralSeized: totalLiquidatorCost.toFixed(2),
+        bonus: bonus.toFixed(2),
         ownerRefund,
         timestamp: Date.now(),
         txHash
       });
       
-      // Mock USDC transfers
-      // 1. Transfer collateral + bonus from vault to liquidator
+      // Mock USDC transfers - CORRECT DeFi mechanics
+      // 1. Liquidator PAYS debt value to protocol (negative transfer)
+      recordMockTransfer(
+        liquidator,
+        'protocol_treasury',
+        debtValue.toFixed(2),
+        `Debt payment for ${tokenType} liquidation`
+      );
+      
+      // 2. Liquidator RECEIVES debt value + 5% bonus from vault collateral
       recordMockTransfer(
         'vault_collateral_pool',
         liquidator,
-        collateralSeized,
-        `Liquidation payment for ${tokenType} vault`
+        totalLiquidatorCost.toFixed(2),
+        `Liquidation payout (debt + 5% bonus) for ${tokenType} vault`
       );
       
-      // 2. Transfer remaining collateral from vault to owner (if any)
+      // 3. Vault owner gets remaining collateral (if any)
       if (parseFloat(ownerRefund) > 0) {
         recordMockTransfer(
           'vault_collateral_pool',
@@ -455,11 +472,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
       }
       
-      console.log(`✅ Vault liquidated with mock transfers:`, {
+      console.log(`✅ Vault liquidated with correct DeFi mechanics:`, {
         tokenType,
         owner,
         liquidator,
-        liquidatorReceived: collateralSeized,
+        liquidatorNetGain: bonus.toFixed(2), // Only the 5% bonus is profit
+        liquidatorTotalReceived: totalLiquidatorCost.toFixed(2),
+        liquidatorPaid: debtValue.toFixed(2),
         ownerReceived: ownerRefund
       });
       
@@ -470,8 +489,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           owner,
           liquidator,
           debtRepaid,
-          collateralSeized,
-          bonus,
+          collateralSeized: totalLiquidatorCost.toFixed(2),
+          bonus: bonus.toFixed(2),
           ownerRefund,
           txHash,
           timestamp: Date.now()
