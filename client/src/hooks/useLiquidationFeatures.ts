@@ -333,6 +333,12 @@ export function useLiquidation() {
       
       // Force refresh balances
       await queryClient.invalidateQueries({ queryKey: ['balances'] });
+      
+      // CRITICAL: Invalidate all queries to ensure vault disappears from everywhere
+      await queryClient.invalidateQueries({ queryKey: ['liquidatable-positions'] });
+      await queryClient.invalidateQueries({ queryKey: ['user-positions', vault.owner] });
+      await queryClient.invalidateQueries({ queryKey: ['liquidations'] });
+      await queryClient.invalidateQueries({ queryKey: ['vault-stats'] });
 
       // Generate consistent vault ID based on owner and token type
       const uniqueVaultId = `${vault.tokenType}-${vault.owner.slice(-4)}-${vault.owner.slice(2, 7)}`.toLowerCase();
@@ -436,6 +442,21 @@ export function useLiquidation() {
       queryClient.removeQueries({ queryKey: ['balances'] });
       
       console.log(`🔄 Forced complete cache refresh - all balances will reload from blockchain`);
+      
+      // CRITICAL: Force refresh ALL data to ensure vault closure is reflected everywhere
+      // Invalidate the liquidation history query specifically
+      await queryClient.invalidateQueries({ queryKey: ['liquidation-history'] });
+      
+      // Wait a moment for backend to process the liquidation
+      setTimeout(async () => {
+        await queryClient.invalidateQueries();
+        console.log('🔄 Forced refresh of all data after liquidation');
+      }, 500);
+      
+      toast({
+        title: "Vault Liquidated Successfully",
+        description: `Burned ${vault.debt} ${vault.tokenType} and received ${totalPaymentToLiquidator.toFixed(2)} USDC (including $${bonusAmount.toFixed(2)} bonus)`,
+      });
 
       return {
         success: true,
