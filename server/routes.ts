@@ -165,22 +165,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
             let showPosition = true;
             
             if (bvixLiquidated) {
-              // Auto-detect fresh vault activity after liquidation
-              const { detectAndUpdateFreshVaultActivity, hasFreshVaultAfterLiquidation } = await import('./services/liquidation.js');
-              await detectAndUpdateFreshVaultActivity('BVIX', userAddress, rawCollateral, rawDebt);
-              const freshVaultData = hasFreshVaultAfterLiquidation('BVIX', userAddress);
+              // Get liquidation record to find contract state at liquidation time
+              const { getLiquidation } = await import('./services/liquidation.js');
+              const liquidationRecord = getLiquidation('BVIX', userAddress);
               
-              if (freshVaultData) {
-                // Fresh vault after liquidation - show only new activity
-                const preCollateral = parseFloat(freshVaultData.preActivationCollateral!);
-                const preDebt = parseFloat(freshVaultData.preActivationDebt!);
-                collateral = Math.max(0, rawCollateral - preCollateral);
-                debt = Math.max(0, rawDebt - preDebt);
-                console.log(`🆕 FRESH VAULT DETECTED: Using fresh activity data - Collateral: ${collateral}, Debt: ${debt}`);
+              if (liquidationRecord && liquidationRecord.contractStateAtLiquidation) {
+                // Contract state at liquidation time
+                const oldCollateral = parseFloat(liquidationRecord.contractStateAtLiquidation.collateral);
+                const oldDebt = parseFloat(liquidationRecord.contractStateAtLiquidation.debt);
+                
+                // Calculate fresh vault amounts (current - old)
+                const freshCollateral = rawCollateral - oldCollateral;
+                const freshDebt = rawDebt - oldDebt;
+                
+                if (freshCollateral > 0 || freshDebt > 0) {
+                  // User has minted after liquidation - show ONLY the new mint
+                  collateral = freshCollateral;
+                  debt = freshDebt;
+                  console.log(`🆕 NEW VAULT AFTER LIQUIDATION: ${collateral.toFixed(2)} USDC, ${debt.toFixed(2)} BVIX`);
+                  console.log(`   (Contract total: ${rawCollateral} USDC, ${rawDebt} BVIX)`);
+                  console.log(`   (At liquidation: ${oldCollateral} USDC, ${oldDebt} BVIX)`);
+                } else {
+                  // No fresh activity - hide position
+                  showPosition = false;
+                  console.log(`🔥 VAULT LIQUIDATED: No fresh activity - position closed`);
+                }
               } else {
-                // Liquidated with no fresh activity - don't show position
+                // No liquidation state stored - shouldn't happen but show nothing
                 showPosition = false;
-                console.log(`🔥 VAULT LIQUIDATED: No fresh activity detected - hiding position`);
+                console.log(`⚠️ WARNING: Liquidation record exists but no contract state stored`);
               }
             } else {
               // Normal active vault
