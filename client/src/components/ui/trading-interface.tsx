@@ -670,31 +670,6 @@ export default function TradingInterface() {
 
   return (
     <div className="space-y-8">
-      {/* Sprint 2.1: Real-time Oracle Status Header */}
-      <Card className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-950 dark:to-cyan-950 border-blue-200 dark:border-blue-800">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className={`w-3 h-3 rounded-full ${oracleConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
-              <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">
-                  Oracle Status: {oracleConnected ? 'Connected' : 'Offline'}
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {oracleConnected 
-                    ? `Prices update every 5 seconds • Last update: ${oracleLastUpdate || 'Starting...'}`
-                    : 'Price simulation offline'
-                  }
-                </p>
-              </div>
-            </div>
-            <Badge variant="outline" className="text-xs border-blue-200 text-blue-700 bg-blue-50">
-              <div className="w-2 h-2 rounded-full bg-blue-500 mr-2"></div>
-              Base Sepolia Testnet
-            </Badge>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Price Display - Clickable Cards */}
       <div className="grid md:grid-cols-2 gap-6">
