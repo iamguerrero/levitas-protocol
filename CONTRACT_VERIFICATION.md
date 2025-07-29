@@ -88,12 +88,26 @@ Arguments: [
 ]
 ```
 
-#### Oracle Contracts
+#### Oracle Contracts (BVIX & EVIX)
 ```
-Constructor: constructor(address initialOwner)
-Arguments: ["0x<DEPLOYER_ADDRESS>"]
-ABI-Encoded: 0x000000000000000000000000<DEPLOYER_ADDRESS_WITHOUT_0x>
+Constructor: constructor(uint256 _initialPrice)
+BVIX Oracle Argument: 42150000000000000000 (42.15 * 10^18)
+EVIX Oracle Argument: [CHECK DEPLOYMENT TX FOR ACTUAL PRICE]
 ```
+
+## 🔍 Finding Constructor Arguments
+
+**The bytecode mismatch error is likely due to incorrect constructor arguments.** 
+
+### Quick Fix Steps:
+1. **Visit the deployment transaction** on Basescan for each contract
+2. **Copy the exact input data** from the deployment transaction  
+3. **Extract constructor arguments** from the input data (everything after the contract bytecode)
+4. **Use those exact arguments** in the verification form
+
+### Example for BVIX Oracle:
+- Expected argument: `42150000000000000000` (42.15 ETH in wei)
+- ABI-encoded: `0x000000000000000000000000000000000000000000000002495a14eef300000`
 
 ## 🛠️ Verification Tools
 
@@ -140,13 +154,30 @@ npx hardhat verify --network baseSepolia 0x7223A0Eb07B8d7d3CFbf84AC78eee4ae9DaA2
 - [ ] EVIX MintRedeem V6 - `0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf`
 - [ ] EVIX Oracle V6 - `0xBd6E9809B9608eCAc3610cA65327735CC3c08104`
 
-## 🚨 Common Issues
+## 🚨 Common Issues & Solutions
+
+### Bytecode Matching Error (err_code_2)
+
+**Problem**: "Unable to locate matching bytecode" occurs when verifying flattened files with multiple contracts.
+
+**Solution**: Use the correct main contract name for each verification:
+
+| Flattened File | Main Contract Name | Address |
+|---|---|---|
+| `BVIXToken.sol` | **BVIXToken** | `0x7223A0Eb07B8d7d3CFbf84AC78eee4ae9DaA22CE` |
+| `MintRedeemV8.sol` | **MintRedeemV8** | `0x653A6a4dCe04dABAEdb521091A889bb1EE298D8d` |
+| `BVIXOracle.sol` | **MockOracle** | `0xA6FAC514Fdc2C017FBCaeeDA27562dAC83Cf22cf` |
+| `EVIXToken.sol` | **EVIXToken** | `0x7066700CAf442501B308fAe34d5919091e1b2380` |
+| `EVIXMintRedeemV6.sol` | **EVIXMintRedeemV6** | `0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf` |
+| `EVIXOracle.sol` | **MockOracle** | `0xBd6E9809B9608eCAc3610cA65327735CC3c08104` |
+
+### Other Common Issues
 
 1. **Constructor Arguments**: Make sure to ABI-encode all constructor arguments
 2. **Compiler Version**: Use exact version `v0.8.21+commit.d9974bed`
 3. **Optimization**: Must match deployment settings (Enabled, 200 runs)
 4. **License**: Use MIT License for all contracts
-5. **Imports**: Ensure all imports are resolved in flattened files
+5. **Contract Name**: Select the main contract name from the table above
 
 ## 📞 Support
 
