@@ -12,5 +12,19 @@
     "amount": "38.44",
     "reason": "Remaining collateral refund after liquidation",
     "timestamp": 1753785318866
+  },
+  {
+    "from": "vault_collateral_pool",
+    "to": "0x58bc63cbb24854f0a5edeaf3c5e530192dcbc24b",
+    "amount": "87.24",
+    "reason": "Liquidation payout (debt + 5% bonus) for EVIX vault",
+    "timestamp": 1753791995307
+  },
+  {
+    "from": "vault_collateral_pool",
+    "to": "0x18633ea30ad5c91e13d2e5714fe5e3d97043679b",
+    "amount": "12.46",
+    "reason": "Remaining collateral refund after liquidation",
+    "timestamp": 1753791995307
   }
 ]
