@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { WalletProvider } from "@/hooks/use-wallet";
 import LandingPage from "@/pages/landing";
 import DAppPage from "@/pages/dapp";
+import LearnPage from "@/pages/learn";
 import LiquidationPage from "@/pages/liquidation";
 import NotFound from "@/pages/not-found";
 import { clearAllMockData } from "@/utils/clearMockData";
@@ -17,6 +18,7 @@ function Router() {
       <Route path="/app" component={DAppPage} />
       <Route path="/dashboard" component={DAppPage} />
       <Route path="/trading" component={DAppPage} />
+      <Route path="/learn" component={LearnPage} />
       <Route path="/liquidation" component={LiquidationPage} />
       <Route component={NotFound} />
     </Switch>
