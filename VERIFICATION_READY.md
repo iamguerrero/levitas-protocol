@@ -41,6 +41,17 @@ Moved obsolete contracts to `./archive/old-contracts/`:
 
 Only production contracts remain in `./contracts/` directory.
 
+## ✅ Compiler Warning Fixed
+
+**Issue Resolved**: Removed dotenv injection lines from all flattened files that were causing ParserError.
+
+All flattened contracts now start cleanly with:
+```solidity
+// Sources flattened with hardhat v2.26.0 https://hardhat.org
+
+// SPDX-License-Identifier: MIT
+```
+
 ## 🚀 Ready for Deployment
 
 All systems are ready for mainnet deployment:

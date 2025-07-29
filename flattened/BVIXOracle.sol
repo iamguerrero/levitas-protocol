@@ -1,4 +1,3 @@
-[dotenv@17.2.0] injecting env (0) from .env (tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] })
 // Sources flattened with hardhat v2.26.0 https://hardhat.org
 
 // SPDX-License-Identifier: MIT
