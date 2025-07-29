@@ -354,15 +354,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             console.log(`🔍 Liquidation check for BVIX ${userAddress}: isLiquidated=${isLiquidated}`);
             
-            // Skip liquidated vaults completely in liquidation opportunities
-            if (isLiquidated) {
-              console.log(`⚠️ SKIPPING LIQUIDATED BVIX VAULT for ${userAddress}`);
-              continue; // Don't show liquidated vaults in liquidation center
-            }
-            
             let collateral, debt;
-            collateral = rawCollateral;
-            debt = rawDebt;
+            
+            // FOR LIQUIDATED VAULTS: Use fresh vault calculations (same as user-positions API)
+            if (isLiquidated) {
+              const liquidationData = getLiquidation('BVIX', userAddress);
+              if (liquidationData && liquidationData.contractStateAtLiquidation) {
+                const contractCollateral = parseFloat(liquidationData.contractStateAtLiquidation.collateral);
+                const contractDebt = parseFloat(liquidationData.contractStateAtLiquidation.debt);
+                
+                // Calculate fresh vault after liquidation (just like user-positions API)
+                const freshCollateral = rawCollateral - contractCollateral;
+                const freshDebt = rawDebt - contractDebt;
+                
+                if (freshCollateral > 0 && freshDebt > 0) {
+                  collateral = freshCollateral;
+                  debt = freshDebt;
+                  console.log(`🆕 FRESH BVIX VAULT FOR LIQUIDATION: ${freshCollateral.toFixed(2)} USDC, ${freshDebt.toFixed(2)} BVIX`);
+                } else {
+                  console.log(`⚠️ SKIPPING - No fresh vault activity for liquidated ${userAddress}`);
+                  continue;
+                }
+              } else {
+                console.log(`⚠️ SKIPPING - No liquidation data found for ${userAddress}`);
+                continue;
+              }
+            } else {
+              // Normal vault - use raw contract data
+              collateral = rawCollateral;
+              debt = rawDebt;
+            }
             
             const cr = debt > 0 ? (collateral / (debt * price)) * 100 : 0;
             
@@ -372,10 +393,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
               price,
               cr: cr.toFixed(2),
               crExact: cr,
-              isLiquidatable: cr <= 120.01 && cr > 0
+              isLiquidatable: cr < 120.0 && cr > 0,
+              isFreshVault: isLiquidated
             });
             
-            if (cr <= 120.25 && cr > 0) { // Liquidatable at or below 120% CR (allow floating point precision)
+            if (cr < 120.0 && cr > 0) { // Liquidatable below 120% CR
               liquidatable.push({
                 vaultId: liquidatable.length + 1,
                 owner: userAddress,
@@ -400,15 +422,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Check if this vault has been liquidated
             const isLiquidated = isVaultLiquidated('EVIX', userAddress);
             
-            // Skip liquidated vaults completely in liquidation opportunities
-            if (isLiquidated) {
-              console.log(`⚠️ SKIPPING LIQUIDATED EVIX VAULT for ${userAddress}`);
-              continue; // Don't show liquidated vaults in liquidation center
-            }
+            console.log(`🔍 Liquidation check for EVIX ${userAddress}: isLiquidated=${isLiquidated}`);
             
             let collateral, debt;
-            collateral = rawCollateral;
-            debt = rawDebt;
+            
+            // FOR LIQUIDATED VAULTS: Use fresh vault calculations (same as user-positions API)
+            if (isLiquidated) {
+              const liquidationData = getLiquidation('EVIX', userAddress);
+              if (liquidationData && liquidationData.contractStateAtLiquidation) {
+                const contractCollateral = parseFloat(liquidationData.contractStateAtLiquidation.collateral);
+                const contractDebt = parseFloat(liquidationData.contractStateAtLiquidation.debt);
+                
+                // Calculate fresh vault after liquidation (just like user-positions API)
+                const freshCollateral = rawCollateral - contractCollateral;
+                const freshDebt = rawDebt - contractDebt;
+                
+                if (freshCollateral > 0 && freshDebt > 0) {
+                  collateral = freshCollateral;
+                  debt = freshDebt;
+                  console.log(`🆕 FRESH EVIX VAULT FOR LIQUIDATION: ${freshCollateral.toFixed(2)} USDC, ${freshDebt.toFixed(2)} EVIX`);
+                } else {
+                  console.log(`⚠️ SKIPPING - No fresh vault activity for liquidated ${userAddress}`);
+                  continue;
+                }
+              } else {
+                console.log(`⚠️ SKIPPING - No liquidation data found for ${userAddress}`);
+                continue;
+              }
+            } else {
+              // Normal vault - use raw contract data
+              collateral = rawCollateral;
+              debt = rawDebt;
+            }
             
             const cr = debt > 0 ? (collateral / (debt * price)) * 100 : 0;
             
