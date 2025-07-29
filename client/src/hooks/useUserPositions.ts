@@ -163,8 +163,8 @@ export function useUserPositions() {
       }
     },
     enabled: isConnected && !!address,
-    refetchInterval: 10000, // Refresh every 10 seconds
-    staleTime: 5000 // Consider data stale after 5 seconds for faster updates
+    refetchInterval: 15000, // Refresh every 15 seconds for better performance
+    staleTime: 8000 // Consider data stale after 8 seconds
   });
 
   // Log any query errors

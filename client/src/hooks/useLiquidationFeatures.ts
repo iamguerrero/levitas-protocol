@@ -112,7 +112,7 @@ export function useLiquidationPrice(userAddress: string | null, tokenType: 'BVIX
       */
     },
     enabled: !!userAddress,
-    refetchInterval: 5000, // Refresh every 5 seconds for real-time updates
+    refetchInterval: 12000, // Reduced to 12 seconds for better performance
   });
 }
 
