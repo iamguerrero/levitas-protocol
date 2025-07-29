@@ -24,13 +24,21 @@ The following flattened source files are ready for contract verification on Base
 
 ## 📋 Verification Process
 
+### Option 1: Use Flattened Files (Recommended)
+
 For each contract:
 
 1. **Visit**: https://sepolia.basescan.org/address/{CONTRACT_ADDRESS}
 2. **Click**: "Contract" tab → "Verify & Publish"
 3. **Upload**: Corresponding flattened source file from `./flattened/`
-4. **Settings**: Use compiler settings above
-5. **Constructor**: Add ABI-encoded constructor arguments (see CONTRACT_VERIFICATION.md)
+4. **Contract Name**: Use the main contract name from table above (e.g., "BVIXToken", "MintRedeemV8")
+5. **Settings**: Use compiler settings above
+6. **Constructor**: Add ABI-encoded constructor arguments (see CONTRACT_VERIFICATION.md)
+
+### Option 2: Individual Contract Files (If Option 1 Fails)
+
+Individual contract files are available in `./verification-ready/` but may have missing dependencies.
+Use only if flattened files fail verification.
 
 ## 🧹 Project Cleanup Completed
 
