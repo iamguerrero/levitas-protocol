@@ -62,21 +62,37 @@ export default function Navigation() {
             >
               Litepaper
             </a>
-            <a
-              href="https://app.uniswap.org/add/0x036cbd53842c5426634e7929541ec2318f3dcf7e/0xa0b86a33e6ba6d57e9e8fa4c9f23de33a3b76b6f?chain=base_sepolia"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-600 hover:text-black transition-colors"
-            >
-              Liquidity
-            </a>
+            <Link href="/learn">
+              <span className={`transition-colors cursor-pointer ${
+                location === "/learn" 
+                  ? "text-cyan-600 font-semibold" 
+                  : "text-gray-600 hover:text-black"
+              }`}>
+                Learn
+              </span>
+            </Link>
+            <Link href="/liquidation">
+              <span className={`transition-colors cursor-pointer ${
+                location === "/liquidation" 
+                  ? "text-cyan-600 font-semibold" 
+                  : "text-gray-600 hover:text-black"
+              }`}>
+                Liquidation
+              </span>
+            </Link>
             {/* Only show WalletConnect on app pages when connected */}
             {(location === "/app" || location === "/trading" || location === "/liquidation") && isConnected ? (
               <WalletConnect />
-            ) : location !== "/app" && location !== "/trading" && location !== "/liquidation" ? (
+            ) : location !== "/app" && location !== "/trading" && location !== "/liquidation" && location !== "/learn" ? (
               <Link href="/app">
                 <Button className="bg-blue-600 text-white hover:bg-blue-700">
                   Launch App
+                </Button>
+              </Link>
+            ) : location === "/learn" ? (
+              <Link href="/app">
+                <Button className="bg-cyan-600 text-white hover:bg-cyan-700">
+                  Try it Live
                 </Button>
               </Link>
             ) : null}
@@ -122,14 +138,16 @@ export default function Navigation() {
             >
               Litepaper
             </a>
-            <a
-              href="https://app.uniswap.org/add/0x036cbd53842c5426634e7929541ec2318f3dcf7e/0xa0b86a33e6ba6d57e9e8fa4c9f23de33a3b76b6f?chain=base_sepolia"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block py-2 text-gray-600 hover:text-black"
-            >
-              Liquidity
-            </a>
+            <Link href="/learn">
+              <span className="block py-2 text-gray-600 hover:text-black cursor-pointer">
+                Learn
+              </span>
+            </Link>
+            <Link href="/liquidation">
+              <span className="block py-2 text-gray-600 hover:text-black cursor-pointer">
+                Liquidation
+              </span>
+            </Link>
             <a
               href="#governance"
               className="block py-2 text-gray-600 hover:text-black"
