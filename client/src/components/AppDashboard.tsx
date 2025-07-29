@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, TrendingUp, TrendingDown } from "lucide-react";
 import { useWallet } from "@/hooks/use-wallet";
 import { useUserPositions } from "@/hooks/useUserPositions";
+import { useRealTimeOracle } from "@/hooks/useRealTimeOracle";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 
@@ -15,6 +16,12 @@ export default function AppDashboard() {
   const history = historyResult.data || [];
   const { address } = useWallet();
   const { data: userPositions } = useUserPositions();
+  const { bvixPrice, evixPrice } = useRealTimeOracle();
+  
+  // Add console logging to debug pricing issues
+  useEffect(() => {
+    console.log('📊 AppDashboard Oracle Prices:', { bvixPrice, evixPrice });
+  }, [bvixPrice, evixPrice]);
   const [location] = useLocation();
   const [defaultTab, setDefaultTab] = useState("trading");
   
@@ -79,7 +86,15 @@ export default function AppDashboard() {
                           {item.isLiquidator === true ? (
                             <p className="font-medium text-green-600">+${parseFloat(item.bonus || '0').toFixed(2)} USDC Bonus</p>
                           ) : item.isLiquidator === false ? (
-                            <p className="font-medium text-red-600">-${parseFloat(item.bonus || '0').toFixed(2)} USDC Fee</p>
+                            <p className="font-medium text-red-600">-${(() => {
+                              // Calculate 5% liquidation fee based on debt value
+                              const debt = parseFloat(item.amount || item.debtRepaid || '0');
+                              const tokenType = item.tokenType || item.vault?.tokenType;
+                              const price = tokenType === 'BVIX' ? parseFloat(bvixPrice || '42.15') : parseFloat(evixPrice || '37.98');
+                              const debtValue = debt * price;
+                              const fee = debtValue * 0.05; // 5% liquidation fee
+                              return fee.toFixed(2);
+                            })()} USDC Fee</p>
                           ) : (
                             <p className="font-medium text-green-600">+${parseFloat(item.bonus || '0').toFixed(2)} USDC</p>
                           )}
@@ -95,13 +110,17 @@ export default function AppDashboard() {
                           <p className="text-gray-500">Debt Value</p>
                           <p className="font-medium">${(() => {
                             const debt = parseFloat(item.amount || item.debtRepaid || '0');
-                            const price = (item.tokenType || item.vault?.tokenType) === 'BVIX' ? 42.15 : 37.98;
+                            const tokenType = item.tokenType || item.vault?.tokenType;
+                            const price = tokenType === 'BVIX' ? parseFloat(bvixPrice || '42.15') : parseFloat(evixPrice || '37.98');
                             return (debt * price).toFixed(2);
                           })()} USDC</p>
                         </div>
                         <div>
                           <p className="text-gray-500">{item.isLiquidator === false ? 'Collateral Lost' : 'Total Received'}</p>
-                          <p className="font-medium">${parseFloat(item.collateralSeized || '0').toFixed(2)} USDC</p>
+                          <p className="font-medium">{item.isLiquidator === false ? 
+                            `-$${parseFloat(item.collateralLost || '0').toFixed(2)}` : 
+                            `$${parseFloat(item.collateralSeized || '0').toFixed(2)}`
+                          } USDC</p>
                         </div>
                         <div>
                           <p className="text-gray-500">Transaction</p>
