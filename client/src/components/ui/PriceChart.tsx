@@ -9,8 +9,7 @@ import {
   LineElement,
   Title,
   Tooltip,
-  Legend,
-  Filler
+  Legend
 } from 'chart.js';
 import { PriceDataPoint } from '@/hooks/usePriceHistory';
 import { Bitcoin, TrendingUp, TrendingDown } from 'lucide-react';
@@ -23,8 +22,7 @@ ChartJS.register(
   LineElement,
   Title,
   Tooltip,
-  Legend,
-  Filler
+  Legend
 );
 
 interface PriceChartProps {
@@ -61,17 +59,15 @@ export function PriceChart({ token, data, currentPrice, isConnected }: PriceChar
         label: `${token.toUpperCase()} Price`,
         data: validData.map(point => point.price),
         borderColor: token === 'bvix' ? '#f97316' : '#3b82f6',
-        backgroundColor: token === 'bvix' 
-          ? 'rgba(249, 115, 22, 0.1)' 
-          : 'rgba(59, 130, 246, 0.1)',
+        backgroundColor: 'transparent',
         borderWidth: 2,
-        fill: true,
-        tension: 0.4,
+        fill: false,
+        tension: 0.1,
         pointBackgroundColor: token === 'bvix' ? '#f97316' : '#3b82f6',
-        pointBorderColor: '#ffffff',
-        pointBorderWidth: 2,
-        pointRadius: validData.length > 50 ? 1 : 3,
-        pointHoverRadius: 6,
+        pointBorderColor: token === 'bvix' ? '#f97316' : '#3b82f6',
+        pointBorderWidth: 1,
+        pointRadius: 2,
+        pointHoverRadius: 4,
       }
     ]
   };
