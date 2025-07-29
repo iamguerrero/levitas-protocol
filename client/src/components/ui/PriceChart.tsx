@@ -35,10 +35,20 @@ interface PriceChartProps {
 }
 
 export function PriceChart({ token, data, currentPrice, isConnected }: PriceChartProps) {
-  const isUpTrend = data.length >= 2 ? parseFloat(currentPrice) > data[data.length - 2].price : true;
+  // Filter out invalid data points and ensure we have valid price data
+  const validData = data.filter(point => 
+    point && 
+    typeof point.price === 'number' && 
+    !isNaN(point.price) && 
+    point.price > 0 &&
+    point.timestamp &&
+    !isNaN(point.timestamp)
+  ).sort((a, b) => a.timestamp - b.timestamp);
+
+  const isUpTrend = validData.length >= 2 ? parseFloat(currentPrice) > validData[validData.length - 2].price : true;
   
   const chartData = {
-    labels: data.map(point => {
+    labels: validData.map(point => {
       const date = new Date(point.timestamp);
       return date.toLocaleTimeString('en-US', { 
         hour: '2-digit', 
@@ -49,7 +59,7 @@ export function PriceChart({ token, data, currentPrice, isConnected }: PriceChar
     datasets: [
       {
         label: `${token.toUpperCase()} Price`,
-        data: data.map(point => point.price),
+        data: validData.map(point => point.price),
         borderColor: token === 'bvix' ? '#f97316' : '#3b82f6',
         backgroundColor: token === 'bvix' 
           ? 'rgba(249, 115, 22, 0.1)' 
@@ -60,7 +70,7 @@ export function PriceChart({ token, data, currentPrice, isConnected }: PriceChar
         pointBackgroundColor: token === 'bvix' ? '#f97316' : '#3b82f6',
         pointBorderColor: '#ffffff',
         pointBorderWidth: 2,
-        pointRadius: 3,
+        pointRadius: validData.length > 50 ? 1 : 3,
         pointHoverRadius: 6,
       }
     ]
@@ -69,6 +79,10 @@ export function PriceChart({ token, data, currentPrice, isConnected }: PriceChar
   const options = {
     responsive: true,
     maintainAspectRatio: false,
+    interaction: {
+      intersect: false,
+      mode: 'index' as const,
+    },
     plugins: {
       legend: {
         display: false,
@@ -91,6 +105,7 @@ export function PriceChart({ token, data, currentPrice, isConnected }: PriceChar
         display: true,
         grid: {
           color: 'rgba(0, 0, 0, 0.1)',
+          drawBorder: false,
         },
         ticks: {
           maxTicksLimit: 6,
@@ -104,6 +119,7 @@ export function PriceChart({ token, data, currentPrice, isConnected }: PriceChar
         display: true,
         grid: {
           color: 'rgba(0, 0, 0, 0.1)',
+          drawBorder: false,
         },
         ticks: {
           color: '#6b7280',
@@ -111,16 +127,28 @@ export function PriceChart({ token, data, currentPrice, isConnected }: PriceChar
             size: 11
           },
           callback: function(value: any) {
-            return `$${value.toFixed(2)}`;
+            return `$${Number(value).toFixed(2)}`;
           }
-        }
+        },
+        beginAtZero: false,
+      }
+    },
+    elements: {
+      point: {
+        hoverRadius: 6,
+      },
+      line: {
+        borderJoinStyle: 'round' as const,
+        borderCapStyle: 'round' as const,
       }
     }
   };
 
-  const priceChange = data.length >= 2 
-    ? ((parseFloat(currentPrice) - data[0].price) / data[0].price) * 100 
+  const priceChange = validData.length >= 2 
+    ? ((parseFloat(currentPrice) - validData[0].price) / validData[0].price) * 100 
     : 0;
+
+  const displayPrice = parseFloat(currentPrice) || 0;
 
   return (
     <Card className="bg-white dark:bg-gray-800 border shadow-lg">
@@ -144,7 +172,7 @@ export function PriceChart({ token, data, currentPrice, isConnected }: PriceChar
           <div className="text-right">
             <div className="flex items-center gap-2">
               <span className={`font-mono font-bold text-lg ${token === 'bvix' ? 'text-orange-600' : 'text-blue-600'}`}>
-                ${parseFloat(currentPrice).toFixed(4)}
+                ${displayPrice.toFixed(4)}
               </span>
               {isConnected && (
                 <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">
@@ -152,7 +180,7 @@ export function PriceChart({ token, data, currentPrice, isConnected }: PriceChar
                 </span>
               )}
             </div>
-            {data.length >= 2 && (
+            {validData.length >= 2 && !isNaN(priceChange) && (
               <div className={`flex items-center gap-1 text-sm ${isUpTrend ? 'text-green-600' : 'text-red-600'}`}>
                 {isUpTrend ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
                 <span>{priceChange >= 0 ? '+' : ''}{priceChange.toFixed(2)}%</span>
@@ -163,7 +191,7 @@ export function PriceChart({ token, data, currentPrice, isConnected }: PriceChar
       </CardHeader>
       <CardContent>
         <div className="h-48">
-          {data.length > 0 ? (
+          {validData.length > 0 ? (
             <Line data={chartData} options={options} />
           ) : (
             <div className="h-full flex items-center justify-center text-gray-500">
