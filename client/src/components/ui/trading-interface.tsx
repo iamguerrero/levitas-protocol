@@ -661,14 +661,14 @@ export default function TradingInterface() {
                   <Bitcoin className="text-orange-500" size={20} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-foreground">BVIX</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <h3 className="font-bold text-black">BVIX</h3>
+                  <p className="text-sm text-gray-600">
                     Bitcoin Volatility Index
                   </p>
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-2xl font-bold text-foreground">
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">
                   ${parseFloat(realtimeBvixPrice || contractData.bvixPrice || "0").toFixed(2)}
                 </div>
               </div>
@@ -692,14 +692,14 @@ export default function TradingInterface() {
                   <SiEthereum className="text-blue-500" size={20} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-foreground">EVIX</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <h3 className="font-bold text-black">EVIX</h3>
+                  <p className="text-sm text-gray-600">
                     Ethereum Volatility Index
                   </p>
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-2xl font-bold text-foreground">
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">
                   ${parseFloat(realtimeEvixPrice || contractData.evixPrice || "0").toFixed(2)}
                 </div>
               </div>
