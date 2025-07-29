@@ -1,0 +1,73 @@
+inpage.js:1 MetaMask - RPC Error: Internal JSON-RPC error. 
+Object
+code
+: 
+-32603
+data
+: 
+cause
+: 
+null
+code
+: 
+3
+data
+: 
+"0xfb8f41b20000000000000000000000006c3e986c4cc7b3400de732440fa01b66ff9172cf0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004190ab00"
+message
+: 
+"execution reverted"
+[[Prototype]]
+: 
+Object
+message
+: 
+"Internal JSON-RPC error."
+stack
+: 
+"{\n  \"code\": -32603,\n  \"message\": \"Internal JSON-RPC error.\",\n  \"data\": {\n    \"code\": 3,\n    \"message\": \"execution reverted\",\n    \"data\": \"0xfb8f41b20000000000000000000000006c3e986c4cc7b3400de732440fa01b66ff9172cf0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004190ab00\",\n    \"cause\": null\n  },\n  \"stack\": \"Error: Internal JSON-RPC error.\\n    at new o (chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/common-3.js:3:5787)\\n    at a (chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/common-3.js:3:8878)\\n    at Object.internal (chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/common-3.js:3:9487)\\n    at chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/common-1.js:3:21663\\n    at async chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/common-2.js:3:64047\"\n}\n  at new o (chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/common-3.js:3:5787)\n  at a (chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/common-3.js:3:8878)\n  at Object.internal (chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/common-3.js:3:9487)\n  at chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/common-1.js:3:21663\n  at async chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/common-2.js:3:64047"
+[[Prototype]]
+: 
+Object
+constructor
+: 
+ƒ Object()
+hasOwnProperty
+: 
+ƒ hasOwnProperty()
+isPrototypeOf
+: 
+ƒ isPrototypeOf()
+propertyIsEnumerable
+: 
+ƒ propertyIsEnumerable()
+toLocaleString
+: 
+ƒ toLocaleString()
+toString
+: 
+ƒ toString()
+valueOf
+: 
+ƒ valueOf()
+__defineGetter__
+: 
+ƒ __defineGetter__()
+__defineSetter__
+: 
+ƒ __defineSetter__()
+__lookupGetter__
+: 
+ƒ __lookupGetter__()
+__lookupSetter__
+: 
+ƒ __lookupSetter__()
+__proto__
+: 
+(...)
+get __proto__
+: 
+ƒ __proto__()
+set __proto__
+: 
+ƒ __proto__()
