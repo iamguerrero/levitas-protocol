@@ -5,6 +5,7 @@ import { useWallet } from "@/hooks/use-wallet";
 import { Button } from "@/components/ui/button";
 import { getNetworkName } from "@/lib/web3";
 import { useRealTimeOracle } from "@/hooks/useRealTimeOracle";
+import { Footer } from "@/components/ui/footer";
 
 export default function DAppPage() {
   const { isConnected, address, connectWallet, disconnect } = useWallet();
@@ -33,7 +34,7 @@ export default function DAppPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <Navigation />
 
       
@@ -45,22 +46,23 @@ export default function DAppPage() {
             <AppDashboard />
           ) : (
             <div className="text-center py-20">
-              <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg className="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-20 h-20 bg-primary/10 dark:bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg className="w-10 h-10 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Connect Your Wallet</h2>
-              <p className="text-gray-600 mb-8 max-w-md mx-auto">
+              <h2 className="text-2xl font-bold text-foreground mb-4">Connect Your Wallet</h2>
+              <p className="text-muted-foreground mb-8 max-w-md mx-auto">
                 Connect your MetaMask wallet to start minting and redeeming volatility tokens.
               </p>
-              <Button onClick={connectWallet} size="lg" className="bg-blue-600 hover:bg-blue-700">
+              <Button onClick={connectWallet} size="lg">
                 Connect MetaMask
               </Button>
             </div>
           )}
         </div>
       </div>
+      <Footer />
     </div>
   );
 }
