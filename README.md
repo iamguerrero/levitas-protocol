@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Network: Base Sepolia](https://img.shields.io/badge/Network-Base%20Sepolia-blue)](https://sepolia.basescan.org/)
-[![Status: Production Ready](https://img.shields.io/badge/Status-Production%20Ready-brightgreen)](https://levitas.replit.app)
+[![Status: Production Ready](https://img.shields.io/badge/Status-Production%20Ready-brightgreen)](https://levitas.finance)
 
 **Build the volatility layer of DeFi**  
 Tokenized crypto-native volatility indices with full collateralization, advanced liquidation mechanics, and permissionless trading on Base Sepolia.
@@ -107,32 +107,12 @@ DATABASE_URL=your_postgresql_url
 NODE_ENV=development
 ```
 
-## 🔗 Contract Verification
-
-To verify smart contracts on Basescan:
-
-1. **Visit Basescan**: Go to https://sepolia.basescan.org/
-2. **Navigate to Contract**: Enter the contract address 
-3. **Verify & Publish**: Click "Contract" → "Verify & Publish"
-4. **Compiler Settings**:
-   - Compiler Type: Solidity (Single file)
-   - Compiler Version: v0.8.19+commit.7dd6d404
-   - License Type: MIT License
-5. **Upload Source**: Copy the flattened contract source code
-6. **Constructor Arguments**: Include ABI-encoded constructor parameters
-
-### Contract Verification Status
-- [ ] BVIX Token V8 - `0x7223A0Eb07B8d7d3CFbf84AC78eee4ae9DaA22CE`
-- [ ] BVIX MintRedeem V8 - `0x653A6a4dCe04dABAEdb521091A889bb1EE298D8d`  
-- [ ] EVIX Token V6 - `0x7066700CAf442501B308fAe34d5919091e1b2380`
-- [ ] EVIX MintRedeem V6 - `0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf`
-
 ---
 
 ## 📖 Documentation
 
-- **Live dApp**: https://levitas.replit.app
-- **Litepaper**: [Levitas Finance Whitepaper](https://levitas.replit.app/Levitas%20Finance%20Whitepaper%20V1.pdf)
+- **Live dApp**: https://levitas.finance
+- **Litepaper**: [Levitas Finance Whitepaper](https://levitas.finance/Levitas%20Finance%20Whitepaper%20V1.pdf)
 - **Architecture**: See `replit.md` for detailed technical documentation
 
 ## 🤝 Contributing
