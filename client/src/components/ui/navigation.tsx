@@ -71,19 +71,18 @@ export default function Navigation() {
                 Learn
               </span>
             </Link>
-            <Link href="/liquidation">
-              <span className={`transition-colors cursor-pointer ${
-                location === "/liquidation" 
-                  ? "text-cyan-600 font-semibold" 
-                  : "text-gray-600 hover:text-black"
-              }`}>
-                Liquidation
-              </span>
-            </Link>
+            <a
+              href="https://app.uniswap.org"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-600 hover:text-black transition-colors"
+            >
+              Liquidity
+            </a>
             {/* Only show WalletConnect on app pages when connected */}
-            {(location === "/app" || location === "/trading" || location === "/liquidation") && isConnected ? (
+            {(location === "/app" || location === "/trading") && isConnected ? (
               <WalletConnect />
-            ) : location !== "/app" && location !== "/trading" && location !== "/liquidation" && location !== "/learn" ? (
+            ) : location !== "/app" && location !== "/trading" && location !== "/learn" ? (
               <Link href="/app">
                 <Button className="bg-blue-600 text-white hover:bg-blue-700">
                   Launch App
@@ -143,11 +142,14 @@ export default function Navigation() {
                 Learn
               </span>
             </Link>
-            <Link href="/liquidation">
-              <span className="block py-2 text-gray-600 hover:text-black cursor-pointer">
-                Liquidation
-              </span>
-            </Link>
+            <a
+              href="https://app.uniswap.org"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block py-2 text-gray-600 hover:text-black"
+            >
+              Liquidity
+            </a>
             <a
               href="#governance"
               className="block py-2 text-gray-600 hover:text-black"
