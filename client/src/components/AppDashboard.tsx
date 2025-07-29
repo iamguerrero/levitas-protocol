@@ -17,14 +17,14 @@ export default function AppDashboard() {
   const { address } = useWallet();
   const { data: userPositions } = useUserPositions();
   const { bvixPrice, evixPrice } = useRealTimeOracle();
-  
+
   // Add console logging to debug pricing issues
   useEffect(() => {
     console.log('📊 AppDashboard Oracle Prices:', { bvixPrice, evixPrice });
   }, [bvixPrice, evixPrice]);
   const [location] = useLocation();
   const [defaultTab, setDefaultTab] = useState("trading");
-  
+
   // Debug logging
   useEffect(() => {
     if (address && history) {
@@ -33,7 +33,7 @@ export default function AppDashboard() {
       console.log(`🎨 AppDashboard - History items:`, history);
     }
   }, [address, history]);
-  
+
   useEffect(() => {
     // Check URL parameters for tab selection
     const params = new URLSearchParams(window.location.search);
@@ -51,17 +51,17 @@ export default function AppDashboard() {
           <TabsTrigger value="liquidation">Liquidation Center</TabsTrigger>
           <TabsTrigger value="history">History</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="trading" className="space-y-4">
           <TradingInterface />
         </TabsContent>
-        
+
         <TabsContent value="liquidation" className="space-y-4">
           <LiquidationOpportunities />
         </TabsContent>
-        
 
-        
+
+
         <TabsContent value="history" className="space-y-4">
           <div className="space-y-4">
             <h2 className="text-2xl font-bold">Transaction History</h2>
@@ -124,7 +124,11 @@ export default function AppDashboard() {
                         </div>
                         <div>
                           <p className="text-gray-500">Transaction</p>
-                          <p className="font-mono text-xs">{item.txHash ? `${item.txHash.slice(0, 10)}...` : 'Pending...'}</p>
+                          <p className="font-medium font-mono text-xs break-all">
+                            <a href={`https://sepolia.basescan.org/tx/${item.txHash}`} target="_blank" rel="noopener noreferrer">
+                              {item.txHash}
+                            </a>
+                          </p>
                         </div>
                       </div>
                     </CardContent>
