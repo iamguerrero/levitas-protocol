@@ -262,12 +262,6 @@ export async function getAllBalances(address: string): Promise<{
       usdcBalance: ethers.formatUnits(usdcBalance, 6)
     };
     
-
-      evixFormatted: result.evixBalance,
-      usdcRaw: usdcBalance.toString(),
-      usdcFormatted: result.usdcBalance
-    });
-    
     // Don't use mock balances in getAllBalances - keep it clean
     // Mock balances should only be used in specific liquidation contexts
     
