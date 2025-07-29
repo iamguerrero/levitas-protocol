@@ -170,12 +170,7 @@ export default function TradingInterface() {
   // Use real-time prices only as fallback when API data is unavailable
   useEffect(() => {
     if ((realtimeBvixPrice || realtimeEvixPrice) && (!vaultData?.price || !vaultData?.evixPrice)) {
-      console.log("🔄 Sprint 2.1 Real-time price fallback:", { 
-        bvix: realtimeBvixPrice, 
-        evix: realtimeEvixPrice, 
-        oracleConnected,
-        apiPricesAvailable: !!vaultData?.price
-      });
+      // Real-time price fallback active
       setContractData(prev => ({
         ...prev,
         bvixPrice: vaultData?.price || realtimeBvixPrice || prev.bvixPrice,
@@ -195,10 +190,8 @@ export default function TradingInterface() {
   // In the useEffect for address change
   useEffect(() => {
     if (address && contractsDeployed) {
-      // Clear any mock balances when loading the trading interface
+      // Clear any mock balances when loading the trading interface  
       localStorage.removeItem('mockBalances');
-      
-      // Preserve existing prices, only reset balances
       setIsLoading(true);
       setContractData(prev => ({
         ...prev,
@@ -222,7 +215,7 @@ export default function TradingInterface() {
       if (!isLoading) {
         loadContractData();
       }
-    }, 60000); // Increased to 60s (1 minute) to minimize performance violations
+    }, 90000); // Increased to 90s to further reduce violations
 
     return () => clearInterval(interval);
   }, [address, contractsDeployed]);
@@ -658,7 +651,7 @@ export default function TradingInterface() {
       {/* Price Display - Clickable Cards */}
       <div className="grid md:grid-cols-2 gap-6">
         <Card 
-          className={`hover:shadow-lg transition-all cursor-pointer ${selectedToken === 'bvix' ? 'ring-2 ring-orange-500 shadow-lg' : ''}`}
+          className={`hover:shadow-lg transition-shadow cursor-pointer ${selectedToken === 'bvix' ? 'ring-2 ring-orange-500 shadow-lg' : ''}`}
           onClick={() => setSelectedToken('bvix')}
         >
           <CardContent className="p-6">
@@ -689,7 +682,7 @@ export default function TradingInterface() {
         </Card>
 
         <Card 
-          className={`hover:shadow-lg transition-all cursor-pointer ${selectedToken === 'evix' ? 'ring-2 ring-blue-500 shadow-lg' : ''}`}
+          className={`hover:shadow-lg transition-shadow cursor-pointer ${selectedToken === 'evix' ? 'ring-2 ring-blue-500 shadow-lg' : ''}`}
           onClick={() => setSelectedToken('evix')}
         >
           <CardContent className="p-6">
