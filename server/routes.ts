@@ -2,6 +2,13 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { ethers } from "ethers";
+import { recordLiquidation, isVaultLiquidated, getLiquidation, getAllLiquidations, clearLiquidations } from './services/liquidation';
+import { recordMockTransfer, getMockUsdcBalance, getMockTransfers } from './services/mockUsdcTransfer';
+
+// Declare global types for TypeScript
+declare global {
+  var liquidatedVaults: Record<string, any> | undefined;
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // put application routes here
@@ -10,25 +17,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // use storage to perform CRUD operations on the storage interface
   // e.g. storage.insertUser(user) or storage.getUserByUsername(username)
 
+  // API endpoint to get consistent simulated prices for frontend/backend synchronization
+  app.get("/api/v1/simulated-prices", async (req, res) => {
+    try {
+      const { simulatedPricing } = await import('./services/simulatedPricing.js');
+      const prices = simulatedPricing.getPrices();
+      
+      res.json({
+        bvix: parseFloat(prices.bvix),
+        evix: parseFloat(prices.evix),
+        lastUpdate: new Date().toISOString()
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        error: 'Failed to fetch simulated prices',
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   // Vault statistics endpoint
   app.get("/api/v1/vault-stats", async (req, res) => {
     try {
-      // Contract addresses - V5 Final with fresh BVIX and proper ownership
+      // Import simulated pricing service for consistent frontend/backend pricing
+      const { simulatedPricing } = await import('./services/simulatedPricing.js');
+      
+      // Contract addresses - V6 (current production)
       const MOCK_USDC_ADDRESS = '0x9CC37B36FDd8CF5c0297BE15b75663Bf2a193297'; // MockUSDC with public faucet
-      const BVIX_ADDRESS = '0xdcCCCC3A977cC0166788265eD4B683D41f3AED09'; // Fresh BVIX with faucet USDC
-      const MINT_REDEEM_ADDRESS = '0x4d0ddFBCBa76f2e72B0Fef2fdDcaE9ddd6922397'; // V5 with faucet USDC
-      const ORACLE_ADDRESS = '0x85485dD6cFaF5220150c413309C61a8EA24d24FE';
-      // EVIX contracts - V5 Final addresses
-      const EVIX_MINT_REDEEM_ADDRESS = '0xb187c5Ff48D69BB0b477dAf30Eec779E0D07771D'; // EVIX V5 with faucet USDC
+      const BVIX_ADDRESS = '0x7223A0Eb07B8d7d3CFbf84AC78eee4ae9DaA22CE'; // BVIX token V8 (WORKING)
+      const MINT_REDEEM_ADDRESS = '0x653A6a4dCe04dABAEdb521091A889bb1EE298D8d'; // BVIX MintRedeem V8 (WORKING)
+      // EVIX contracts - V6 addresses
+      const EVIX_ADDRESS = '0x7066700CAf442501B308fAe34d5919091e1b2380'; // EVIX token V6
+      const EVIX_MINT_REDEEM_ADDRESS = '0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf'; // EVIX MintRedeem V6
       const BASE_SEPOLIA_RPC_URL = 'https://sepolia.base.org';
 
       // Minimal ERC20 ABI for balance and supply queries
       const ERC20_ABI = [
         'function balanceOf(address account) external view returns (uint256)',
-        'function totalSupply() external view returns (uint256)',
+        // 'function totalSupply() external view returns (uint256)', // Removed - individual vault mode
       ];
 
-      // Oracle ABI for price queries
+      // Oracle ABI for price queries - BVIX uses uint256, EVIX uses int256, but we can cast
       const ORACLE_ABI = [
         'function getPrice() external view returns (uint256)',
       ];
@@ -38,72 +67,216 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Initialize contracts
       const usdcContract = new ethers.Contract(MOCK_USDC_ADDRESS, ERC20_ABI, provider);
-      const bvixContract = new ethers.Contract(BVIX_ADDRESS, ERC20_ABI, provider);
-      const oracleContract = new ethers.Contract(ORACLE_ADDRESS, ORACLE_ABI, provider);
+      const bvixContract = new ethers.Contract('0x7223A0Eb07B8d7d3CFbf84AC78eee4ae9DaA22CE', ERC20_ABI, provider); // V8 BVIX TOKEN (WORKING)
+      
+      // Get simulated prices for consistent frontend/backend pricing
+      const simulatedPrices = simulatedPricing.getPrices();
       
       // Fetch data in parallel from both vaults
-      const [bvixVaultUsdcBalance, evixVaultUsdcBalance, bvixTotalSupply, bvixPrice] = await Promise.all([
+      const [bvixVaultUsdcBalance, evixVaultUsdcBalance, bvixTotalSupply] = await Promise.all([
         usdcContract.balanceOf(MINT_REDEEM_ADDRESS),
         usdcContract.balanceOf(EVIX_MINT_REDEEM_ADDRESS),
-        bvixContract.totalSupply(),
-        oracleContract.getPrice()
+        Promise.resolve(BigInt(0)) // Don't use totalSupply for individual vaults
       ]);
       
       // Format values
       const bvixUsdcValue = ethers.formatUnits(bvixVaultUsdcBalance, 6);
       const evixUsdcValue = ethers.formatUnits(evixVaultUsdcBalance, 6);
-      const totalUsdcValue = (parseFloat(bvixUsdcValue) + parseFloat(evixUsdcValue)).toString();
-      const bvixSupply = ethers.formatEther(bvixTotalSupply); // BVIX has 18 decimals
-      const price = ethers.formatUnits(bvixPrice, 8); // Oracle returns 8-decimal format on Base Sepolia
+      const totalUsdcValue = evixUsdcValue; // INDIVIDUAL VAULT ONLY - no protocol-wide sums
+      const bvixSupply = "0.0"; // Individual vault mode - no total supply
+      const price = simulatedPrices.bvix; // Use simulated price for consistency
       
-      // Calculate protocol-wide collateral ratio (total USDC vs total token value)
-      // This should be the standard practice for protocol health
+      // Individual vault calculations only - NO PROTOCOL-WIDE LOGIC
       const totalUsdcFloat = parseFloat(totalUsdcValue);
       const bvixFloat = parseFloat(bvixSupply);
       const priceFloat = parseFloat(price);
       
-      // Add EVIX data for complete protocol-wide collateral ratio
-      const evixContract = new ethers.Contract('0x089C132BC246bF2060F40B0608Cb14b2A0cC9127', ERC20_ABI, provider);
-      const evixOracleContract = new ethers.Contract('0xCd7441A771a7F84E58d98E598B7Ff23A3688094F', ['function getPrice() external view returns (uint256)'], provider);
+      // Add EVIX data for individual vault calculations
+      const evixContract = new ethers.Contract(EVIX_ADDRESS, ERC20_ABI, provider);
       
-      console.log('Debug: Using EVIX contract address:', '0x089C132BC246bF2060F40B0608Cb14b2A0cC9127');
-      console.log('Debug: Using EVIX vault address:', EVIX_MINT_REDEEM_ADDRESS);
+
       
-      const [evixTotalSupply, evixPrice] = await Promise.all([
-        evixContract.totalSupply(),
-        evixOracleContract.getPrice()
-      ]);
-      
-      const evixSupply = ethers.formatEther(evixTotalSupply);
-      const evixPriceFormatted = ethers.formatEther(evixPrice); // EVIX oracle also returns 18-decimal format
+      // Use simulated pricing for EVIX as well
+      const evixSupply = "0.0"; // Individual vault mode - no total supply
+      const evixPriceFormatted = simulatedPrices.evix; // Use simulated price for consistency
       
       const bvixValueInUsd = bvixFloat * priceFloat;
       const evixValueInUsd = parseFloat(evixSupply) * parseFloat(evixPriceFormatted);
       const totalTokenValueInUsd = bvixValueInUsd + evixValueInUsd;
       
-      // Calculate protocol-wide collateral ratio (correct math)
-      // Total USDC in all vaults / Total value of all tokens
-      const protocolWideCR = totalTokenValueInUsd > 0 ? (totalUsdcFloat / totalTokenValueInUsd) * 100 : 0;
+      // Calculate individual vault CRs only - NO PROTOCOL-WIDE CR
+      const individualCR = totalTokenValueInUsd > 0 ? (totalUsdcFloat / totalTokenValueInUsd) * 100 : 0;
       
       // Also calculate individual vault CRs for debugging
       const bvixVaultCR = bvixValueInUsd > 0 ? (parseFloat(bvixUsdcValue) / bvixValueInUsd) * 100 : 0;
+      // Calculate EVIX vault CR from actual position data (if exists)
       const evixVaultCR = evixValueInUsd > 0 ? (parseFloat(evixUsdcValue) / evixValueInUsd) * 100 : 0;
       
+      // Get user's personal wallet USDC balance (not vault balance)
+      const userAddress = req.query.address as string;
+      let adjustedUsdcBalance = "0.0000";
+      
+      if (userAddress) {
+        // Fetch user's actual wallet USDC balance
+        const userWalletUsdcBalance = await usdcContract.balanceOf(userAddress);
+        const userWalletUsdcFormatted = ethers.formatUnits(userWalletUsdcBalance, 6);
+        
+        // Apply mock transfers to user's actual wallet balance
+        adjustedUsdcBalance = getMockUsdcBalance(userAddress, userWalletUsdcFormatted);
+
+      } else {
+        // Fallback if no user address provided
+        adjustedUsdcBalance = totalUsdcFloat.toFixed(4);
+      }
+      
+      // GET ACTUAL USER POSITION DATA DIRECTLY WITHOUT API CALL TO AVOID CIRCULAR DEPENDENCY
+      let bvixPositionValueInUsd = 0;
+      let bvixPositionUsdc = "0.0";
+      let bvixPositionCR = 0;
+      let evixPositionValueInUsd = 0;
+      let evixPositionUsdc = "0.0";
+      let evixPositionCR = 0;
+      
+      if (userAddress) {
+        try {
+          // DIRECT CONTRACT CALLS TO GET ACTUAL POSITIONS (same logic as user-positions endpoint)
+          const BVIX_MINT_REDEEM_ADDRESS = '0x653A6a4dCe04dABAEdb521091A889bb1EE298D8d';
+          const EVIX_MINT_REDEEM_ADDRESS = '0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf';
+          
+          const MINT_REDEEM_ABI = [
+            'function positions(address user) external view returns (uint256 collateral, uint256 debt)',
+          ];
+          
+          const bvixVaultContract = new ethers.Contract(BVIX_MINT_REDEEM_ADDRESS, MINT_REDEEM_ABI, provider);
+          const evixVaultContract = new ethers.Contract(EVIX_MINT_REDEEM_ADDRESS, MINT_REDEEM_ABI, provider);
+          
+          const [bvixPosition, evixPosition] = await Promise.all([
+            bvixVaultContract.positions(userAddress),
+            evixVaultContract.positions(userAddress)
+          ]);
+          
+          // Check if BVIX vault was liquidated and format position accordingly
+          const bvixLiquidated = isVaultLiquidated('BVIX', userAddress);
+          const evixLiquidated = isVaultLiquidated('EVIX', userAddress);
+          
+          // Calculate BVIX position with fresh vault detection
+
+          
+          if (bvixPosition.debt > 0n) {
+            const rawCollateral = parseFloat(ethers.formatUnits(bvixPosition.collateral, 6));
+            const rawDebt = parseFloat(ethers.formatEther(bvixPosition.debt));
+            
+            // Apply fresh vault detection logic for liquidated vaults
+            let collateral, debt;
+            let showPosition = true;
+            
+            if (bvixLiquidated) {
+              // Get liquidation record to find contract state at liquidation time
+              const { getLiquidation } = await import('./services/liquidation.js');
+              const liquidationRecord = getLiquidation('BVIX', userAddress);
+              
+              if (liquidationRecord && liquidationRecord.contractStateAtLiquidation) {
+                // Contract state at liquidation time
+                const oldCollateral = parseFloat(liquidationRecord.contractStateAtLiquidation.collateral);
+                const oldDebt = parseFloat(liquidationRecord.contractStateAtLiquidation.debt);
+                
+                // Calculate fresh vault amounts (current - old)
+                const freshCollateral = rawCollateral - oldCollateral;
+                const freshDebt = rawDebt - oldDebt;
+                
+                if (freshCollateral > 0 || freshDebt > 0) {
+                  // User has minted after liquidation - show ONLY the new mint
+                  collateral = freshCollateral;
+                  debt = freshDebt;
+
+                } else {
+                  // No fresh activity - hide position
+                  showPosition = false;
+
+                }
+              } else {
+                // No liquidation state stored - shouldn't happen but show nothing
+                showPosition = false;
+
+              }
+            } else {
+              // Normal active vault
+              collateral = rawCollateral;
+              debt = rawDebt;
+            }
+            
+            if (showPosition && debt > 0) {
+              const priceFloat = parseFloat(price);
+              const cr = debt > 0 ? (collateral / (debt * priceFloat)) * 100 : 0;
+              
+              bvixPositionUsdc = collateral.toFixed(6);
+              bvixPositionValueInUsd = debt * priceFloat;
+              bvixPositionCR = cr;
+              
+              // BVIX Position Calculated
+              // collateral: bvixPositionUsdc, valueInUsd: bvixPositionValueInUsd, cr: bvixPositionCR, freshVault: bvixLiquidated && showPosition
+            } else {
+
+            }
+          }
+          
+          // Calculate EVIX position if exists and not liquidated  
+          if (!evixLiquidated && evixPosition.debt > 0n) {
+            const collateral = parseFloat(ethers.formatUnits(evixPosition.collateral, 6));
+            const debt = parseFloat(ethers.formatEther(evixPosition.debt));
+            const priceFloat = parseFloat(evixPriceFormatted);
+            const cr = debt > 0 ? (collateral / (debt * priceFloat)) * 100 : 0;
+            
+            evixPositionUsdc = collateral.toFixed(6);
+            evixPositionValueInUsd = debt * priceFloat;
+            evixPositionCR = cr;
+          }
+          
+        } catch (error) {
+
+        }
+      }
+
+      // CRITICAL FIX: Get actual wallet balances from blockchain instead of vault position data
+      let actualBvixBalance = "0.0";
+      let actualEvixBalance = "0.0";
+      
+      if (userAddress) {
+        try {
+          // Get actual BVIX and EVIX wallet balances from blockchain
+          const [userBvixBalance, userEvixBalance] = await Promise.all([
+            bvixContract.balanceOf(userAddress),
+            evixContract.balanceOf(userAddress)
+          ]);
+          
+          actualBvixBalance = ethers.formatEther(userBvixBalance);
+          actualEvixBalance = ethers.formatEther(userEvixBalance);
+          
+          console.log(`💰 Actual wallet balances for ${userAddress}:`, {
+            bvix: actualBvixBalance,
+            evix: actualEvixBalance,
+            usdc: adjustedUsdcBalance
+          });
+        } catch (error) {
+          console.error('Error fetching wallet balances:', error);
+        }
+      }
+
       res.json({
-        usdc: totalUsdcValue, // Total USDC across all vaults (protocol-wide view)
-        bvix: bvixSupply,
-        evix: evixSupply,
-        cr: Math.round(protocolWideCR * 100) / 100, // Protocol-wide CR (what user expects)
+        usdc: adjustedUsdcBalance, // Adjusted USDC balance with mock transfers
+        bvix: actualBvixBalance, // ACTUAL BLOCKCHAIN WALLET BALANCE
+        evix: actualEvixBalance, // ACTUAL BLOCKCHAIN WALLET BALANCE
+        cr: Math.round(evixPositionCR * 100) / 100, // INDIVIDUAL EVIX VAULT CR ONLY
         price: price,
         evixPrice: evixPriceFormatted,
-        usdcValue: parseFloat(totalUsdcValue),
-        bvixValueInUsd: bvixValueInUsd,
-        evixValueInUsd: evixValueInUsd,
-        totalTokenValueInUsd: totalTokenValueInUsd,
-        bvixVaultUsdc: bvixUsdcValue,
-        evixVaultUsdc: evixUsdcValue,
-        bvixVaultCR: Math.round(bvixVaultCR * 100) / 100,
-        evixVaultCR: Math.round(evixVaultCR * 100) / 100
+        usdcValue: parseFloat(adjustedUsdcBalance), // Adjusted USDC value
+        bvixValueInUsd: bvixPositionValueInUsd, // ACTUAL BVIX POSITION VALUE
+        evixValueInUsd: evixPositionValueInUsd,
+        totalTokenValueInUsd: bvixPositionValueInUsd + evixPositionValueInUsd, // Both position values
+        bvixVaultUsdc: bvixPositionUsdc, // ACTUAL BVIX POSITION COLLATERAL
+        evixVaultUsdc: evixPositionUsdc, // ACTUAL EVIX POSITION COLLATERAL
+        bvixVaultCR: Math.round(bvixPositionCR * 100) / 100, // ACTUAL BVIX POSITION CR
+        evixVaultCR: Math.round(evixPositionCR * 100) / 100
       });
       
     } catch (error) {
@@ -115,7 +288,565 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all liquidatable positions across individual vaults
+  app.get('/api/v1/liquidatable-positions', async (req, res) => {
+    try {
+      // Import simulated pricing service for consistent frontend/backend pricing
+      const { simulatedPricing } = await import('./services/simulatedPricing.js');
+      
+      // Contract addresses - V8 BVIX (WORKING), V6 EVIX (WORKING) 
+      const BVIX_MINT_REDEEM_ADDRESS = '0x653A6a4dCe04dABAEdb521091A889bb1EE298D8d'; // BVIX MintRedeem V8 (WORKING)
+      const EVIX_MINT_REDEEM_ADDRESS = '0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf'; // EVIX MintRedeem V6
+      const BASE_SEPOLIA_RPC_URL = 'https://sepolia.base.org';
+
+      // MintRedeem ABI for position queries
+      const MINT_REDEEM_ABI = [
+        'function positions(address user) external view returns (uint256 collateral, uint256 debt)',
+        'function getUserCollateralRatio(address user) external view returns (uint256)',
+        'function getPrice() external view returns (uint256)'
+      ];
+
+      // Oracle ABI
+      const ORACLE_ABI = [
+        'function getPrice() external view returns (uint256)',
+      ];
+      
+      const provider = new ethers.JsonRpcProvider(BASE_SEPOLIA_RPC_URL);
+      
+      // Get all positions that might be liquidatable
+      // Check multiple known addresses including current user
+      const knownAddresses = [
+        '0x18633ea30ad5c91e13d2e5714fe5e3d97043679b', // Original test address
+        '0x58bc63cbb24854f0a5edeaf3c5e530192dcbc24b', // Current user address
+        '0xe18d3b075a241379d77fffe01ed1317dda0e8bac'  // Another user address
+      ];
+      
+      // Use V8 BVIX (WORKING - identical to EVIX) and V6 EVIX contracts
+      const bvixVault = new ethers.Contract(BVIX_MINT_REDEEM_ADDRESS, MINT_REDEEM_ABI, provider); // V8 WORKING
+      const evixVault = new ethers.Contract(EVIX_MINT_REDEEM_ADDRESS, MINT_REDEEM_ABI, provider);
+      
+      // Get simulated prices for consistent frontend/backend pricing
+      const simulatedPrices = simulatedPricing.getPrices();
+      
+      console.log(`🔍 Using Simulated Prices: BVIX=${simulatedPrices.bvix}, EVIX=${simulatedPrices.evix}`);
+      
+      const liquidatable = [];
+      
+      // Check all known addresses for liquidatable positions
+      for (const userAddress of knownAddresses) {
+        try {
+          const [bvixPosition, evixPosition] = await Promise.all([
+            bvixVault.positions(userAddress),
+            evixVault.positions(userAddress)
+          ]);
+      
+          // Check BVIX position for this user
+          if (bvixPosition.debt > 0n) {
+            const rawCollateral = parseFloat(ethers.formatUnits(bvixPosition.collateral, 6));
+            const rawDebt = parseFloat(ethers.formatEther(bvixPosition.debt));
+            // Use simulated BVIX price for consistency
+            let price = parseFloat(simulatedPrices.bvix);
+            
+            console.log(`🔍 BVIX Price Processing: simulated=${price}`);
+            
+            // Check if this vault has been liquidated
+            const isLiquidated = isVaultLiquidated('BVIX', userAddress);
+            
+            console.log(`🔍 Liquidation check for BVIX ${userAddress}: isLiquidated=${isLiquidated}`);
+            
+            let collateral, debt;
+            
+            // FOR LIQUIDATED VAULTS: Use fresh vault calculations (same as user-positions API)
+            if (isLiquidated) {
+              const liquidationData = getLiquidation('BVIX', userAddress);
+              if (liquidationData && liquidationData.contractStateAtLiquidation) {
+                const contractCollateral = parseFloat(liquidationData.contractStateAtLiquidation.collateral);
+                const contractDebt = parseFloat(liquidationData.contractStateAtLiquidation.debt);
+                
+                // Calculate fresh vault after liquidation (just like user-positions API)
+                const freshCollateral = rawCollateral - contractCollateral;
+                const freshDebt = rawDebt - contractDebt;
+                
+                if (freshCollateral > 0 && freshDebt > 0) {
+                  collateral = freshCollateral;
+                  debt = freshDebt;
+                  console.log(`🆕 FRESH BVIX VAULT FOR LIQUIDATION: ${freshCollateral.toFixed(2)} USDC, ${freshDebt.toFixed(2)} BVIX`);
+                } else {
+                  console.log(`⚠️ SKIPPING - No fresh vault activity for liquidated ${userAddress}`);
+                  continue;
+                }
+              } else {
+                console.log(`⚠️ SKIPPING - No liquidation data found for ${userAddress}`);
+                continue;
+              }
+            } else {
+              // Normal vault - use raw contract data
+              collateral = rawCollateral;
+              debt = rawDebt;
+            }
+            
+            const cr = debt > 0 ? (collateral / (debt * price)) * 100 : 0;
+            
+            console.log(`🔍 BVIX Position Check for ${userAddress}:`, {
+              collateral,
+              debt,
+              price,
+              cr: cr.toFixed(2),
+              crExact: cr,
+              isLiquidatable: cr < 120.0 && cr > 0,
+              isFreshVault: isLiquidated
+            });
+            
+            if (cr < 120.0 && cr > 0) { // Liquidatable below 120% CR
+              liquidatable.push({
+                vaultId: liquidatable.length + 1,
+                owner: userAddress,
+                collateral: collateral.toFixed(2),
+                debt: debt.toFixed(2),
+                currentCR: Math.round(cr * 100) / 100,
+                liquidationPrice: (price * 1.2).toFixed(2),
+                maxBonus: ((debt * price * 0.05)).toFixed(2),
+                canLiquidate: true,
+                tokenType: 'BVIX',
+                contractAddress: BVIX_MINT_REDEEM_ADDRESS // V8 WORKING
+              });
+            }
+          }
+          
+          // Check EVIX position for this user
+          if (evixPosition.debt > 0n) {
+            const rawCollateral = parseFloat(ethers.formatUnits(evixPosition.collateral, 6));
+            const rawDebt = parseFloat(ethers.formatEther(evixPosition.debt));
+            const price = parseFloat(simulatedPrices.evix);
+            
+            console.log(`🔍 EVIX Price Processing: simulated=${price}`);
+            
+            // Check if this vault has been liquidated
+            const isLiquidated = isVaultLiquidated('EVIX', userAddress);
+            
+            console.log(`🔍 Liquidation check for EVIX ${userAddress}: isLiquidated=${isLiquidated}`);
+            
+            let collateral, debt;
+            
+            // FOR LIQUIDATED VAULTS: Use fresh vault calculations (same as user-positions API)
+            if (isLiquidated) {
+              const liquidationData = getLiquidation('EVIX', userAddress);
+              if (liquidationData && liquidationData.contractStateAtLiquidation) {
+                const contractCollateral = parseFloat(liquidationData.contractStateAtLiquidation.collateral);
+                const contractDebt = parseFloat(liquidationData.contractStateAtLiquidation.debt);
+                
+                // Calculate fresh vault after liquidation (just like user-positions API)
+                const freshCollateral = rawCollateral - contractCollateral;
+                const freshDebt = rawDebt - contractDebt;
+                
+                if (freshCollateral > 0 && freshDebt > 0) {
+                  collateral = freshCollateral;
+                  debt = freshDebt;
+                  console.log(`🆕 FRESH EVIX VAULT FOR LIQUIDATION: ${freshCollateral.toFixed(2)} USDC, ${freshDebt.toFixed(2)} EVIX`);
+                } else {
+                  console.log(`⚠️ SKIPPING - No fresh vault activity for liquidated ${userAddress}`);
+                  continue;
+                }
+              } else {
+                console.log(`⚠️ SKIPPING - No liquidation data found for ${userAddress}`);
+                continue;
+              }
+            } else {
+              // Normal vault - use raw contract data
+              collateral = rawCollateral;
+              debt = rawDebt;
+            }
+            
+            const cr = debt > 0 ? (collateral / (debt * price)) * 100 : 0;
+            
+            console.log(`🔍 EVIX Position Check for ${userAddress}:`, {
+              collateral,
+              debt,
+              price,
+              cr: cr.toFixed(2),
+              isLiquidatable: cr <= 120.0 && cr > 0,
+              freshVault: false
+            });
+            
+            if (cr <= 120.0 && cr > 0) { // Liquidatable at or below 120% CR
+              liquidatable.push({
+                vaultId: liquidatable.length + 1,
+                owner: userAddress,
+                collateral: collateral.toFixed(2),
+                debt: debt.toFixed(2),
+                currentCR: Math.round(cr * 100) / 100,
+                liquidationPrice: (price * 1.2).toFixed(2),
+                maxBonus: ((debt * price * 0.05)).toFixed(2),
+                canLiquidate: true,
+                tokenType: 'EVIX',
+                contractAddress: EVIX_MINT_REDEEM_ADDRESS
+              });
+            }
+          }
+        } catch (error) {
+          console.error(`Error checking positions for ${userAddress}:`, error);
+        }
+      }
+      
+      res.json({ bvix: liquidatable.filter(v => v.tokenType === 'BVIX'), evix: liquidatable.filter(v => v.tokenType === 'EVIX') });
+      
+    } catch (error) {
+      console.error('Error fetching liquidatable positions:', error);
+      res.status(500).json({ 
+        error: 'Failed to fetch liquidatable positions',
+        details: error instanceof Error ? error.message : String(error),
+        bvix: [],
+        evix: []
+      });
+    }
+  });
+
+  // User-specific vault positions endpoint
+  app.get("/api/v1/user-positions/:address", async (req, res) => {
+    try {
+      const userAddress = req.params.address;
+      
+      // Import simulated pricing service for consistent frontend/backend pricing
+      const { simulatedPricing } = await import('./services/simulatedPricing.js');
+      
+      // Contract addresses - V7 BVIX (FIXED), V6 EVIX
+      const BVIX_MINT_REDEEM_ADDRESS = '0x653A6a4dCe04dABAEdb521091A889bb1EE298D8d'; // BVIX MintRedeem V8 (WORKING)
+      const EVIX_MINT_REDEEM_ADDRESS = '0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf'; // EVIX MintRedeem V6
+      const BASE_SEPOLIA_RPC_URL = 'https://sepolia.base.org';
+
+      // MintRedeem ABI for position queries
+      const MINT_REDEEM_ABI = [
+        'function positions(address user) external view returns (uint256 collateral, uint256 debt)',
+        'function getUserCollateralRatio(address user) external view returns (uint256)',
+        'function getPrice() external view returns (uint256)'
+      ];
+
+      // Oracle ABI
+      const ORACLE_ABI = [
+        'function getPrice() external view returns (uint256)',
+      ];
+
+      // Initialize provider
+      const provider = new ethers.JsonRpcProvider(BASE_SEPOLIA_RPC_URL);
+      
+      // Initialize contracts
+      const bvixVaultContract = new ethers.Contract(BVIX_MINT_REDEEM_ADDRESS, MINT_REDEEM_ABI, provider);
+      const evixVaultContract = new ethers.Contract(EVIX_MINT_REDEEM_ADDRESS, MINT_REDEEM_ABI, provider);
+
+      // Get simulated prices for consistent frontend/backend pricing
+      const simulatedPrices = simulatedPricing.getPrices();
+
+      // Fetch user positions in parallel (use simulated prices instead of oracle)
+      const [bvixPosition, evixPosition] = await Promise.all([
+        bvixVaultContract.positions(userAddress),
+        evixVaultContract.positions(userAddress)
+      ]);
+
+      // VAULT ISOLATION: Contract correctly tracks minting activity only (not external DEX purchases)
+      // One vault per user containing only: USDC deposited via minting + BVIX tokens minted
+      // External BVIX/USDC from DEXes should not affect vault CR, only wallet balances
+      console.log(`✅ VAULT DESIGN CORRECT: One vault per user tracking minting activity only`);
+      console.log(`Vault data (minting only): collateral=${ethers.formatUnits(bvixPosition.collateral, 6)}, debt=${ethers.formatEther(bvixPosition.debt)}`);
+
+      // FRESH VAULT DETECTION: Check if user has fresh vault after liquidation
+      const rawCollateral = parseFloat(ethers.formatUnits(bvixPosition.collateral, 6));
+      const rawDebt = parseFloat(ethers.formatEther(bvixPosition.debt));
+      const bvixLiquidated = isVaultLiquidated('BVIX', userAddress);
+      
+      let bvixCollateral, bvixDebt;
+      let showPosition = true;
+      
+      console.log(`🔍 VAULT CHECK: liquidated=${bvixLiquidated}, rawCollateral=${rawCollateral}, rawDebt=${rawDebt}`);
+      
+      if (bvixLiquidated) {
+        // Check if there's fresh activity after liquidation
+        const liquidationRecord = getLiquidation('BVIX', userAddress);
+        if (liquidationRecord && liquidationRecord.contractStateAtLiquidation) {
+          const oldCollateral = parseFloat(liquidationRecord.contractStateAtLiquidation.collateral);
+          const oldDebt = parseFloat(liquidationRecord.contractStateAtLiquidation.debt);
+          
+          // Calculate fresh vault amounts (current - old)
+          const freshCollateral = rawCollateral - oldCollateral;
+          const freshDebt = rawDebt - oldDebt;
+          
+          if (freshCollateral > 0 || freshDebt > 0) {
+            // User has minted after liquidation - show ONLY the new mint
+            bvixCollateral = freshCollateral.toFixed(6);
+            bvixDebt = freshDebt.toString();
+            console.log(`🆕 FRESH BVIX VAULT: ${freshCollateral.toFixed(2)} USDC, ${freshDebt.toFixed(2)} BVIX`);
+            console.log(`   (Contract total: ${rawCollateral} USDC, ${rawDebt} BVIX)`);
+            console.log(`   (At liquidation: ${oldCollateral} USDC, ${oldDebt} BVIX)`);
+          } else {
+            // No fresh activity - hide position
+            showPosition = false;
+            bvixCollateral = "0";
+            bvixDebt = "0";
+            console.log(`🔥 BVIX VAULT LIQUIDATED: No fresh activity - position closed`);
+          }
+        } else {
+          // No liquidation state stored - hide position
+          showPosition = false;
+          bvixCollateral = "0";
+          bvixDebt = "0";
+          console.log(`⚠️ WARNING: Liquidated vault but no contract state stored`);
+        }
+      } else {
+        // Normal vault (no liquidation history)
+        bvixCollateral = ethers.formatUnits(bvixPosition.collateral, 6);
+        bvixDebt = ethers.formatEther(bvixPosition.debt);
+        console.log(`💰 NORMAL BVIX VAULT: ${bvixCollateral} USDC collateral, ${bvixDebt} BVIX debt`);
+      }
+      
+      // Vault status already logged above based on liquidation state
+      
+      // Use simulated BVIX price for consistency
+      const bvixPriceFormatted = parseFloat(simulatedPrices.bvix);
+      
+      // Check if EVIX vault was liquidated and format position accordingly
+      const evixLiquidated = isVaultLiquidated('EVIX', userAddress);
+      const rawEvixCollateral = parseFloat(ethers.formatUnits(evixPosition.collateral, 6));
+      const rawEvixDebt = parseFloat(ethers.formatEther(evixPosition.debt));
+      
+      let evixCollateral, evixDebt;
+      
+      if (evixLiquidated) {
+        // Check if there's fresh activity after liquidation
+        const liquidationRecord = getLiquidation('EVIX', userAddress);
+        if (liquidationRecord && liquidationRecord.contractStateAtLiquidation) {
+          const oldCollateral = parseFloat(liquidationRecord.contractStateAtLiquidation.collateral);
+          const oldDebt = parseFloat(liquidationRecord.contractStateAtLiquidation.debt);
+          
+          // Calculate fresh vault amounts (current - old)
+          const freshCollateral = rawEvixCollateral - oldCollateral;
+          const freshDebt = rawEvixDebt - oldDebt;
+          
+          if (freshCollateral > 0 || freshDebt > 0) {
+            // User has minted after liquidation - show ONLY the new mint
+            evixCollateral = freshCollateral.toFixed(6);
+            evixDebt = freshDebt.toString();
+            console.log(`🆕 FRESH EVIX VAULT: ${freshCollateral.toFixed(2)} USDC, ${freshDebt.toFixed(2)} EVIX`);
+            console.log(`   (Contract total: ${rawEvixCollateral} USDC, ${rawEvixDebt} EVIX)`);
+            console.log(`   (At liquidation: ${oldCollateral} USDC, ${oldDebt} EVIX)`);
+          } else {
+            // No fresh activity - hide position
+            evixCollateral = "0";
+            evixDebt = "0";
+            console.log(`🔥 EVIX VAULT LIQUIDATED: No fresh activity - position closed`);
+          }
+        } else {
+          // No liquidation state stored - hide position
+          evixCollateral = "0";
+          evixDebt = "0";
+          console.log(`⚠️ WARNING: Liquidated EVIX vault but no contract state stored`);
+        }
+      } else {
+        // Normal vault (no liquidation history)
+        evixCollateral = ethers.formatUnits(evixPosition.collateral, 6);
+        evixDebt = ethers.formatEther(evixPosition.debt);
+        console.log(`💰 NORMAL EVIX VAULT: ${evixCollateral} USDC collateral, ${evixDebt} EVIX debt`);
+      }
+      
+      const evixPriceFormatted = parseFloat(simulatedPrices.evix);
+
+      // Calculate CRs
+      let bvixCR = 0;
+      let evixCR = 0;
+      
+      if (parseFloat(bvixDebt) > 0) {
+        const bvixDebtValue = parseFloat(bvixDebt) * bvixPriceFormatted;
+        bvixCR = (parseFloat(bvixCollateral) / bvixDebtValue) * 100;
+        
+        console.log(`📊 BVIX CR Calculation for ${userAddress}:`, {
+          collateral: parseFloat(bvixCollateral),
+          debt: parseFloat(bvixDebt),
+          price: bvixPriceFormatted,
+          debtValue: bvixDebtValue,
+          cr: bvixCR.toFixed(2),
+          isFreshVault: bvixLiquidated && bvixCollateral !== "0"
+        });
+      }
+      
+      if (parseFloat(evixDebt) > 0) {
+        const evixDebtValue = parseFloat(evixDebt) * evixPriceFormatted;
+        evixCR = (parseFloat(evixCollateral) / evixDebtValue) * 100;
+        
+        console.log(`📊 EVIX CR Calculation for ${userAddress}:`, {
+          collateral: parseFloat(evixCollateral),
+          debt: parseFloat(evixDebt),
+          price: evixPriceFormatted,
+          debtValue: evixDebtValue,
+          cr: evixCR.toFixed(2),
+          isFreshVault: evixLiquidated && evixCollateral !== "0"
+        });
+      }
+
+      res.json({
+        bvix: {
+          collateral: bvixCollateral,
+          debt: bvixDebt,
+          cr: Math.round(bvixCR * 100) / 100
+        },
+        evix: {
+          collateral: evixCollateral,
+          debt: evixDebt,
+          cr: Math.round(evixCR * 100) / 100
+        },
+        prices: {
+          bvix: parseFloat(simulatedPrices.bvix),
+          evix: parseFloat(simulatedPrices.evix)
+        }
+      });
+      
+    } catch (error) {
+      console.error('Error fetching user positions:', error);
+      res.status(500).json({ 
+        error: 'Failed to fetch user positions',
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Liquidation tracking endpoint with mock USDC transfers
+  app.post('/api/v1/liquidate-vault', async (req, res) => {
+    try {
+      console.log('🔍 Raw request body:', req.body);
+      
+      const { 
+        liquidator, 
+        tokenType, 
+        owner, 
+        debtRepaid, 
+        collateralSeized, 
+        bonus, 
+        totalCollateral, 
+        remainingCollateral, 
+        txHash,
+        mockTransfers,
+        contractStateAtLiquidation 
+      } = req.body;
+      
+      console.log('🔍 Liquidation request received:', { 
+        liquidator, 
+        tokenType, 
+        owner, 
+        debtRepaid, 
+        collateralSeized, 
+        bonus,
+        mockTransfers 
+      });
+      
+      if (!tokenType || !owner) {
+        console.error('❌ Missing tokenType or owner in request');
+        return res.status(400).json({ error: 'Missing tokenType or owner in request body' });
+      }
+      
+      // Generate txHash if not provided
+      const finalTxHash = txHash || `0x${Date.now().toString(16).padStart(64, '0')}`;
+      
+      // Record liquidation in service
+      recordLiquidation({
+        tokenType,
+        owner,
+        liquidator,
+        debtRepaid,
+        collateralSeized,
+        bonus,
+        ownerRefund: remainingCollateral,
+        timestamp: Date.now(),
+        txHash: finalTxHash,
+        contractStateAtLiquidation: contractStateAtLiquidation || {
+          collateral: totalCollateral || "0",
+          debt: debtRepaid || "0"
+        }
+      });
+      
+      // Handle mock transfers if provided
+      if (mockTransfers) {
+        console.log('📝 Processing mock USDC transfers:', mockTransfers);
+        
+        // Process liquidator payment
+        if (mockTransfers.liquidatorPayment) {
+          const { from, to, amount, reason } = mockTransfers.liquidatorPayment;
+          recordMockTransfer(from, to, amount, reason);
+        }
+        
+        // Process owner refund if any
+        if (mockTransfers.ownerRefund) {
+          const { from, to, amount, reason } = mockTransfers.ownerRefund;
+          recordMockTransfer(from, to, amount, reason);
+        }
+      }
+      
+      console.log(`✅ Vault liquidated:`, {
+        tokenType,
+        owner,
+        liquidator,
+        debtRepaid,
+        collateralSeized,
+        bonus,
+        remainingCollateral,
+        txHash: finalTxHash
+      });
+      
+      res.json({ 
+        success: true, 
+        liquidation: {
+          tokenType,
+          owner,
+          liquidator,
+          debtRepaid,
+          collateralSeized,
+          bonus,
+          ownerRefund: remainingCollateral,
+          txHash: finalTxHash,
+          timestamp: Date.now()
+        }
+      });
+    } catch (error) {
+      console.error('Error processing liquidation:', error);
+      res.status(500).json({ error: 'Failed to process liquidation' });
+    }
+  });
+  
+  // Get liquidation history
+  app.get('/api/v1/liquidations', async (req, res) => {
+    try {
+      const liquidations = getAllLiquidations();
+      res.json({ liquidations });
+    } catch (error) {
+      console.error('Error fetching liquidations:', error);
+      res.status(500).json({ error: 'Failed to fetch liquidations' });
+    }
+  });
+
+  // Check if vault is liquidated endpoint
+  app.get('/api/v1/vault-liquidated/:tokenType/:owner', async (req, res) => {
+    try {
+      const { tokenType, owner } = req.params;
+      const liquidationKey = `liquidated_${tokenType.toLowerCase()}_${owner}`;
+      
+      global.liquidatedVaults = global.liquidatedVaults || {};
+      const isLiquidated = !!global.liquidatedVaults[liquidationKey];
+      
+      res.json({ isLiquidated, liquidation: global.liquidatedVaults[liquidationKey] || null });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to check liquidation status' });
+    }
+  });
+
+  // Clear liquidations endpoint for testing
+  app.post('/api/v1/clear-liquidations', async (req, res) => {
+    try {
+      global.liquidatedVaults = {};
+      console.log('🧹 All liquidation records cleared');
+      res.json({ success: true, message: 'All liquidation records cleared' });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to clear liquidations' });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
 }
+// Fix for liquidation grace period

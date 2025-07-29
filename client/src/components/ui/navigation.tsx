@@ -2,11 +2,14 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import { Link, useLocation } from "wouter";
-import levitasLogoPath from "@assets/levitas small_1752663859911.jpg";
+import WalletConnect from "@/components/ui/wallet-connect";
+import { useWallet } from "@/hooks/use-wallet";
+const levitasLogoPath = "/levi large.jpg";
 
 export default function Navigation() {
   const [location] = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { isConnected } = useWallet();
 
   return (
     <nav className="fixed top-0 w-full z-50 glass-effect border-b border-gray-200">
@@ -18,7 +21,7 @@ export default function Navigation() {
               <img 
                 src={levitasLogoPath} 
                 alt="Levitas Finance Logo"
-                className="w-8 h-8 object-cover rounded-lg"
+                className="w-10 h-8 object-cover rounded-md"
               />
               <div>
                 <span className="text-xl font-bold text-black">
@@ -52,7 +55,7 @@ export default function Navigation() {
               Whitepaper
             </a>
             <a
-              href="/Levitas Litepaper_1753091498988.pdf"
+              href="/levitas-litepaper.pdf"
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-600 hover:text-black transition-colors"
@@ -67,11 +70,16 @@ export default function Navigation() {
             >
               Liquidity
             </a>
-            <Link href="/app">
-              <Button className="bg-blue-600 text-white hover:bg-blue-700">
-                Launch App
-              </Button>
-            </Link>
+            {/* Only show WalletConnect on app pages when connected */}
+            {(location === "/app" || location === "/trading" || location === "/liquidation") && isConnected ? (
+              <WalletConnect />
+            ) : location !== "/app" && location !== "/trading" && location !== "/liquidation" ? (
+              <Link href="/app">
+                <Button className="bg-blue-600 text-white hover:bg-blue-700">
+                  Launch App
+                </Button>
+              </Link>
+            ) : null}
           </div>
 
           <button

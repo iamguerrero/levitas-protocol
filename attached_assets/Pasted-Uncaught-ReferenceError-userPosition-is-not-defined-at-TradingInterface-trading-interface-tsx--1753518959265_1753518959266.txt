@@ -1,0 +1,40 @@
+Uncaught ReferenceError: userPosition is not defined
+    at TradingInterface (trading-interface.tsx:598:55)
+    at renderWithHooks (chunk-RPCDYKBN.js?v=5bbf24ad:11548:26)
+    at mountIndeterminateComponent (chunk-RPCDYKBN.js?v=5bbf24ad:14926:21)
+    at beginWork (chunk-RPCDYKBN.js?v=5bbf24ad:15914:22)
+    at HTMLUnknownElement.callCallback2 (chunk-RPCDYKBN.js?v=5bbf24ad:3674:22)
+    at Object.invokeGuardedCallbackDev (chunk-RPCDYKBN.js?v=5bbf24ad:3699:24)
+    at invokeGuardedCallback (chunk-RPCDYKBN.js?v=5bbf24ad:3733:39)
+    at beginWork$1 (chunk-RPCDYKBN.js?v=5bbf24ad:19765:15)
+    at performUnitOfWork (chunk-RPCDYKBN.js?v=5bbf24ad:19198:20)
+    at workLoopSync (chunk-RPCDYKBN.js?v=5bbf24ad:19137:13)Understand this error
+chunk-RPCDYKBN.js?v=5bbf24ad:14032 The above error occurred in the <TradingInterface> component:
+
+    at TradingInterface (https://e106c780-a437-4454-bbc3-14455a9e31ed-00-3atykg4g5l0nu.worf.replit.dev:3000/src/components/ui/trading-interface.tsx:57:23)
+    at div
+    at https://e106c780-a437-4454-bbc3-14455a9e31ed-00-3atykg4g5l0nu.worf.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-AXMZZQ2X.js?v=5bbf24ad:42:13
+    at Presence (https://e106c780-a437-4454-bbc3-14455a9e31ed-00-3atykg4g5l0nu.worf.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-VALKHY5Q.js?v=5bbf24ad:24:11)
+    at https://e106c780-a437-4454-bbc3-14455a9e31ed-00-3atykg4g5l0nu.worf.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js?v=5bbf24ad:173:13
+    at _c5 (https://e106c780-a437-4454-bbc3-14455a9e31ed-00-3atykg4g5l0nu.worf.replit.dev:3000/src/components/ui/tabs.tsx:68:12)
+    at div
+    at https://e106c780-a437-4454-bbc3-14455a9e31ed-00-3atykg4g5l0nu.worf.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-AXMZZQ2X.js?v=5bbf24ad:42:13
+    at Provider (https://e106c780-a437-4454-bbc3-14455a9e31ed-00-3atykg4g5l0nu.worf.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=5bbf24ad:38:15)
+    at https://e106c780-a437-4454-bbc3-14455a9e31ed-00-3atykg4g5l0nu.worf.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js?v=5bbf24ad:51:7
+    at div
+    at AppDashboard (https://e106c780-a437-4454-bbc3-14455a9e31ed-00-3atykg4g5l0nu.worf.replit.dev:3000/src/components/AppDashboard.tsx:31:25)
+    at div
+    at div
+    at div
+    at DAppPage (https://e106c780-a437-4454-bbc3-14455a9e31ed-00-3atykg4g5l0nu.worf.replit.dev:3000/src/pages/dapp.tsx:27:63)
+    at Route (https://e106c780-a437-4454-bbc3-14455a9e31ed-00-3atykg4g5l0nu.worf.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=5bbf24ad:265:16)
+    at Switch (https://e106c780-a437-4454-bbc3-14455a9e31ed-00-3atykg4g5l0nu.worf.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=5bbf24ad:321:17)
+    at Router
+    at Provider (https://e106c780-a437-4454-bbc3-14455a9e31ed-00-3atykg4g5l0nu.worf.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=5bbf24ad:38:15)
+    at TooltipProvider (https://e106c780-a437-4454-bbc3-14455a9e31ed-00-3atykg4g5l0nu.worf.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=5bbf24ad:61:5)
+    at WalletProvider (https://e106c780-a437-4454-bbc3-14455a9e31ed-00-3atykg4g5l0nu.worf.replit.dev:3000/src/hooks/use-wallet.tsx:22:34)
+    at QueryClientProvider (https://e106c780-a437-4454-bbc3-14455a9e31ed-00-3atykg4g5l0nu.worf.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=5bbf24ad:2934:3)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.

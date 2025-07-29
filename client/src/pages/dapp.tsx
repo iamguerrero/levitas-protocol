@@ -1,16 +1,15 @@
 import { useState, useEffect } from "react";
 import Navigation from "@/components/ui/navigation";
-import WalletConnect from "@/components/ui/wallet-connect";
-import TradingInterface from "@/components/ui/trading-interface";
+import AppDashboard from "@/components/AppDashboard";
 import { useWallet } from "@/hooks/use-wallet";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
-import { Link } from "wouter";
 import { getNetworkName } from "@/lib/web3";
+import { useRealTimeOracle } from "@/hooks/useRealTimeOracle";
 
 export default function DAppPage() {
   const { isConnected, address, connectWallet, disconnect } = useWallet();
   const [networkName, setNetworkName] = useState("Base Sepolia Testnet");
+  const { isConnected: oracleConnected } = useRealTimeOracle();
 
   useEffect(() => {
     const updateNetworkName = async () => {
@@ -23,7 +22,7 @@ export default function DAppPage() {
     };
 
     updateNetworkName();
-    
+
     // Listen for network changes
     if (window.ethereum) {
       window.ethereum.on('chainChanged', updateNetworkName);
@@ -36,30 +35,14 @@ export default function DAppPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
+
       
-      {/* DApp Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-16 z-40">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Link href="/">
-                <Button variant="ghost" size="sm" className="text-gray-600 hover:text-black">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back to Home
-                </Button>
-              </Link>
-              <span className="text-sm text-gray-500">{networkName}</span>
-            </div>
-            <WalletConnect />
-          </div>
-        </div>
-      </div>
 
       {/* DApp Content */}
-      <div className="pt-20 pb-20 px-4 sm:px-6 lg:px-8">
+      <div className="pt-24 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           {isConnected ? (
-            <TradingInterface />
+            <AppDashboard />
           ) : (
             <div className="text-center py-20">
               <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">

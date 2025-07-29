@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
 
 export interface VaultStats {
   usdc: string;
@@ -14,9 +15,44 @@ export interface VaultStatus {
   message: string;
 }
 
+function getProvider() {
+  if (typeof window !== 'undefined' && window.ethereum) {
+    return window.ethereum;
+  }
+  throw new Error('MetaMask not found');
+}
+
 export function useVault() {
+  const [userAddress, setUserAddress] = useState<string | null>(null);
+  
+  useEffect(() => {
+    const loadAddress = async () => {
+      try {
+        const provider = getProvider();
+        const accounts = await provider.request({ method: 'eth_requestAccounts' });
+        if (accounts.length > 0) {
+          setUserAddress(accounts[0]);
+        }
+      } catch (error) {
+        // Silently handle error
+      }
+    };
+    loadAddress();
+  }, []);
+
   const { data, error, isLoading, isError, refetch } = useQuery<VaultStats>({
-    queryKey: ['/api/v1/vault-stats'],
+    queryKey: ['/api/v1/vault-stats', userAddress],
+    queryFn: async () => {
+      const url = userAddress 
+        ? `/api/v1/vault-stats?address=${userAddress}`
+        : '/api/v1/vault-stats';
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    },
+    enabled: !!userAddress,
     refetchInterval: 3000, // Refetch every 3 seconds for real-time updates
     staleTime: 1000, // Consider data stale after 1 second
     retry: 3,

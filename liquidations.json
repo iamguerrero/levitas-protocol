@@ -1,0 +1,32 @@
+{
+  "bvix_0x58bc63cbb24854f0a5edeaf3c5e530192dcbc24b": {
+    "tokenType": "BVIX",
+    "owner": "0x58bc63cbb24854f0a5edeaf3c5e530192dcbc24b",
+    "liquidator": "0xe18d3B075A241379D77fffE01eD1317ddA0e8bac",
+    "debtRepaid": "5.91",
+    "collateralSeized": "261.56",
+    "bonus": "12.46",
+    "ownerRefund": "38.44",
+    "timestamp": 1753785318849,
+    "txHash": "0x51828a578f4183aeeb775881341db9f8a7ab3dba6f259ebe9dc8446b937bc285",
+    "contractStateAtLiquidation": {
+      "collateral": "1894.3",
+      "debt": "37.451561850533807826"
+    }
+  },
+  "evix_0x18633ea30ad5c91e13d2e5714fe5e3d97043679b": {
+    "tokenType": "EVIX",
+    "owner": "0x18633ea30ad5c91e13d2e5714fe5e3d97043679b",
+    "liquidator": "0x58BC63CBB24854F0A5EDEAF3c5E530192dcBc24B",
+    "debtRepaid": "2.187554844655081621",
+    "collateralSeized": "87.24",
+    "bonus": "4.15",
+    "ownerRefund": "12.46",
+    "timestamp": 1753791995306,
+    "txHash": "0xfee36f450574d27e6343f2d4b21de936671184ff5cc58211720191145528300e",
+    "contractStateAtLiquidation": {
+      "collateral": "99.7",
+      "debt": "2.187554844655081621"
+    }
+  }
+}

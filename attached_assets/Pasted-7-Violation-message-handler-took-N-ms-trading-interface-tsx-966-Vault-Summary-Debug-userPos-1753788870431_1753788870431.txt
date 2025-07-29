@@ -1,0 +1,18 @@
+7[Violation] 'message' handler took <N>ms
+trading-interface.tsx:966 🔍 Vault Summary Debug: {userPositions: {…}, effectiveUserPositions: {…}, userPositionLoading: false, bvixPosition: {…}, evixPosition: {…}, …}
+useLiquidationFeatures.ts:694 🧹 Cleared 1 localStorage keys containing old vault IDs
+trading-interface.tsx:966 🔍 Vault Summary Debug: {userPositions: {…}, effectiveUserPositions: {…}, userPositionLoading: false, bvixPosition: {…}, evixPosition: {…}, …}
+trading-interface.tsx:966 🔍 Vault Summary Debug: {userPositions: {…}, effectiveUserPositions: {…}, userPositionLoading: false, bvixPosition: {…}, evixPosition: {…}, …}
+useLiquidationFeatures.ts:703 🔄 Syncing 1 backend liquidations with localStorage
+useLiquidationFeatures.ts:784 🔄 Synced new owner liquidation record to localStorage: {timestamp: 1753785318849, liquidator: '0xe18d3B075A241379D77fffE01eD1317ddA0e8bac', isLiquidator: false, tokenType: 'BVIX', vault: {…}, …}
+useLiquidationFeatures.ts:790 ✅ Updated owner localStorage with liquidation records
+useLiquidationFeatures.ts:839 📋 Loading history for 0x58bc63cbb24854f0a5edeaf3c5e530192dcbc24b:
+useLiquidationFeatures.ts:840   - User-specific records: 1
+useLiquidationFeatures.ts:841   - Backend liquidator records: 0
+useLiquidationFeatures.ts:842   - Backend owner records: 1
+useLiquidationFeatures.ts:843   - Records breakdown: [{…}]
+trading-interface.tsx:966 🔍 Vault Summary Debug: {userPositions: {…}, effectiveUserPositions: {…}, userPositionLoading: false, bvixPosition: {…}, evixPosition: {…}, …}
+chunk-RPCDYKBN.js?v=5bbf24ad:18625 [Violation] 'setTimeout' handler took 900ms
+trading-interface.tsx:966 🔍 Vault Summary Debug: {userPositions: {…}, effectiveUserPositions: {…}, userPositionLoading: false, bvixPosition: {…}, evixPosition: {…}, …}
+trading-interface.tsx:966 🔍 Vault Summary Debug: {userPositions: {…}, effectiveUserPositions: {…}, userPositionLoading: false, bvixPosition: {…}, evixPosition: {…}, …}
+trading-interface.tsx:966 🔍 Vault Summary Debug: {userPositions: {…}, effectiveUserPositions: {…}, userPositionLoading: false, bvixPosition: {…}, evixPosition: {…}, …}
