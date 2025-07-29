@@ -145,7 +145,7 @@ export default function TradingInterface() {
       if (!response.ok) throw new Error('Failed to fetch vault stats');
       return response.json();
     },
-    refetchInterval: 15000,
+    refetchInterval: 20000,
     enabled: true,
   });
 

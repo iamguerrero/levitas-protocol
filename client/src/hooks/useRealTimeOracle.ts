@@ -42,8 +42,8 @@ export const useRealTimeOracle = () => {
     // Initialize pricing system - fetch immediately then update every 5 seconds
     updatePrices(); // Initial fetch
     
-    // Set up 5-second interval to match backend simulated pricing updates
-    updateInterval = setInterval(updatePrices, 5000);
+    // Set up 10-second interval for better performance (was 5 seconds)
+    updateInterval = setInterval(updatePrices, 10000);
 
     return () => {
       if (updateInterval) {
