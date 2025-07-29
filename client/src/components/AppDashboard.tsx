@@ -18,21 +18,11 @@ export default function AppDashboard() {
   const { data: userPositions } = useUserPositions();
   const { bvixPrice, evixPrice } = useRealTimeOracle();
 
-  // Add console logging to debug pricing issues
-  useEffect(() => {
-    console.log('📊 AppDashboard Oracle Prices:', { bvixPrice, evixPrice });
-  }, [bvixPrice, evixPrice]);
+
   const [location] = useLocation();
   const [defaultTab, setDefaultTab] = useState("trading");
 
-  // Debug logging
-  useEffect(() => {
-    if (address && history) {
-      console.log(`🎨 AppDashboard - Current user: ${address}`);
-      console.log(`🎨 AppDashboard - History length: ${history.length}`);
-      console.log(`🎨 AppDashboard - History items:`, history);
-    }
-  }, [address, history]);
+
 
   useEffect(() => {
     // Check URL parameters for tab selection

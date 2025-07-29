@@ -42,7 +42,7 @@ async function getUserPosition(
         cr = Number(crRatio);
       }
     } catch (error) {
-      console.log("Error getting CR, position might be empty");
+      // Silently handle empty position
     }
 
     return {
@@ -51,7 +51,6 @@ async function getUserPosition(
       cr
     };
   } catch (error) {
-    console.error("Error fetching user position:", error);
     return {
       collateral: "0",
       debt: "0",
@@ -83,7 +82,7 @@ export function useUserPositions() {
         if (response.ok) {
           const backendData = await response.json();
           
-          console.log('🏦 Using backend API for liquidated vault detection:', backendData);
+
           
           // Return backend data which properly handles liquidated vaults
           return {
@@ -101,19 +100,14 @@ export function useUserPositions() {
           };
         }
       } catch (error) {
-        console.error('Backend API failed, falling back to blockchain data:', error);
+        // Fallback to blockchain data
       }
 
       // Fallback to blockchain data if API fails
       const isBVIXLiquidated = false;
       const isEVIXLiquidated = false;
       
-      // DEBUG: Let's see what the raw blockchain data shows
-      console.log('🔧 Raw blockchain fetch about to start for contracts:', {
-        bvixContract: BVIX_VAULT_ADDRESS,
-        evixContract: EVIX_VAULT_ADDRESS,
-        userAddress: address
-      });
+
 
       const [rawBvixPosition, rawEvixPosition] = await Promise.all([
         getUserPosition(BVIX_VAULT_ADDRESS, address, mintRedeemV6ABI),
@@ -124,25 +118,13 @@ export function useUserPositions() {
       const bvixPrice = BigInt(4500000000); // $45.00 in 8 decimals
       const evixPrice = BigInt(3798000000); // $37.98 in 8 decimals
       
-      console.log('🔧 RAW BLOCKCHAIN DATA:', {
-        rawBvixPosition,
-        rawEvixPosition,
-        bvixPrice: bvixPrice.toString(),
-        evixPrice: evixPrice.toString()
-      });
+
 
       // Always use raw blockchain positions - no overrides
       const bvixPosition = rawBvixPosition;
       const evixPosition = rawEvixPosition;
       
-      console.log('🔍 Vault-specific liquidation check:', { 
-        isBVIXLiquidated, 
-        isEVIXLiquidated, 
-        rawBvixPosition, 
-        rawEvixPosition, 
-        finalBvixPosition: bvixPosition,
-        finalEvixPosition: evixPosition 
-      });
+
 
       // Calculate collateral ratios
       let bvixCR = 0;
@@ -154,13 +136,7 @@ export function useUserPositions() {
           const bvixPriceFormatted = Number(bvixPrice) / 1e8;
           const debtValueInUSDC = Number(bvixPosition.debt) * bvixPriceFormatted;
           bvixCR = Math.floor((Number(bvixPosition.collateral) / debtValueInUSDC) * 100);
-          console.log('🔍 BVIX CR calculation:', {
-            collateral: bvixPosition.collateral,
-            debt: bvixPosition.debt,
-            price: bvixPriceFormatted,
-            debtValueInUSDC,
-            calculatedCR: bvixCR
-          });
+
         }
 
         // For EVIX: CR = (collateral) / (debt * price) * 100 - only if not liquidated
@@ -171,7 +147,7 @@ export function useUserPositions() {
         }
 
       } catch (error) {
-        console.log('🔍 CR calculation failed:', error);
+        // Silently handle CR calculation error
       }
 
       const result = {

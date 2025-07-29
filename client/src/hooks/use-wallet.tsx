@@ -33,7 +33,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
           setIsConnected(true);
         }
       } catch (error) {
-        console.error("Error checking wallet connection:", error);
+
       }
     }
   };

@@ -20,7 +20,7 @@ export function usePriceHistory() {
   const addPricePoint = (token: 'bvix' | 'evix', price: number) => {
     // Validate price data before adding
     if (!price || isNaN(price) || price <= 0 || price > 1000000) {
-      console.warn(`Invalid price data for ${token}:`, price);
+
       return;
     }
 
@@ -53,7 +53,7 @@ export function usePriceHistory() {
       try {
         localStorage.setItem('priceHistory', JSON.stringify(updatedHistory));
       } catch (error) {
-        console.warn('Failed to save price history to localStorage:', error);
+
       }
       return updatedHistory;
     });
