@@ -60,7 +60,7 @@ export const BVIX_ADDRESS = "0x7223A0Eb07B8d7d3CFbf84AC78eee4ae9DaA22CE"; // V8 
 
 // V8 contract addresses (WORKING - identical to EVIX V6 architecture)
 export const BVIX_MINT_REDEEM_V8_ADDRESS = '0x653A6a4dCe04dABAEdb521091A889bb1EE298D8d'; // BVIX V8 (WORKING)
-export const EVIX_MINT_REDEEM_V6_ADDRESS = '0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf'; // EVIX V6
+export const EVIX_MINT_REDEEM_ADDRESS = '0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf'; // EVIX V6
 
 // Token and Oracle addresses
 export const EVIX_ADDRESS = "0x7066700CAf442501B308fAe34d5919091e1b2380"; // EVIX token
@@ -116,11 +116,11 @@ export const getEVIXOracleContract = async (providerOrSigner: any) => {
 };
 
 export const getEVIXMintRedeemContract = async (providerOrSigner: any) => {
-  return new ethers.Contract(EVIX_MINT_REDEEM_V6_ADDRESS, EVIXMintRedeem_ABI, providerOrSigner);
+  return new ethers.Contract(EVIX_MINT_REDEEM_ADDRESS, EVIXMintRedeem_ABI, providerOrSigner);
 };
 
 export const getEVIXMintRedeemContractV6 = (providerOrSigner: any) =>
-  new ethers.Contract(EVIX_MINT_REDEEM_V6_ADDRESS, EVIXMintRedeem_ABI, providerOrSigner);
+  new ethers.Contract(EVIX_MINT_REDEEM_ADDRESS, EVIXMintRedeem_ABI, providerOrSigner);
 
 // Provider functions
 export function getProvider() {
@@ -547,14 +547,14 @@ export async function mintEVIX(
   // Check current allowance
   const currentAllowance = await usdcContract.allowance(
     address,
-    EVIX_MINT_REDEEM_V6_ADDRESS,
+    EVIX_MINT_REDEEM_ADDRESS,
   );
 
   // Only approve if needed
   if (currentAllowance < usdcAmountWei) {
     console.log("🔄 Approving USDC spending for EVIX...");
     const approveTx = await usdcContract.approve(
-      EVIX_MINT_REDEEM_V6_ADDRESS,
+      EVIX_MINT_REDEEM_ADDRESS,
       usdcAmountWei,
     );
     await approveTx.wait();
@@ -788,7 +788,7 @@ export async function getUserPositionEVIX(user: string) {
     const contract = await getEVIXMintRedeemContract(provider);
     
     console.log('🔍 Getting EVIX position for user:', user);
-    console.log('🔍 Using EVIX V6 contract address:', EVIX_MINT_REDEEM_V6_ADDRESS);
+    console.log('🔍 Using EVIX V6 contract address:', EVIX_MINT_REDEEM_ADDRESS);
     
     // Get user's position from V6 contract using positions(address) function
     const position = await contract.positions(user);
@@ -822,7 +822,7 @@ export async function getUserCollateralRatioEVIX(user: string): Promise<number> 
     const contract = await getEVIXMintRedeemContract(provider);
     
     console.log('🔍 Getting EVIX CR for user:', user);
-    console.log('🔍 Using EVIX V6 contract address:', EVIX_MINT_REDEEM_V6_ADDRESS);
+    console.log('🔍 Using EVIX V6 contract address:', EVIX_MINT_REDEEM_ADDRESS);
     
     // First check if user has a position
     const position = await contract.positions(user);
