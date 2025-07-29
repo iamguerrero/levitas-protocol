@@ -352,18 +352,12 @@ export async function getOraclePrice(): Promise<string> {
     const decimals = chainId === CHAIN_IDS.sepolia ? 18 : 8;
     const formattedPrice = ethers.formatUnits(price, decimals);
     
-    console.log("🔍 BVIX Price Debug:", {
-      chainId,
-      decimals,
-      rawPrice: price.toString(),
-      formattedPrice,
-      finalPrice: parseFloat(formattedPrice).toFixed(2)
-    });
+    // Debug logging removed for performance
     
     // Validate the price is reasonable (between $0.01 and $100,000)
     const priceFloat = parseFloat(formattedPrice);
     if (priceFloat < 0.01 || priceFloat > 100000) {
-      console.warn("⚠️ BVIX price seems unreasonable:", priceFloat, "using fallback");
+      // BVIX price unreasonable, using fallback
       
       // Try alternative decimal formats if the price seems wrong
       if (chainId === CHAIN_IDS.sepolia) {
@@ -371,7 +365,7 @@ export async function getOraclePrice(): Promise<string> {
         const altFormattedPrice = ethers.formatUnits(price, 8);
         const altPriceFloat = parseFloat(altFormattedPrice);
         if (altPriceFloat >= 0.01 && altPriceFloat <= 100000) {
-          console.log("✅ Fixed BVIX price with 8 decimals:", altPriceFloat);
+          // Fixed BVIX price with 8 decimals
           return altPriceFloat.toFixed(2);
         }
       } else {
@@ -379,7 +373,7 @@ export async function getOraclePrice(): Promise<string> {
         const altFormattedPrice = ethers.formatUnits(price, 18);
         const altPriceFloat = parseFloat(altFormattedPrice);
         if (altPriceFloat >= 0.01 && altPriceFloat <= 100000) {
-          console.log("✅ Fixed BVIX price with 18 decimals:", altPriceFloat);
+          // Fixed BVIX price with 18 decimals
           return altPriceFloat.toFixed(2);
         }
       }
@@ -407,18 +401,12 @@ export async function getEVIXPrice(): Promise<string> {
     const decimals = chainId === CHAIN_IDS.sepolia ? 18 : 8;
     const formattedPrice = ethers.formatUnits(priceRaw, decimals);
     
-    console.log("🔍 EVIX Price Debug:", {
-      chainId,
-      decimals,
-      rawPrice: priceRaw.toString(),
-      formattedPrice,
-      finalPrice: parseFloat(formattedPrice).toFixed(2)
-    });
+    // Debug logging removed for performance
     
     // Validate the price is reasonable (between $0.01 and $100,000)
     const priceFloat = parseFloat(formattedPrice);
     if (priceFloat < 0.01 || priceFloat > 100000) {
-      console.warn("⚠️ EVIX price seems unreasonable:", priceFloat, "using fallback");
+      // EVIX price unreasonable, using fallback
       
       // Try alternative decimal formats if the price seems wrong
       if (chainId === CHAIN_IDS.sepolia) {
@@ -426,7 +414,7 @@ export async function getEVIXPrice(): Promise<string> {
         const altFormattedPrice = ethers.formatUnits(priceRaw, 8);
         const altPriceFloat = parseFloat(altFormattedPrice);
         if (altPriceFloat >= 0.01 && altPriceFloat <= 100000) {
-          console.log("✅ Fixed EVIX price with 8 decimals:", altPriceFloat);
+          // Fixed EVIX price with 8 decimals
           return altPriceFloat.toFixed(2);
         }
       } else {
@@ -434,7 +422,7 @@ export async function getEVIXPrice(): Promise<string> {
         const altFormattedPrice = ethers.formatUnits(priceRaw, 18);
         const altPriceFloat = parseFloat(altFormattedPrice);
         if (altPriceFloat >= 0.01 && altPriceFloat <= 100000) {
-          console.log("✅ Fixed EVIX price with 18 decimals:", altPriceFloat);
+          // Fixed EVIX price with 18 decimals
           return altPriceFloat.toFixed(2);
         }
       }

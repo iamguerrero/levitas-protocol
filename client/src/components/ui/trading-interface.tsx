@@ -222,7 +222,7 @@ export default function TradingInterface() {
       if (!isLoading) {
         loadContractData();
       }
-    }, 30000); // Increased from 10s to 30s
+    }, 45000); // Increased to 45s to reduce expensive Web3 calls
 
     return () => clearInterval(interval);
   }, [address, contractsDeployed]);
@@ -232,7 +232,7 @@ export default function TradingInterface() {
 
     setIsLoading(true);
     try {
-      console.log("🔄 Loading contract data for address:", address);
+      // Loading contract data
       
       // Always get wallet balances from blockchain for accurate display
       const [balances, oraclePrice, evixPrice, ratio] = await Promise.all([
@@ -244,7 +244,7 @@ export default function TradingInterface() {
       
       const { bvixBalance, evixBalance, usdcBalance } = balances;
 
-      console.log("📊 Wallet balances from blockchain:", { bvixBalance, evixBalance, usdcBalance, oraclePrice, evixPrice, ratio });
+      // Wallet balances loaded from blockchain
 
       setCollateralRatio(ratio);
 
