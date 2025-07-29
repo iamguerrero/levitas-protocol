@@ -455,9 +455,9 @@ export function LiquidationDashboard() {
                       </div>
                       <div>
                         <p className="text-gray-500">Transaction</p>
-                        <p className="font-medium text-blue-600">
+                        <p className="font-medium text-blue-600 font-mono text-xs break-all">
                           <a href={`https://sepolia.basescan.org/tx/${item.txHash}`} target="_blank" rel="noopener noreferrer">
-                            {item.txHash.slice(0, 8)}...
+                            {item.txHash}
                           </a>
                         </p>
                       </div>
