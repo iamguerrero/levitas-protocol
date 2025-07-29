@@ -17,16 +17,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // use storage to perform CRUD operations on the storage interface
   // e.g. storage.insertUser(user) or storage.getUserByUsername(username)
 
+  // API endpoint to get consistent simulated prices for frontend/backend synchronization
+  app.get("/api/v1/simulated-prices", async (req, res) => {
+    try {
+      const { simulatedPricing } = await import('./services/simulatedPricing.js');
+      const prices = simulatedPricing.getPrices();
+      
+      res.json({
+        bvix: parseFloat(prices.bvix),
+        evix: parseFloat(prices.evix),
+        lastUpdate: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error fetching simulated prices:', error);
+      res.status(500).json({ 
+        error: 'Failed to fetch simulated prices',
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   // Vault statistics endpoint
   app.get("/api/v1/vault-stats", async (req, res) => {
     try {
+      // Import simulated pricing service for consistent frontend/backend pricing
+      const { simulatedPricing } = await import('./services/simulatedPricing.js');
+      
       // Contract addresses - V6 (current production)
       const MOCK_USDC_ADDRESS = '0x9CC37B36FDd8CF5c0297BE15b75663Bf2a193297'; // MockUSDC with public faucet
       const BVIX_ADDRESS = '0x7223A0Eb07B8d7d3CFbf84AC78eee4ae9DaA22CE'; // BVIX token V8 (WORKING)
       const MINT_REDEEM_ADDRESS = '0x653A6a4dCe04dABAEdb521091A889bb1EE298D8d'; // BVIX MintRedeem V8 (WORKING)
-      // Oracle addresses
-      const BVIX_ORACLE_ADDRESS = '0xA6FAC514Fdc2C017FBCaeeDA27562dAC83Cf22cf'; // V8 BVIX ORACLE (WORKING)
-      const EVIX_ORACLE_ADDRESS = '0xBd6E9809B9608eCAc3610cA65327735CC3c08104'; // Updated EVIX Oracle
       // EVIX contracts - V6 addresses
       const EVIX_ADDRESS = '0x7066700CAf442501B308fAe34d5919091e1b2380'; // EVIX token V6
       const EVIX_MINT_REDEEM_ADDRESS = '0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf'; // EVIX MintRedeem V6
@@ -49,15 +69,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Initialize contracts
       const usdcContract = new ethers.Contract(MOCK_USDC_ADDRESS, ERC20_ABI, provider);
       const bvixContract = new ethers.Contract('0x7223A0Eb07B8d7d3CFbf84AC78eee4ae9DaA22CE', ERC20_ABI, provider); // V8 BVIX TOKEN (WORKING)
-      const bvixOracleContract = new ethers.Contract(BVIX_ORACLE_ADDRESS, ORACLE_ABI, provider);
-      const evixOracleContract = new ethers.Contract(EVIX_ORACLE_ADDRESS, ORACLE_ABI, provider);
+      
+      // Get simulated prices for consistent frontend/backend pricing
+      const simulatedPrices = simulatedPricing.getPrices();
       
       // Fetch data in parallel from both vaults
-      const [bvixVaultUsdcBalance, evixVaultUsdcBalance, bvixTotalSupply, bvixPrice] = await Promise.all([
+      const [bvixVaultUsdcBalance, evixVaultUsdcBalance, bvixTotalSupply] = await Promise.all([
         usdcContract.balanceOf(MINT_REDEEM_ADDRESS),
         usdcContract.balanceOf(EVIX_MINT_REDEEM_ADDRESS),
-        Promise.resolve(BigInt(0)), // Don't use totalSupply for individual vaults
-        bvixOracleContract.getPrice()
+        Promise.resolve(BigInt(0)) // Don't use totalSupply for individual vaults
       ]);
       
       // Format values
@@ -65,7 +85,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const evixUsdcValue = ethers.formatUnits(evixVaultUsdcBalance, 6);
       const totalUsdcValue = evixUsdcValue; // INDIVIDUAL VAULT ONLY - no protocol-wide sums
       const bvixSupply = "0.0"; // Individual vault mode - no total supply
-      const price = ethers.formatUnits(bvixPrice, 8); // Oracle returns 8-decimal format on Base Sepolia
+      const price = simulatedPrices.bvix; // Use simulated price for consistency
       
       // Individual vault calculations only - NO PROTOCOL-WIDE LOGIC
       const totalUsdcFloat = parseFloat(totalUsdcValue);
@@ -78,16 +98,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Debug: Using EVIX contract address:', EVIX_ADDRESS);
       console.log('Debug: Using EVIX vault address:', EVIX_MINT_REDEEM_ADDRESS);
       
-      const [evixTotalSupply, evixPrice] = await Promise.all([
-        Promise.resolve(BigInt(0)), // Don't use totalSupply for individual vaults
-        evixOracleContract.getPrice()
-      ]);
-      
+      // Use simulated pricing for EVIX as well
       const evixSupply = "0.0"; // Individual vault mode - no total supply
-      // When fetching evixPrice, handle int256
-      // Change: const evixPriceFormatted = ethers.formatUnits(evixPrice, 8);
-      // To handle potential negative, but since prices are positive:
-      const evixPriceFormatted = ethers.formatUnits(evixPrice.toString(), 8); // Convert BigInt to string for formatUnits
+      const evixPriceFormatted = simulatedPrices.evix; // Use simulated price for consistency
       
       const bvixValueInUsd = bvixFloat * priceFloat;
       const evixValueInUsd = parseFloat(evixSupply) * parseFloat(evixPriceFormatted);
@@ -291,11 +304,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all liquidatable positions across individual vaults
   app.get('/api/v1/liquidatable-positions', async (req, res) => {
     try {
+      // Import simulated pricing service for consistent frontend/backend pricing
+      const { simulatedPricing } = await import('./services/simulatedPricing.js');
+      
       // Contract addresses - V8 BVIX (WORKING), V6 EVIX (WORKING) 
       const BVIX_MINT_REDEEM_ADDRESS = '0x653A6a4dCe04dABAEdb521091A889bb1EE298D8d'; // BVIX MintRedeem V8 (WORKING)
       const EVIX_MINT_REDEEM_ADDRESS = '0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf'; // EVIX MintRedeem V6
-      const BVIX_ORACLE_ADDRESS = '0xA6FAC514Fdc2C017FBCaeeDA27562dAC83Cf22cf'; // V8 BVIX ORACLE (WORKING)
-      const EVIX_ORACLE_ADDRESS = '0xBd6E9809B9608eCAc3610cA65327735CC3c08104';
       const BASE_SEPOLIA_RPC_URL = 'https://sepolia.base.org';
 
       // MintRedeem ABI for position queries
@@ -323,16 +337,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Use V8 BVIX (WORKING - identical to EVIX) and V6 EVIX contracts
       const bvixVault = new ethers.Contract(BVIX_MINT_REDEEM_ADDRESS, MINT_REDEEM_ABI, provider); // V8 WORKING
       const evixVault = new ethers.Contract(EVIX_MINT_REDEEM_ADDRESS, MINT_REDEEM_ABI, provider);
-      const bvixOracle = new ethers.Contract(BVIX_ORACLE_ADDRESS, ORACLE_ABI, provider);
-      const evixOracle = new ethers.Contract(EVIX_ORACLE_ADDRESS, ORACLE_ABI, provider);
       
-      // Get prices first
-      const [bvixPrice, evixPrice] = await Promise.all([
-        bvixOracle.getPrice(),
-        evixOracle.getPrice()
-      ]);
+      // Get simulated prices for consistent frontend/backend pricing
+      const simulatedPrices = simulatedPricing.getPrices();
       
-      console.log(`🔍 Raw Oracle Prices: BVIX=${bvixPrice.toString()}, EVIX=${evixPrice.toString()}`);
+      console.log(`🔍 Using Simulated Prices: BVIX=${simulatedPrices.bvix}, EVIX=${simulatedPrices.evix}`);
       
       const liquidatable = [];
       
@@ -348,10 +357,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (bvixPosition.debt > 0n) {
             const rawCollateral = parseFloat(ethers.formatUnits(bvixPosition.collateral, 6));
             const rawDebt = parseFloat(ethers.formatEther(bvixPosition.debt));
-            // V8 BVIX Oracle uses 18 decimals - raw: 42150000000000000000 -> 42.15
-            let price = parseFloat(ethers.formatUnits(bvixPrice, 18));
+            // Use simulated BVIX price for consistency
+            let price = parseFloat(simulatedPrices.bvix);
             
-            console.log(`🔍 BVIX Price Processing: raw=${bvixPrice.toString()}, formatted=${price}`);
+            console.log(`🔍 BVIX Price Processing: simulated=${price}`);
             
             // Check if this vault has been liquidated
             const isLiquidated = isVaultLiquidated('BVIX', userAddress);
@@ -421,9 +430,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (evixPosition.debt > 0n) {
             const rawCollateral = parseFloat(ethers.formatUnits(evixPosition.collateral, 6));
             const rawDebt = parseFloat(ethers.formatEther(evixPosition.debt));
-            const price = parseFloat(ethers.formatUnits(evixPrice, 8));
+            const price = parseFloat(simulatedPrices.evix);
             
-            console.log(`🔍 EVIX Price Processing: raw=${evixPrice.toString()}, formatted=${price}`);
+            console.log(`🔍 EVIX Price Processing: simulated=${price}`);
             
             // Check if this vault has been liquidated
             const isLiquidated = isVaultLiquidated('EVIX', userAddress);
@@ -510,11 +519,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userAddress = req.params.address;
       
+      // Import simulated pricing service for consistent frontend/backend pricing
+      const { simulatedPricing } = await import('./services/simulatedPricing.js');
+      
       // Contract addresses - V7 BVIX (FIXED), V6 EVIX
       const BVIX_MINT_REDEEM_ADDRESS = '0x653A6a4dCe04dABAEdb521091A889bb1EE298D8d'; // BVIX MintRedeem V8 (WORKING)
       const EVIX_MINT_REDEEM_ADDRESS = '0x6C3e986c4cc7b3400de732440fa01B66FF9172Cf'; // EVIX MintRedeem V6
-      const BVIX_ORACLE_ADDRESS = '0xA6FAC514Fdc2C017FBCaeeDA27562dAC83Cf22cf'; // V8 BVIX ORACLE (WORKING)
-      const EVIX_ORACLE_ADDRESS = '0xBd6E9809B9608eCAc3610cA65327735CC3c08104';
       const BASE_SEPOLIA_RPC_URL = 'https://sepolia.base.org';
 
       // MintRedeem ABI for position queries
@@ -535,15 +545,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Initialize contracts
       const bvixVaultContract = new ethers.Contract(BVIX_MINT_REDEEM_ADDRESS, MINT_REDEEM_ABI, provider);
       const evixVaultContract = new ethers.Contract(EVIX_MINT_REDEEM_ADDRESS, MINT_REDEEM_ABI, provider);
-      const bvixOracleContract = new ethers.Contract(BVIX_ORACLE_ADDRESS, ORACLE_ABI, provider);
-      const evixOracleContract = new ethers.Contract(EVIX_ORACLE_ADDRESS, ORACLE_ABI, provider);
 
-      // Fetch user positions and prices in parallel
-      const [bvixPosition, evixPosition, bvixPrice, evixPrice] = await Promise.all([
+      // Get simulated prices for consistent frontend/backend pricing
+      const simulatedPrices = simulatedPricing.getPrices();
+
+      // Fetch user positions in parallel (use simulated prices instead of oracle)
+      const [bvixPosition, evixPosition] = await Promise.all([
         bvixVaultContract.positions(userAddress),
-        evixVaultContract.positions(userAddress),
-        bvixOracleContract.getPrice(),
-        evixOracleContract.getPrice()
+        evixVaultContract.positions(userAddress)
       ]);
 
       // VAULT ISOLATION: Contract correctly tracks minting activity only (not external DEX purchases)
@@ -603,8 +612,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Vault status already logged above based on liquidation state
       
-      // V8 BVIX Oracle uses 18 decimals - raw: 42150000000000000000 -> 42.15
-      const bvixPriceFormatted = parseFloat(ethers.formatUnits(bvixPrice, 18));
+      // Use simulated BVIX price for consistency
+      const bvixPriceFormatted = parseFloat(simulatedPrices.bvix);
       
       // Check if EVIX vault was liquidated and format position accordingly
       const evixLiquidated = isVaultLiquidated('EVIX', userAddress);
@@ -650,7 +659,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`💰 NORMAL EVIX VAULT: ${evixCollateral} USDC collateral, ${evixDebt} EVIX debt`);
       }
       
-      const evixPriceFormatted = parseFloat(ethers.formatUnits(evixPrice, 8));
+      const evixPriceFormatted = parseFloat(simulatedPrices.evix);
 
       // Calculate CRs
       let bvixCR = 0;
@@ -696,8 +705,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           cr: Math.round(evixCR * 100) / 100
         },
         prices: {
-          bvix: bvixPriceFormatted,
-          evix: evixPriceFormatted
+          bvix: parseFloat(simulatedPrices.bvix),
+          evix: parseFloat(simulatedPrices.evix)
         }
       });
       
