@@ -1,4 +1,3 @@
-[dotenv@17.2.0] injecting env (0) from .env (tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' })
 // Sources flattened with hardhat v2.26.0 https://hardhat.org
 
 // SPDX-License-Identifier: MIT
