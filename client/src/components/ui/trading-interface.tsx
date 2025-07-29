@@ -222,7 +222,7 @@ export default function TradingInterface() {
       if (!isLoading) {
         loadContractData();
       }
-    }, 45000); // Increased to 45s to reduce expensive Web3 calls
+    }, 60000); // Increased to 60s (1 minute) to minimize performance violations
 
     return () => clearInterval(interval);
   }, [address, contractsDeployed]);
@@ -234,29 +234,23 @@ export default function TradingInterface() {
     try {
       // Loading contract data
       
-      // Always get wallet balances from blockchain for accurate display
-      const [balances, oraclePrice, evixPrice, ratio] = await Promise.all([
-        getAllBalances(address),
-        getOraclePrice(),
-        getEVIXPrice(),
-        getCollateralRatio(),
-      ]);
-      
+      // Only get wallet balances from blockchain - use API for prices to avoid 800ms violations
+      const balances = await getAllBalances(address);
       const { bvixBalance, evixBalance, usdcBalance } = balances;
 
-      // Wallet balances loaded from blockchain
-
-      setCollateralRatio(ratio);
+      // Use real-time API prices instead of expensive Web3 oracle calls  
+      const apiPrice = realtimeBvixPrice || vaultData?.price || "42.15";
+      const apiEvixPrice = realtimeEvixPrice || vaultData?.evixPrice || "37.98";
 
       const totalValue = (
-        parseFloat(bvixBalance) * parseFloat(oraclePrice) +
-        parseFloat(evixBalance) * parseFloat(evixPrice) +
+        parseFloat(bvixBalance) * parseFloat(apiPrice) +
+        parseFloat(evixBalance) * parseFloat(apiEvixPrice) +
         parseFloat(usdcBalance)
       ).toFixed(2);
 
       setContractData({
-        bvixPrice: oraclePrice,
-        evixPrice,
+        bvixPrice: apiPrice,
+        evixPrice: apiEvixPrice,
         usdcBalance,
         bvixBalance,
         evixBalance,
@@ -267,7 +261,7 @@ export default function TradingInterface() {
 
       // Fallback to API prices if web3 calls fail
       if (vaultData) {
-        console.log("🔄 Falling back to API prices");
+        // Falling back to API prices
         setContractData(prev => ({
           ...prev,
           bvixPrice: vaultData.price || prev.bvixPrice,
