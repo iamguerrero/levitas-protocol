@@ -11,7 +11,7 @@
     "txHash": "0x478282c23023f7d6abb526b3161d07c96c50415190a952a131d6f9e300dba223",
     "contractStateAtLiquidation": {
       "collateral": "1594.3",
-      "debt": "31.65"
+      "debt": "31.54"
     }
   }
 }
