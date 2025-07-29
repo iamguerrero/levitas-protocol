@@ -35,10 +35,18 @@ For each contract:
 5. **Settings**: Use compiler settings above
 6. **Constructor**: Add ABI-encoded constructor arguments (see CONTRACT_VERIFICATION.md)
 
-### Option 2: Individual Contract Files (If Option 1 Fails)
+### Option 2: Check Constructor Arguments (Most Common Issue)
+
+**Bytecode matching errors are usually caused by wrong constructor arguments.**
+
+1. **Visit the deployment transaction** on Basescan for each contract address
+2. **Look at the "Input Data"** section of the deployment transaction
+3. **Copy the constructor arguments** (the data after the contract bytecode)
+4. **Use those exact arguments** in the verification form
+
+### Option 3: Individual Contract Files (If Options 1-2 Fail)
 
 Individual contract files are available in `./verification-ready/` but may have missing dependencies.
-Use only if flattened files fail verification.
 
 ## 🧹 Project Cleanup Completed
 
