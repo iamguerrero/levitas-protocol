@@ -962,16 +962,7 @@ export default function TradingInterface() {
                 const currentBvixPrice = parseFloat(realtimeBvixPrice || formatPrice(contractData.bvixPrice));
                 const currentEvixPrice = parseFloat(realtimeEvixPrice || formatPrice(contractData.evixPrice));
 
-                // Debug logging
-                console.log('🔍 Vault Summary Debug:', {
-                  userPositions,
-                  effectiveUserPositions,
-                  userPositionLoading,
-                  bvixPosition: effectiveUserPositions?.bvix,
-                  evixPosition: effectiveUserPositions?.evix,
-                  vaultStats,
-                  hasPositions: effectiveUserPositions !== null && effectiveUserPositions !== undefined
-                });
+                // Debug logging removed for performance
 
                 // Only count active positions (vaults), not wallet balances
                 // BVIX vault
