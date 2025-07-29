@@ -29,7 +29,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lastUpdate: new Date().toISOString()
       });
     } catch (error) {
-      console.error('Error fetching simulated prices:', error);
       res.status(500).json({ 
         error: 'Failed to fetch simulated prices',
         details: error instanceof Error ? error.message : String(error)
@@ -95,8 +94,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Add EVIX data for individual vault calculations
       const evixContract = new ethers.Contract(EVIX_ADDRESS, ERC20_ABI, provider);
       
-      console.log('Debug: Using EVIX contract address:', EVIX_ADDRESS);
-      console.log('Debug: Using EVIX vault address:', EVIX_MINT_REDEEM_ADDRESS);
+
       
       // Use simulated pricing for EVIX as well
       const evixSupply = "0.0"; // Individual vault mode - no total supply
@@ -125,7 +123,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Apply mock transfers to user's actual wallet balance
         adjustedUsdcBalance = getMockUsdcBalance(userAddress, userWalletUsdcFormatted);
-        console.log(`💰 USDC Balance for ${userAddress}: Wallet=${userWalletUsdcFormatted}, With Transfers=${adjustedUsdcBalance}`);
+
       } else {
         // Fallback if no user address provided
         adjustedUsdcBalance = totalUsdcFloat.toFixed(4);
@@ -162,12 +160,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const evixLiquidated = isVaultLiquidated('EVIX', userAddress);
           
           // Calculate BVIX position with fresh vault detection
-          console.log(`🔍 BVIX Position Raw Data for ${userAddress}:`, {
-            liquidated: bvixLiquidated,
-            collateral: bvixPosition.collateral.toString(),
-            debt: bvixPosition.debt.toString(),
-            debtGreaterThanZero: bvixPosition.debt > 0n
-          });
+
           
           if (bvixPosition.debt > 0n) {
             const rawCollateral = parseFloat(ethers.formatUnits(bvixPosition.collateral, 6));
@@ -195,18 +188,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   // User has minted after liquidation - show ONLY the new mint
                   collateral = freshCollateral;
                   debt = freshDebt;
-                  console.log(`🆕 NEW VAULT AFTER LIQUIDATION: ${collateral.toFixed(2)} USDC, ${debt.toFixed(2)} BVIX`);
-                  console.log(`   (Contract total: ${rawCollateral} USDC, ${rawDebt} BVIX)`);
-                  console.log(`   (At liquidation: ${oldCollateral} USDC, ${oldDebt} BVIX)`);
+
                 } else {
                   // No fresh activity - hide position
                   showPosition = false;
-                  console.log(`🔥 VAULT LIQUIDATED: No fresh activity - position closed`);
+
                 }
               } else {
                 // No liquidation state stored - shouldn't happen but show nothing
                 showPosition = false;
-                console.log(`⚠️ WARNING: Liquidation record exists but no contract state stored`);
+
               }
             } else {
               // Normal active vault
@@ -222,14 +213,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
               bvixPositionValueInUsd = debt * priceFloat;
               bvixPositionCR = cr;
               
-              console.log(`✅ BVIX Position Calculated:`, {
-                collateral: bvixPositionUsdc,
-                valueInUsd: bvixPositionValueInUsd,
-                cr: bvixPositionCR,
-                freshVault: bvixLiquidated && showPosition
-              });
+              // BVIX Position Calculated
+              // collateral: bvixPositionUsdc, valueInUsd: bvixPositionValueInUsd, cr: bvixPositionCR, freshVault: bvixLiquidated && showPosition
             } else {
-              console.log(`❌ BVIX Position Skipped: liquidated=${bvixLiquidated}, hasDebt=${bvixPosition.debt > 0n}, showPosition=${showPosition}`);
+
             }
           }
           
@@ -246,7 +233,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
           
         } catch (error) {
-          console.log('Could not fetch user positions for vault stats:', error);
+
         }
       }
 

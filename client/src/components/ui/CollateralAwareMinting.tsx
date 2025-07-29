@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { HapticButton } from "@/components/ui/haptic-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -95,8 +95,7 @@ export function CollateralAwareMinting({
       const selectedCR = targetCR[0];
       const expectedTokenValue = parseFloat(usdcInput) / (selectedCR / 100);
       
-      console.log(`🎯 V5 Collateral-aware mint: Spending ${usdcInput} USDC at ${selectedCR}% CR`);
-      console.log(`💰 Token value you'll receive: $${expectedTokenValue.toFixed(2)} (CR enforced by contract)`);
+
       
       await onMint(usdcInput, selectedCR);
       // Reset after successful mint
@@ -227,10 +226,11 @@ export function CollateralAwareMinting({
 
 
         {/* Submit Button */}
-        <Button 
+        <HapticButton 
           onClick={handleSubmit}
           disabled={!canMint || isLoading}
           className="w-full"
+          hapticIntensity="medium"
         >
           {isLoading ? (
             <>
@@ -242,7 +242,7 @@ export function CollateralAwareMinting({
           ) : (
             `Mint ${tokenSymbol}`
           )}
-        </Button>
+        </HapticButton>
       </CardContent>
     </Card>
   );
