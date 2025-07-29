@@ -49,7 +49,8 @@ export default function LiquidationOpportunities() {
   // Get vault stats and contract data for liquidation info cards
   const { data: vaultStats } = useQuery({
     queryKey: ['/api/v1/vault-stats'],
-    refetchInterval: 5000
+    refetchInterval: 12000, // Reduced from 5000ms to 12000ms for better performance
+    staleTime: 6000
   });
   
   // Get user-specific positions for accurate CR display
@@ -61,7 +62,8 @@ export default function LiquidationOpportunities() {
       if (!response.ok) throw new Error('Failed to fetch user positions');
       return response.json();
     },
-    refetchInterval: 5000,
+    refetchInterval: 12000, // Reduced from 5000ms to 12000ms for better performance
+    staleTime: 6000,
     enabled: !!address
   });
   
