@@ -332,6 +332,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         evixOracle.getPrice()
       ]);
       
+      console.log(`🔍 Raw Oracle Prices: BVIX=${bvixPrice.toString()}, EVIX=${evixPrice.toString()}`);
+      
       const liquidatable = [];
       
       // Check all known addresses for liquidatable positions
@@ -348,6 +350,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const rawDebt = parseFloat(ethers.formatEther(bvixPosition.debt));
             // V8 BVIX Oracle uses 18 decimals - raw: 42150000000000000000 -> 42.15
             let price = parseFloat(ethers.formatUnits(bvixPrice, 18));
+            
+            console.log(`🔍 BVIX Price Processing: raw=${bvixPrice.toString()}, formatted=${price}`);
             
             // Check if this vault has been liquidated
             const isLiquidated = isVaultLiquidated('BVIX', userAddress);
@@ -418,6 +422,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const rawCollateral = parseFloat(ethers.formatUnits(evixPosition.collateral, 6));
             const rawDebt = parseFloat(ethers.formatEther(evixPosition.debt));
             const price = parseFloat(ethers.formatUnits(evixPrice, 8));
+            
+            console.log(`🔍 EVIX Price Processing: raw=${evixPrice.toString()}, formatted=${price}`);
             
             // Check if this vault has been liquidated
             const isLiquidated = isVaultLiquidated('EVIX', userAddress);
