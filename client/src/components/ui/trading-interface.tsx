@@ -163,12 +163,12 @@ export default function TradingInterface() {
     if (vaultData) {
       setVaultStats(vaultData);
 
-      // Prioritize real-time oracle prices over API data
-      // Also update balances from vault-stats API when liquidation occurs
+      // Use backend API prices for consistency with user-positions and liquidatable-positions APIs
+      // This ensures frontend and backend use the same pricing source
       setContractData(prev => ({
         ...prev,
-        bvixPrice: realtimeBvixPrice || vaultData.price || prev.bvixPrice,
-        evixPrice: realtimeEvixPrice || vaultData.evixPrice || prev.evixPrice,
+        bvixPrice: vaultData.price || realtimeBvixPrice || prev.bvixPrice,
+        evixPrice: vaultData.evixPrice || realtimeEvixPrice || prev.evixPrice,
         // Update BVIX balance from API when liquidated (shows 0.0)
         bvixBalance: vaultData.bvix !== undefined ? vaultData.bvix : prev.bvixBalance,
         evixBalance: vaultData.evix !== undefined ? vaultData.evix : prev.evixBalance,
@@ -177,18 +177,19 @@ export default function TradingInterface() {
     }
   }, [vaultData, realtimeBvixPrice, realtimeEvixPrice]);
 
-  // Update prices when real-time oracle data changes (Sprint 2.1)
+  // Use real-time prices only as fallback when API data is unavailable
   useEffect(() => {
-    if (realtimeBvixPrice || realtimeEvixPrice) {
-      console.log("🔄 Sprint 2.1 Real-time price update:", { 
+    if ((realtimeBvixPrice || realtimeEvixPrice) && (!vaultData?.price || !vaultData?.evixPrice)) {
+      console.log("🔄 Sprint 2.1 Real-time price fallback:", { 
         bvix: realtimeBvixPrice, 
         evix: realtimeEvixPrice, 
-        oracleConnected 
+        oracleConnected,
+        apiPricesAvailable: !!vaultData?.price
       });
       setContractData(prev => ({
         ...prev,
-        bvixPrice: realtimeBvixPrice || prev.bvixPrice,
-        evixPrice: realtimeEvixPrice || prev.evixPrice,
+        bvixPrice: vaultData?.price || realtimeBvixPrice || prev.bvixPrice,
+        evixPrice: vaultData?.evixPrice || realtimeEvixPrice || prev.evixPrice,
       }));
 
       // Track price history for charts
