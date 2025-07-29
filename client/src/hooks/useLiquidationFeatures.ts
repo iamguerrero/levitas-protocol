@@ -687,11 +687,7 @@ export function useLiquidationHistory() {
     queryFn: async () => {
       if (!userAddress) return [];
       
-      // CRITICAL FIX: Clear ALL localStorage liquidation data first to fix vault ID inconsistency
-      const allKeys = Object.keys(localStorage);
-      const liquidationKeys = allKeys.filter(key => key.includes('liquidation'));
-      liquidationKeys.forEach(key => localStorage.removeItem(key));
-      console.log(`🧹 Cleared ${liquidationKeys.length} localStorage keys containing old vault IDs`);
+      // Skip localStorage clearing for better performance - only clear if needed
 
       // SYNC: Fetch recent liquidations from backend and sync with localStorage
       let backendLiquidations: any[] = [];
@@ -700,7 +696,7 @@ export function useLiquidationHistory() {
         const data = await response.json();
         backendLiquidations = data.liquidations || [];
         
-        console.log(`🔄 Syncing ${backendLiquidations.length} backend liquidations with localStorage`);
+        // Syncing backend liquidations
         
         // Check for liquidations involving current user as liquidator OR owner
         const userAsLiquidator = backendLiquidations.filter((liq: any) => 
@@ -742,13 +738,13 @@ export function useLiquidationHistory() {
               
               existingLiquidatorHistory.unshift(liquidatorRecord);
               hasNew = true;
-              console.log('🔄 Synced new liquidation to localStorage:', liquidatorRecord);
+              // Synced new liquidation to localStorage
             }
           });
           
           if (hasNew) {
             localStorage.setItem('liquidation-history', JSON.stringify(existingLiquidatorHistory));
-            console.log(`✅ Updated localStorage with new liquidation records`);
+            // Updated localStorage with new liquidation records
           }
         }
         
@@ -781,13 +777,13 @@ export function useLiquidationHistory() {
               
               existingOwnerHistory.unshift(ownerRecord);
               hasNewOwner = true;
-              console.log('🔄 Synced new owner liquidation record to localStorage:', ownerRecord);
+              // Synced new owner liquidation record to localStorage
             }
           });
           
           if (hasNewOwner) {
             localStorage.setItem(`liquidation-history-${userAddress}`, JSON.stringify(existingOwnerHistory));
-            console.log(`✅ Updated owner localStorage with liquidation records`);
+            // Updated owner localStorage with liquidation records
           }
         }
       } catch (error) {
@@ -836,15 +832,7 @@ export function useLiquidationHistory() {
         amount: liq.debtRepaid
       }));
 
-      console.log(`📋 Loading history for ${userAddress}:`);
-      console.log(`  - User-specific records: ${userSpecificHistory.length}`);
-      console.log(`  - Backend liquidator records: ${liquidatorRecords.length}`);
-      console.log(`  - Backend owner records: ${ownerRecords.length}`);
-      console.log(`  - Records breakdown:`, userSpecificHistory.map((r: any) => ({ 
-        isLiquidator: r.isLiquidator, 
-        type: r.type,
-        vault: r.vault?.vaultId 
-      })));
+      // Loading history - debug info removed for performance
       
       // Combine all history sources
       const allHistory = [...userSpecificHistory, ...liquidatorRecords, ...ownerRecords].filter((record, index, self) => 
@@ -854,6 +842,6 @@ export function useLiquidationHistory() {
       return allHistory.sort((a: any, b: any) => b.timestamp - a.timestamp);
     },
     enabled: !!userAddress,
-    refetchInterval: 5000, // Refresh every 5 seconds
+    refetchInterval: 15000, // Refresh every 15 seconds for better performance
   });
 }
