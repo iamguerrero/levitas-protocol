@@ -246,14 +246,7 @@ export async function getAllBalances(address: string): Promise<{
       getUSDCContract(provider)
     ]);
     
-    // Debug contract addresses
-    console.log("🔍 getAllBalances Debug:", {
-      bvixContractAddress: await bvixContract.getAddress(),
-      evixContractAddress: await evixContract.getAddress(),
-      usdcContractAddress: await usdcContract.getAddress(),
-      expectedBVIX: BVIX_ADDRESS,
-      userAddress: address
-    });
+
     
     // Fetch all balances in parallel
     const [bvixBalance, evixBalance, usdcBalance] = await Promise.all([
@@ -269,10 +262,7 @@ export async function getAllBalances(address: string): Promise<{
       usdcBalance: ethers.formatUnits(usdcBalance, 6)
     };
     
-    console.log("🔍 getAllBalances Result:", {
-      bvixRaw: bvixBalance.toString(),
-      bvixFormatted: result.bvixBalance,
-      evixRaw: evixBalance.toString(),
+
       evixFormatted: result.evixBalance,
       usdcRaw: usdcBalance.toString(),
       usdcFormatted: result.usdcBalance

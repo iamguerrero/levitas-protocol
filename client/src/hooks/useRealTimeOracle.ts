@@ -32,16 +32,14 @@ export const useRealTimeOracle = () => {
         setLastUpdate(updateTime);
         setIsConnected(true);
 
-        console.log(`🔄 SPRINT 2.2 CONSISTENT PRICING: BVIX $${data.bvix.toFixed(2)}, EVIX $${data.evix.toFixed(2)} at ${updateTime.toLocaleTimeString()}`);
+
 
       } catch (error) {
-        console.error('Error fetching simulated prices from backend:', error);
         setIsConnected(false);
       }
     };
 
-    // Initialize consistent pricing system - fetch immediately then update every 5 seconds
-    console.log('🚀 Sprint 2.2 Consistent Pricing System initialized - syncing with backend every 5 seconds');
+    // Initialize pricing system - fetch immediately then update every 5 seconds
     updatePrices(); // Initial fetch
     
     // Set up 5-second interval to match backend simulated pricing updates
@@ -52,7 +50,6 @@ export const useRealTimeOracle = () => {
         clearInterval(updateInterval);
       }
       setIsConnected(false);
-      console.log('Real-time oracle system stopped');
     };
   }, []);
 

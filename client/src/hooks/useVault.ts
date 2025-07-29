@@ -34,7 +34,7 @@ export function useVault() {
           setUserAddress(accounts[0]);
         }
       } catch (error) {
-        console.error('Failed to load address:', error);
+        // Silently handle error
       }
     };
     loadAddress();

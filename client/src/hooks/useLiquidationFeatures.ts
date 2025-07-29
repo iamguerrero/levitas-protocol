@@ -43,7 +43,6 @@ export function useLiquidatableVaults() {
         // Fetch all user positions from API to find liquidatable ones
         const response = await fetch('/api/v1/liquidatable-positions');
         if (!response.ok) {
-          console.error('Failed to fetch liquidatable positions');
           return [];
         }
         const data = await response.json();
@@ -59,10 +58,9 @@ export function useLiquidatableVaults() {
           liquidatable.push(...data.evix.filter((v: any) => v.currentCR <= 120));
         }
         
-        console.log('Liquidatable vaults found:', liquidatable);
+
         return liquidatable;
       } catch (error) {
-        console.error('Error fetching liquidatable vaults:', error);
         return [];
       }
     },

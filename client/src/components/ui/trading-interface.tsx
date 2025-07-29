@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { HapticButton } from "@/components/ui/haptic-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -91,27 +91,16 @@ export default function TradingInterface() {
       fetch(`/api/v1/user-positions/${address}`)
         .then(res => res.json())
         .then(data => {
-          console.log('📡 API positions fetched:', data);
           setApiUserPositions(data);
         })
-        .catch(err => console.error('Error fetching positions:', err));
+        .catch(err => {});
     }
   }, [address, userPositions, userPositionLoading]);
   
   // Use either hook data or API data
   const effectiveUserPositions = userPositions || apiUserPositions;
   
-  // Debug log to see what's happening with the hook
-  useEffect(() => {
-    console.log('🔧 useUserPositions hook state:', {
-      userPositions,
-      apiUserPositions,
-      effectiveUserPositions,
-      userPositionLoading,
-      address,
-      hasData: !!effectiveUserPositions
-    });
-  }, [userPositions, apiUserPositions, effectiveUserPositions, userPositionLoading, address]);
+
 
   function explorerLink(hash: string) {
     return (

@@ -64,7 +64,7 @@ class SimulatedPricingService {
       this.evixPrice = this.generateRealisticPrice(this.evixPrice, this.PRICE_BOUNDS.EVIX);
       this.lastUpdate = new Date();
 
-      console.log(`🔄 Backend Simulated Prices: BVIX $${this.bvixPrice.toFixed(2)}, EVIX $${this.evixPrice.toFixed(2)} at ${this.lastUpdate.toLocaleTimeString()}`);
+
     }, 5000);
   }
 
@@ -89,7 +89,7 @@ class SimulatedPricingService {
     this.bvixPrice = parseFloat(bvixPrice);
     this.evixPrice = parseFloat(evixPrice);
     this.lastUpdate = new Date();
-    console.log(`🔄 Backend prices synced with frontend: BVIX $${this.bvixPrice.toFixed(2)}, EVIX $${this.evixPrice.toFixed(2)}`);
+
   }
 
   public destroy(): void {
