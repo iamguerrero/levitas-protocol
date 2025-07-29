@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { CheckCircle, Circle, TrendingUp, Shield, Zap, Target, ArrowRight, BookOpen } from "lucide-react";
+import { CheckCircle, Circle, TrendingUp, Shield, Zap, Target, ArrowRight, BookOpen, X, ShoppingCart } from "lucide-react";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -317,8 +318,12 @@ export default function LearnPage() {
       content: (
         <div className="space-y-6">
           <div className="text-center space-y-4">
-            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-purple-500 to-violet-600 rounded-full flex items-center justify-center">
-              <Target className="w-8 h-8 text-white" />
+            <div className="mx-auto">
+              <img 
+                src="/levi large.jpg" 
+                alt="Levitas Finance Logo"
+                className="w-16 h-16 object-cover rounded-lg mx-auto"
+              />
             </div>
             <h2 className="text-2xl font-bold">How Levitas Works (30 Seconds)</h2>
           </div>
@@ -398,6 +403,179 @@ export default function LearnPage() {
           </div>
         </div>
       )
+    },
+    {
+      id: 4,
+      title: "Mint vs Buy: Critical Difference",
+      description: "Understanding when you're long vol vs short vol",
+      icon: <ShoppingCart className="w-6 h-6" />,
+      completed: completedSteps.includes(4),
+      content: (
+        <div className="space-y-6">
+          <div className="text-center space-y-4">
+            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-red-500 to-pink-600 rounded-full flex items-center justify-center">
+              <ShoppingCart className="w-8 h-8 text-white" />
+            </div>
+            <h2 className="text-2xl font-bold">Mint vs Buy: The Critical Difference</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              This is the most important concept to understand before using volatility tokens
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <Card className="border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg text-red-600">🏦 Minting in App = SHORT Vol</CardTitle>
+                  <Badge variant="destructive">Net Short</Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="bg-red-100 dark:bg-red-900 p-4 rounded-lg">
+                  <h4 className="font-semibold mb-2">What Happens When You Mint:</h4>
+                  <ul className="text-sm space-y-2">
+                    <li>• You deposit USDC (stable)</li>
+                    <li>• You receive BVIX/EVIX tokens (volatile)</li>
+                    <li>• Your debt is denominated in BVIX/EVIX</li>
+                    <li>• Your collateral is USDC</li>
+                  </ul>
+                </div>
+                
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-red-700 dark:text-red-300">You Profit When:</h4>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>• Volatility decreases (BVIX/EVIX price falls)</li>
+                    <li>• You can redeem debt cheaper</li>
+                    <li>• Markets become calm and stable</li>
+                  </ul>
+                </div>
+
+                <div className="bg-red-200 dark:bg-red-800 p-3 rounded-lg">
+                  <p className="text-xs font-medium text-red-800 dark:text-red-200">
+                    ⚠️ Minting = You're betting volatility will decrease
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg text-green-600">🦄 Buying on Uniswap = LONG Vol</CardTitle>
+                  <Badge className="bg-green-500 text-white">Net Long</Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="bg-green-100 dark:bg-green-900 p-4 rounded-lg">
+                  <h4 className="font-semibold mb-2">What Happens When You Buy:</h4>
+                  <ul className="text-sm space-y-2">
+                    <li>• You swap USDC for BVIX/EVIX on Uniswap</li>
+                    <li>• You hold the volatile token directly</li>
+                    <li>• No debt or collateral involved</li>
+                    <li>• Simple buy-and-hold strategy</li>
+                  </ul>
+                </div>
+                
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-green-700 dark:text-green-300">You Profit When:</h4>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>• Volatility increases (BVIX/EVIX price rises)</li>
+                    <li>• Markets become fearful and chaotic</li>
+                    <li>• You want tail-risk protection</li>
+                  </ul>
+                </div>
+
+                <div className="bg-green-200 dark:bg-green-800 p-3 rounded-lg">
+                  <p className="text-xs font-medium text-green-800 dark:text-green-200">
+                    ✅ Buying = You're betting volatility will increase
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Real-World Example</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-lg">
+                <h4 className="font-semibold mb-3">Scenario: Market Crash (-30%)</h4>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <h5 className="font-medium text-red-600">Minter (Short Vol):</h5>
+                    <ul className="text-sm text-muted-foreground space-y-1">
+                      <li>• BVIX price: $40 → $120 (+200%)</li>
+                      <li>• Your debt gets more expensive</li>
+                      <li>• Collateral ratio drops</li>
+                      <li>• ❌ <strong>You lose money</strong></li>
+                    </ul>
+                  </div>
+                  <div className="space-y-2">
+                    <h5 className="font-medium text-green-600">Buyer (Long Vol):</h5>
+                    <ul className="text-sm text-muted-foreground space-y-1">
+                      <li>• BVIX price: $40 → $120 (+200%)</li>
+                      <li>• Your tokens become more valuable</li>
+                      <li>• Perfect hedge against portfolio crash</li>
+                      <li>• ✅ <strong>You make money</strong></li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-amber-50 dark:bg-amber-950 p-4 rounded-lg border border-amber-200 dark:border-amber-800">
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-white text-xs font-bold">!</span>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-amber-700 dark:text-amber-300 mb-2">Key Takeaway</h4>
+                    <p className="text-sm text-amber-600 dark:text-amber-400">
+                      <strong>For Portfolio Hedging:</strong> Buy BVIX/EVIX on Uniswap to protect against crashes.
+                      <br />
+                      <strong>For Yield Farming:</strong> Mint BVIX/EVIX in the app if you think volatility will decrease.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Where to Execute</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <h4 className="font-semibold flex items-center gap-2">
+                    <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                    Minting (Short Vol)
+                  </h4>
+                  <ul className="text-sm text-muted-foreground space-y-1 pl-5">
+                    <li>• Use Levitas App directly</li>
+                    <li>• Requires USDC collateral</li>
+                    <li>• Monitor collateral ratio</li>
+                    <li>• Can be liquidated if CR &lt; 120%</li>
+                  </ul>
+                </div>
+                <div className="space-y-3">
+                  <h4 className="font-semibold flex items-center gap-2">
+                    <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+                    Buying (Long Vol)
+                  </h4>
+                  <ul className="text-sm text-muted-foreground space-y-1 pl-5">
+                    <li>• Uniswap pools on Base Sepolia</li>
+                    <li>• Future CEX listings</li>
+                    <li>• Simple token swap</li>
+                    <li>• No liquidation risk</li>
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )
     }
   ];
 
@@ -405,7 +583,16 @@ export default function LearnPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 relative">
+        {/* Exit Button */}
+        <div className="absolute top-4 left-4">
+          <Link href="/">
+            <Button variant="ghost" size="sm" className="hover:bg-gray-100 dark:hover:bg-gray-800">
+              <X className="w-4 h-4" />
+            </Button>
+          </Link>
+        </div>
+
         {/* Header */}
         <div className="text-center space-y-4 mb-8">
           <div className="flex items-center justify-center gap-3">
@@ -429,7 +616,7 @@ export default function LearnPage() {
         </div>
 
         {/* Step Navigation */}
-        <div className="grid md:grid-cols-4 gap-4 mb-8">
+        <div className="grid md:grid-cols-5 gap-4 mb-8">
           {steps.map((step, index) => (
             <Card 
               key={step.id}
@@ -519,8 +706,8 @@ export default function LearnPage() {
                     Congratulations! 🎉
                   </h2>
                   <p className="text-green-600 dark:text-green-400 max-w-2xl mx-auto">
-                    You've mastered the fundamentals of volatility trading with BVIX and EVIX. 
-                    You're now ready to start hedging your crypto portfolio like a pro!
+                    You've mastered volatility trading fundamentals including the critical mint vs buy difference. 
+                    You now understand how to hedge (buy tokens) vs yield farm (mint tokens) with BVIX and EVIX!
                   </p>
                   <Button 
                     className="bg-green-600 hover:bg-green-700 text-white"
