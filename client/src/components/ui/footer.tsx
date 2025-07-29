@@ -1,74 +1,20 @@
-import { Github, MessageCircle } from "lucide-react";
-import { SiX, SiDiscord } from "react-icons/si";
-import { Button } from "@/components/ui/button";
-import { Link } from "wouter";
-const levitasLogoPath = "/levi large.jpg";
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
-export default function Footer() {
+export function Footer() {
   return (
-    <footer className="bg-white border-t border-gray-200 py-12">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid md:grid-cols-4 gap-8">
-          {/* Brand */}
-          <div className="md:col-span-1">
-            <div className="flex items-center space-x-2 mb-4">
-              <img 
-                src={levitasLogoPath} 
-                alt="Levitas Finance Logo"
-                className="w-10 h-8 object-cover rounded-md"
-              />
-              <div>
-                <span className="text-lg font-bold text-black">Levitas Finance</span>
-                <div className="text-xs text-gray-500">Composable Volatility</div>
-              </div>
-            </div>
-            <p className="text-gray-600 text-sm">Tokenized volatility for the decentralized future.</p>
-          </div>
-
-          {/* Product */}
-          <div>
-            <h4 className="font-semibold text-black mb-4">Product</h4>
-            <ul className="space-y-2 text-sm text-gray-600">
-              <li><a href="#tokens" className="hover:text-black transition-colors">Tokens</a></li>
-              <li><a href="/Levitas Finance Whitepaper V1.pdf" target="_blank" rel="noopener noreferrer" className="hover:text-black transition-colors">Whitepaper</a></li>
-              <li><a href="#" className="hover:text-black transition-colors">FAQs</a></li>
-              <li><a href="#" className="hover:text-black transition-colors">Audit</a></li>
-            </ul>
-          </div>
-
-          {/* Governance */}
-          <div>
-            <h4 className="font-semibold text-black mb-4">Governance</h4>
-            <ul className="space-y-2 text-sm text-gray-600">
-              <li><a href="#governance" className="hover:text-black transition-colors">Governance</a></li>
-              <li><a href="#" className="hover:text-black transition-colors">Proposals</a></li>
-              <li><a href="#" className="hover:text-black transition-colors">Forum</a></li>
-              <li><a href="#" className="hover:text-black transition-colors">Blog</a></li>
-            </ul>
-          </div>
-
-          {/* Community */}
-          <div>
-            <h4 className="font-semibold text-black mb-4">Community</h4>
-            <div className="flex space-x-4 mb-4">
-              <a href="https://x.com/LevitasFinance" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-black transition-colors">
-                <SiX className="w-5 h-5" />
-              </a>
-              <a href="https://discord.gg/dE5wV8Deya" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-black transition-colors" title="Join our Discord">
-                <SiDiscord className="w-5 h-5" />
-              </a>
-              <a href="https://github.com/iamguerrero/levitas-protocol" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-black transition-colors">
-                <Github className="w-5 h-5" />
-              </a>
-            </div>
-            <Button className="bg-blue-600 text-white hover:bg-blue-700 text-sm">
-              Join Early Access
-            </Button>
-          </div>
+    <footer className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-14 items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <p className="text-sm text-muted-foreground">
+            © 2025 <span className="font-semibold text-primary">Levitas Finance</span>. All rights reserved.
+          </p>
         </div>
-
-        <div className="border-t border-gray-200 mt-8 pt-8 text-center text-sm text-gray-600">
-          <p>&copy; 2024 Levitas Finance. All rights reserved. | Terms & Support</p>
+        
+        <div className="flex items-center space-x-4">
+          <p className="text-xs text-muted-foreground hidden sm:block">
+            Toggle theme
+          </p>
+          <ThemeToggle />
         </div>
       </div>
     </footer>
